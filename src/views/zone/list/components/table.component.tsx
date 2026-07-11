@@ -160,8 +160,23 @@ const TableComponent = ({
     manualPagination: true,
     manualFiltering: true,
     manualSorting: true,
-    pageCount: Math.ceil(count / pageSize),
-    onPaginationChange: setPagination,
+    pageCount: Math.max(1, Math.ceil(count / pageSize)),
+    onPaginationChange: (updater) => {
+      const state = useStore.getState();
+      const newPagination =
+        typeof updater === "function"
+          ? updater({
+              pageIndex: state.pageIndex,
+              pageSize: state.pageSize,
+            })
+          : updater;
+      setPagination({
+        pageIndex: newPagination.pageIndex,
+        pageSize: newPagination.pageSize,
+        search: state.search,
+        isActive: state.isActive,
+      });
+    },
   });
 
   // Functions
