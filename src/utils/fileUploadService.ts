@@ -1,0 +1,191 @@
+// utils/fileUploadService.ts
+import { ToastService } from '@/utils/toastService';
+import { getSession } from 'next-auth/react';
+import { ILeasingFileType } from '@/utils/base';
+
+interface UploadOptions {
+  file: File;
+  ownerId: string;
+  ownerType: string;
+  token: string;
+  backendKey: string;
+  platformKey: string;
+  uploadType?: 'pdf' | 'image'; // 'pdf' or 'image'
+  dic?: any; // Add dictionary for localized messages
+}
+
+interface UploadResponse {
+  success?: boolean;
+  message?: string;
+  file?: {
+    _id: string;
+    fileName: string;
+    filePath: string;
+    [key: string]: any;
+  };
+  urls?: {
+    info: string;
+    preview: string;
+    download: string;
+  };
+  // Legacy fields
+  url?: string;
+  fileUrl?: string;
+  downloadUrl?: string;
+}
+
+/**
+ * Upload file to server
+ * @param options - Upload configuration
+ * @returns Promise<string> - File URL or empty string on failure
+ */
+export const uploadFile = async (options: UploadOptions): Promise<string> => {
+  const { file, ownerId, ownerType, token, backendKey, platformKey, uploadType = 'pdf', dic } = options;
+
+  // Validate ownerId
+  if (!ownerId) {
+    ToastService.error(dic?.ownerIdRequired || 'ຕ້ອງການ Owner ID ສຳລັບການອັບໂຫລດໄຟລ໌');
+    return '';
+  }
+
+  // Prepare FormData
+  const formData = new FormData();
+  const nameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+
+  formData.append('file', file);
+  formData.append('ownerId', ownerId);
+  formData.append('ownerType', ownerType);
+  formData.append('originalName', nameWithoutExt);
+
+  // Determine upload endpoint (hard-coded for now)
+  const uploadEndpoint = uploadType === 'image'
+    ? 'https://files.laoworld.la/api/image-files/upload'
+    : 'https://files.laoworld.la/api/pdf-files/upload';
+
+  if (!uploadEndpoint) {
+    ToastService.error(dic?.uploadEndpointNotConfigured || 'ບໍ່ໄດ້ກຳນົດຈຸດປາຍທາງການອັບໂຫລດ');
+    console.error('Missing upload endpoint');
+    return '';
+  }
+
+  try {
+    const response = await fetch(uploadEndpoint, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'backendKey': backendKey,
+        'platform': platformKey,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      ToastService.error(dic?.uploadFailed ? `${dic.uploadFailed}: ${response.status} - ${errorText}` : `ອັບໂຫລດລົ້ມເຫລວ: ${response.status} - ${errorText}`);
+      console.error('Upload error:', errorText);
+      return '';
+    }
+
+    const result: UploadResponse = await response.json();
+
+    // Get download URL - support both formats
+    let fileUrl = result.url || result.fileUrl || result.downloadUrl || '';
+
+    // If not found, try to build from urls.download
+    if (!fileUrl && result.urls?.download) {
+      fileUrl = 'https://files.laoworld.la' + result.urls.download;
+    }
+
+    if (fileUrl) {
+      // toast.success('อัปโหลดไฟล์สำเร็จ');
+      return fileUrl;
+    } else {
+      // toast.warning('File uploaded but URL not found in response');
+      console.warn('Response:', result);
+      return '';
+    }
+  } catch (error) {
+    console.error('Upload error:', error);
+    ToastService.error(dic?.uploadError || 'ເກີດຂໍ້ຜິດພາດໃນການອັບໂຫລດໄຟລ໌');
+    return '';
+  }
+};
+
+/**
+ * Validate file before upload
+ * @param file - File to validate
+ * @param options - Validation options
+ * @returns boolean - true if valid
+ */
+export const validateFile = (
+  file: File,
+  options?: {
+    maxSize?: number; // in MB
+    allowedTypes?: string[];
+    dic?: any; // Add dictionary for localized messages
+  }
+): boolean => {
+  const maxSize = options?.maxSize || 10; // Default 10MB
+  const allowedTypes = options?.allowedTypes || [
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+    'image/jpg',
+  ];
+
+  const dic = options?.dic;
+
+  // Check file size
+  const fileSizeInMB = file.size / (1024 * 1024);
+  if (fileSizeInMB > maxSize) {
+    ToastService.error(dic?.fileSizeTooBig ? `${dic.fileSizeTooBig} (${dic.maximum || 'ສູງສຸດ'} ${maxSize}MB)` : `ໄຟລ໌ມີຂະໜາດໃຫຍ່ເກີນໄປ (ສູງສຸດ ${maxSize}MB)`);
+    return false;
+  }
+
+  // Check file type
+  if (!allowedTypes.includes(file.type)) {
+    ToastService.error(dic?.invalidFileType || 'ປະເພດໄຟລ໌ບໍ່ຖືກຕ້ອງ');
+    return false;
+  }
+
+  return true;
+};
+
+/**
+ * Get file type from file extension or MIME type
+ * @param file - File object
+ * @returns 'pdf' | 'image'
+ */
+export const getFileUploadType = (file: File): 'pdf' | 'image' => {
+  if (file.type.startsWith('image/')) {
+    return 'image';
+  }
+  return 'pdf';
+};
+
+/**
+ * Global helper สำหรับอัปโหลดไฟล์ของ owner ใด ๆ
+ * - เติม token / backendKey / platformKey จาก env ให้ครบ
+ * - ให้ caller ส่ง ownerType เอง (รองรับ ILeasingFileType ทุกตัว)
+ */
+export const uploadOwnerFile = async (params: {
+  file: File;
+  ownerId: string;
+  ownerType: string; // แนะนำให้ส่ง ILeasingFileType.xxx
+  dic?: any;
+}): Promise<string> => {
+  const { file, ownerId, ownerType, dic } = params;
+  const session = await getSession();
+  const model = {
+    file,
+    ownerId,
+    ownerType,
+    token: session?.authorization!,
+    backendKey: process.env.NEXT_PUBLIC_UPLOAD_BACKEND_KEY!,
+    platformKey: process.env.NEXT_PUBLIC_UPLOAD_PLATFORM_KEY!,
+    uploadType: getFileUploadType(file),
+    dic,
+  }
+  console.log(`model:::`, model)
+  return uploadFile(model);
+};

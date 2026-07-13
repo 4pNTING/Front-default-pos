@@ -10,7 +10,6 @@ export const LOAD_ZONE = gql`
         createdAt
         updatedAt
       }
-      count
     }
   }
 `;

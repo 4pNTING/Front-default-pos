@@ -1,0 +1,46 @@
+services:
+  frontend-pos:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: frontend-pos-image:latest
+    container_name: frontend-pos
+    restart: always
+    volumes:
+      - .:/app
+      - frontend-pos-next:/app/.next
+    networks:
+      - share-container-network
+    deploy:
+      replicas: 1
+    environment:
+      - HOSTNAME=0.0.0.0
+      - BASEPATH=${BASEPATH}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_BASEPATH=${NEXTAUTH_BASEPATH}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_DEBUG=true
+      - NODE_ENV=production
+      - API_URL=${API_URL}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+
+  nginx:
+    image: nginx:alpine
+    container_name: frontend-pos-nginx
+    ports:
+      - "9064:8278" # Map Host 9064 to Nginx internal 8278
+    restart: always
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend-pos
+    networks:
+      - share-container-network
+
+networks:
+  share-container-network:
+    external: true
+
+volumes:
+  frontend-pos-next:
