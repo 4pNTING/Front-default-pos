@@ -1,13 +1,9 @@
 // Third-party Imports
 import CredentialProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { PrismaClient } from "@prisma/client";
 import type { LoginData, TokenData, NextAuthOptions, UserLoginData, } from "next-auth";
-import type { Adapter } from "next-auth/adapters";
 import { print } from "graphql";
 import { LOGIN_MUTATION } from "@/gql/queries";
-const prisma = new PrismaClient();
 const url = process.env.NEXT_PUBLIC_API_URL;
 
 
@@ -17,7 +13,6 @@ const url = process.env.NEXT_PUBLIC_API_URL;
 // const loginMutation = `...`;
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as Adapter,
   providers: [
     CredentialProvider({
       name: "Credentials",

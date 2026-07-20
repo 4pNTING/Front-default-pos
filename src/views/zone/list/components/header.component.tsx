@@ -3,7 +3,7 @@ import { Breadcrumbs, Button, Typography } from "@mui/material";
 import Link from "next/link";
 import { ZoneListProps } from "../../type/zoneType";
 import { useStore } from "../../store/zoneStore";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
 import { IEntityStatus, IRoleConfigLevel } from "@/utils/base";
@@ -34,8 +34,15 @@ const HeaderComponent = ({
     setToggleCreateComponent,
   } = useStore();
 
+  const isFirstRender = useRef(true);
+
   // Handle search with debounce
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
     // ถ้า clear search ให้ load ทันที
     if (!search || search.length === 0) {
       onSearch();

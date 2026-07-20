@@ -37,17 +37,17 @@ export const List = ({ props }: { props: ZoneListProps }) => {
 
   async function init() {
     try {
-      if (hasFetchedRef.current) {
+      const { zoneList } = useStore.getState();
+      if (zoneList && zoneList.length > 0) {
+        hasFetchedRef.current = true;
         setRender(true);
+        return;
+      }
+
+      if (hasFetchedRef.current) {
         return;
       }
       hasFetchedRef.current = true;
-
-      const { zoneList } = useStore.getState();
-      if (zoneList && zoneList.length > 0) {
-        setRender(true);
-        return;
-      }
 
       await loadZoneAPI({
         props: {
@@ -58,7 +58,7 @@ export const List = ({ props }: { props: ZoneListProps }) => {
 
       setRender(true);
     } catch (error: any) {
-      hasFetchedRef.current = false; // Reset on error so retry is possible
+      hasFetchedRef.current = false; 
       toast.error(error.message);
     }
   }

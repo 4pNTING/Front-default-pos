@@ -3,6 +3,7 @@ import { gql } from "@apollo/client";
 export const LOAD_ZONE = gql`
   query loadZone($input: LoadZoneDto!) {
     loadZone(input: $input) {
+      count
       zone {
         _id
         name

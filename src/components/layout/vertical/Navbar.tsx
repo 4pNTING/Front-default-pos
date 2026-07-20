@@ -6,9 +6,9 @@ import { PageDefaultProps } from '@/types/pageDefaultTypes'
 
 const Navbar = ({ props }: { props: PageDefaultProps }) => {
   return (
-    // <LayoutNavbar>
+     <LayoutNavbar>
     <NavbarContent props={props} />
-    // </LayoutNavbar>
+     </LayoutNavbar>
   )
 }
 
