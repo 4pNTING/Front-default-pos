@@ -5,6 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 9882",
+    "dev2": "dotenv -e .env.linux -- next dev --port 9882",
     "build": "next build",
     "start": "next build && next start --port 9064",
     "lint": "next lint",

@@ -45,9 +45,9 @@ export function ButtonOption({
 
   const handleDeleteClick = async () => {
     const confirmed = await msgConfirm({
-      title: dic?.confirmDeleteTitle || "ຢືນຢັນການລົບ?",
-      text: dic?.confirmDeleteText || "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລົບ?",
-      btnConfirmText: dic?.confirm || "ຢືນຢັນ",
+      title: dic?.confirmDeleteTitle,
+      text: dic?.confirmDeleteText,
+      btnConfirmText: dic?.confirm,
       btnCancelText: dic?.cancel,
       btnConfirmColor: "#1d5089ff",
     });
@@ -71,9 +71,9 @@ export function ButtonOption({
   const handleRestoreClick = async () => {
     const confirmed = await msgConfirm({
       title: dic?.confirmRestoreTitle,
-      text: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການເປີດໃຊ້ງານ?",
+      text: dic?.confirmRestoreText,
       btnCancelText: dic?.cancel,
-      btnConfirmText: dic?.confirm || "ຢືນຢັນ",
+      btnConfirmText: dic?.confirm,
       btnConfirmColor: "#1d5089ff",
     });
 
