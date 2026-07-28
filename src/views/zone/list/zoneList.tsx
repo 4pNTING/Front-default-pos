@@ -27,6 +27,8 @@ export const List = ({ props }: { props: ZoneListProps }) => {
   });
 
   const [render, setRender] = useState(false);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [editingItem, setEditingItem] = useState<ZoneType | undefined>(
     undefined,
   );
@@ -38,7 +40,7 @@ export const List = ({ props }: { props: ZoneListProps }) => {
   const init = useCallback(async () => {
     try {
       const { zoneList } = useStore.getState();
-      if (zoneList && zoneList.length > 0) {
+      if (zoneList) {
         hasFetchedRef.current = true;
         setRender(true);
         return;
@@ -63,6 +65,29 @@ export const List = ({ props }: { props: ZoneListProps }) => {
     }
   }, [loadZoneAPI, loadZoneCall, dic]);
 
+  const handleGlobalFilterChange = (value: string) => {
+    setGlobalFilter(value);
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        const { searchZoneAPI } = useStore.getState();
+
+        await searchZoneAPI({
+          props: {
+            query: loadZoneCall,
+            dictionary: dic,
+          },
+          keyword: value,
+        });
+      } catch (error: any) {
+        toast.error(error.message);
+      }
+    }, 500);
+  };
+
   const handleEditClick = (item: ZoneType) => {
     setEditingItem(item);
     setIsEditModalOpen(true);
@@ -78,17 +103,12 @@ export const List = ({ props }: { props: ZoneListProps }) => {
   };
 
   useEffect(() => {
-    // if (
-    //   !user?.level ||
-    //   !Object.values([
-    //     IRoleConfigLevel.admin,
-    //     IRoleConfigLevel.superAdmin,
-    //   ]).includes(user?.level as IRoleConfigLevel)
-    // ) {
-    //   return;
-    // }
-
     init();
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
   }, [user, init]);
 
   return (
@@ -96,9 +116,17 @@ export const List = ({ props }: { props: ZoneListProps }) => {
       {render === true ? (
         // loading success
         <div className="grid grid-cols-1 gap-[15px] ">
-          <HeaderComponent props={props} loadZoneCall={loadZoneCall} />
+          <HeaderComponent
+            props={props}
+            globalFilter={globalFilter}
+            setGlobalFilter={setGlobalFilter}
+            onGlobalFilterChange={handleGlobalFilterChange}
+            loadZoneCall={loadZoneCall}
+          />
           <TableComponent
             props={props}
+            globalFilter={globalFilter}
+            onGlobalFilterChange={handleGlobalFilterChange}
             onEditClick={handleEditClick}
             loadZoneCall={loadZoneCall}
           />

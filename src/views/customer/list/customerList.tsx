@@ -31,6 +31,7 @@ export const List = ({ props }: { props: CustomerListProps }) => {
   const [render, setRender] = useState(false);
   const [globalFilter, setGlobalFilter] = useState("");
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasFetchedRef = useRef(false);
 
   const [loadCustomerCall] = useLazyQuery(LOAD_CUSTOMER, {
     fetchPolicy: "network-only",
@@ -38,30 +39,33 @@ export const List = ({ props }: { props: CustomerListProps }) => {
 
   const init = useCallback(async () => {
     try {
-      const promises: Promise<any>[] = [];
-
-      // Skip fetch if data already exists in store
-      if (!customerList || customerList.length === 0) {
-        promises.push(
-          loadCustomerAPI({
-            props: {
-              query: loadCustomerCall,
-              dictionary: dic,
-            },
-          }),
-        );
+      const { customerList: currentCustomerList } = useStore.getState();
+      if (currentCustomerList && currentCustomerList.length > 0) {
+        hasFetchedRef.current = true;
+        setRender(true);
+        return;
       }
 
-      if (promises.length > 0) {
-        await Promise.all(promises);
+      if (hasFetchedRef.current) {
+        return;
       }
-    } catch (error) {}
-  }, [loadCustomerAPI, loadCustomerCall, dic, customerList]);
+      hasFetchedRef.current = true;
+
+      await loadCustomerAPI({
+        props: {
+          query: loadCustomerCall,
+          dictionary: dic,
+        },
+      });
+    } catch (error) {
+      hasFetchedRef.current = false;
+    } finally {
+      setRender(true);
+    }
+  }, [loadCustomerAPI, loadCustomerCall, dic]);
 
   useEffect(() => {
-    init().then(() => {
-      setRender(true);
-    });
+    init();
   }, [user, init]);
 
   useEffect(() => {

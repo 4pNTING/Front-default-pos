@@ -48,6 +48,7 @@ interface IState {
   setSorting: (field: IZoneSortField | null, order: 'ASC' | 'DESC' | null) => void;
 
   loadZoneAPI: ({ props, params }: { props: ListNetworkProps; params?: { pageIndex?: number; pageSize?: number; search?: string; isActive?: string } }) => Promise<void>;
+  searchZoneAPI: ({ props, keyword }: { props: ListNetworkProps; keyword: string }) => Promise<void>;
   createZoneAPI: ({ props }: { props: CreateNetworkProps }) => Promise<void>;
   updateZoneAPI: ({ props }: { props: UpdateNetworkProps }) => Promise<void>;
   deleteZoneAPI: ({ props }: { props: DeleteNetworkProps }) => Promise<void>;
@@ -156,6 +157,18 @@ export const useStore = create<IState>((set, get) => ({
       throw error;
     } finally {
       set({ loading: false });
+    }
+  },
+
+  searchZoneAPI: async ({ props, keyword }: { props: ListNetworkProps; keyword: string }) => {
+    try {
+      set({
+        search: keyword,
+        pageIndex: 0,
+      });
+      await get().loadZoneAPI({ props });
+    } catch (error: any) {
+      throw error;
     }
   },
 

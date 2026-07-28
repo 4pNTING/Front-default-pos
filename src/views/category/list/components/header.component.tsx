@@ -10,9 +10,15 @@ import CustomTextField from "@/@core/components/mui/TextField";
 
 const HeaderComponent = ({
   props,
+  globalFilter,
+  setGlobalFilter,
+  onGlobalFilterChange,
   loadCategoryCall,
 }: {
   props: CategoryListProps;
+  globalFilter?: string;
+  setGlobalFilter?: (value: string) => void;
+  onGlobalFilterChange?: (value: string) => void;
   loadCategoryCall: any;
 }) => {
   const { lang, dictionary: dic } = props;
@@ -27,52 +33,6 @@ const HeaderComponent = ({
     isActive,
     setToggleCreateComponent,
   } = useCategoryStore();
-
-  const isFirstRender = useRef(true);
-
-  // funcs
-  const onSearch = useCallback(async () => {
-    try {
-      await loadCategoryAPI({
-        props: {
-          query: loadCategoryCall,
-          dictionary: dic,
-        },
-      });
-    } catch (error: any) {
-      ToastService.error(error.message);
-    }
-  }, [loadCategoryAPI, loadCategoryCall, dic]);
-
-  // Handle search with debounce
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-
-    if (!keyword || keyword.length === 0) {
-      onSearch();
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      onSearch();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [keyword, onSearch]);
-
-  function onSearchChange(value: string) {
-    setPagination({
-      pageIndex: 0,
-      pageSize: pageSize,
-      keyword: value,
-      isActive: isActive,
-      sortField: null,
-      sortOrder: null,
-    });
-  }
 
   async function onSelectStatus(value: string) {
     try {
@@ -175,18 +135,16 @@ const HeaderComponent = ({
               {/* Search Input */}
               <div className="flex-1 max-w-[400px]">
                 <CustomTextField
+                  sx={{ maxWidth: 300, width: 300 }}
+                  type="search"
                   placeholder={dic.placeHolder?.search}
-                  value={keyword ?? ""}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <i className="tabler-search text-[16px] mr-2 text-gray-500" />
-                    ),
-                  }}
+                  value={globalFilter ?? ""}
+                  onChange={(e) =>
+                    onGlobalFilterChange
+                      ? onGlobalFilterChange(e.target.value)
+                      : setGlobalFilter?.(e.target.value)
+                  }
                   inputProps={{ autoComplete: "off" }}
-                  size="small"
-                  fullWidth
-                  disabled={loading}
                 />
               </div>
             </div>

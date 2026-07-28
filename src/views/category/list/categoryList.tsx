@@ -25,6 +25,8 @@ export const List = ({ props }: { props: CategoryListProps }) => {
   });
 
   const [render, setRender] = useState(false);
+  const [globalFilter, setGlobalFilter] = useState("");
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [editingItem, setEditingItem] = useState<CategoryType | undefined>(
     undefined,
   );
@@ -36,7 +38,7 @@ export const List = ({ props }: { props: CategoryListProps }) => {
   const init = useCallback(async () => {
     try {
       const { categoryList } = useCategoryStore.getState();
-      if (categoryList && categoryList.length > 0) {
+      if (categoryList ) {
         hasFetchedRef.current = true;
         setRender(true);
         return;
@@ -61,6 +63,29 @@ export const List = ({ props }: { props: CategoryListProps }) => {
     }
   }, [loadCategoryAPI, loadCategoryCall, dic]);
 
+  const handleGlobalFilterChange = (value: string) => {
+    setGlobalFilter(value);
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        const { searchCategoryAPI } = useCategoryStore.getState();
+
+        await searchCategoryAPI({
+          props: {
+            query: loadCategoryCall,
+            dictionary: dic,
+          },
+          keyword: value,
+        });
+      } catch (error: any) {
+        toast.error(error.message);
+      }
+    }, 500);
+  };
+
   const handleEditClick = (item: CategoryType) => {
     setEditingItem(item);
     setIsEditModalOpen(true);
@@ -75,6 +100,11 @@ export const List = ({ props }: { props: CategoryListProps }) => {
 
   useEffect(() => {
     init();
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
   }, [user, init]);
 
   return (
@@ -82,9 +112,17 @@ export const List = ({ props }: { props: CategoryListProps }) => {
       {render === true ? (
         // loading success
         <div className="grid grid-cols-1 gap-[15px]">
-          <HeaderComponent props={props} loadCategoryCall={loadCategoryCall} />
+          <HeaderComponent
+            props={props}
+            globalFilter={globalFilter}
+            setGlobalFilter={setGlobalFilter}
+            onGlobalFilterChange={handleGlobalFilterChange}
+            loadCategoryCall={loadCategoryCall}
+          />
           <TableComponent
             props={props}
+            globalFilter={globalFilter}
+            onGlobalFilterChange={handleGlobalFilterChange}
             onEditClick={handleEditClick}
             loadCategoryCall={loadCategoryCall}
           />

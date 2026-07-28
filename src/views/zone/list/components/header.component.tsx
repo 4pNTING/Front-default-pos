@@ -13,9 +13,15 @@ import { ToastService } from "@/utils/toastService";
 
 const HeaderComponent = ({
   props,
+  globalFilter,
+  setGlobalFilter,
+  onGlobalFilterChange,
   loadZoneCall,
 }: {
   props: ZoneListProps;
+  globalFilter?: string;
+  setGlobalFilter?: (value: string) => void;
+  onGlobalFilterChange?: (value: string) => void;
   loadZoneCall: any;
 }) => {
   // Var
@@ -34,52 +40,6 @@ const HeaderComponent = ({
     toggleCreateComponent,
     setToggleCreateComponent,
   } = useStore();
-
-  const isFirstRender = useRef(true);
-
-  // funcs
-  const onSearch = useCallback(async () => {
-    try {
-      await loadZoneAPI({
-        props: {
-          query: loadZoneCall,
-          dictionary: dic,
-        },
-      });
-    } catch (error: any) {
-      ToastService.error(error.message);
-    }
-  }, [loadZoneAPI, loadZoneCall, dic]);
-
-  // Handle search with debounce
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-
-    // ถ้า clear search ให้ load ทันที
-    if (!search || search.length === 0) {
-      onSearch();
-      return;
-    }
-
-    // รอ 800ms ก่อน search (debounce)
-    const timer = setTimeout(() => {
-      onSearch();
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [search, onSearch]);
-
-  function onSearchChange(value: string) {
-    setPagination({
-      pageIndex: 0,
-      pageSize: pageSize,
-      search: value,
-      isActive: isActive,
-    });
-  }
 
   async function onSelectStatus(value: string) {
     try {
@@ -190,18 +150,16 @@ const HeaderComponent = ({
               {/* Search Input */}
               <div className="flex-1 max-w-[400px]">
                 <CustomTextField
+                  sx={{ maxWidth: 300, width: 300 }}
+                  type="search"
                   placeholder={dic.placeHolder?.search}
-                  value={search ?? ""}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                  InputProps={{
-                    startAdornment: (
-                      <i className="tabler-search text-[16px] mr-2 text-gray-500" />
-                    ),
-                  }}
+                  value={globalFilter ?? ""}
+                  onChange={(e) =>
+                    onGlobalFilterChange
+                      ? onGlobalFilterChange(e.target.value)
+                      : setGlobalFilter?.(e.target.value)
+                  }
                   inputProps={{ autoComplete: "off" }}
-                  size="small"
-                  fullWidth
-                  disabled={loading}
                 />
               </div>
             </div>

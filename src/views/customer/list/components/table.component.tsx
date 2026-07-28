@@ -274,29 +274,6 @@ const TableComponent = ({
         size: 120,
         sortingFn: "alphanumeric",
       }),
-      columnHelper.accessor("isActive", {
-        header: () => (
-          <div className="text-center font-bold text-[16px]">
-            {dic?.status}
-          </div>
-        ),
-        cell: ({ row }) => {
-          const isActive = row?.original?.isActive === IEntityStatus.active;
-          return (
-            <div className="flex justify-center">
-              <CustomChip
-                size="small"
-                round="true"
-                variant="tonal"
-                label={isActive ? (dic?.active || "Active") : (dic?.inactive || "Inactive")}
-                color={isActive ? "success" : "secondary"}
-                sx={{ fontWeight: 600 }}
-              />
-            </div>
-          );
-        },
-        size: 100,
-      }),
       columnHelper.accessor("action", {
         header: () => (
           <div className="text-center font-bold text-[16px]">

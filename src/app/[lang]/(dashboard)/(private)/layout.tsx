@@ -46,6 +46,7 @@ const Layout = async ({ children, params }: ChildrenType & { params: { lang: Loc
               <VerticalLayout
                 navigation={<Navigation lang={params.lang} dictionary={dictionary} mode={mode} systemMode={systemMode} props={{ lang: params.lang, dictionary: dictionary }} />}
                 navbar={<Navbar props={{ lang: params.lang, dictionary: dictionary }} />}
+                footer={<VerticalFooter />}
               >
                 {children}
                 <GlobalModalWrapper lang={params.lang} dictionary={dictionary} />

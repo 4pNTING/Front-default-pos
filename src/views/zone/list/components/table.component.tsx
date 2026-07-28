@@ -46,10 +46,14 @@ const columnHelper = createColumnHelper<ListAction>();
 
 const TableComponent = ({
   props,
+  globalFilter,
+  onGlobalFilterChange,
   onEditClick,
   loadZoneCall,
 }: {
   props: ZoneListProps;
+  globalFilter?: string;
+  onGlobalFilterChange?: (value: any) => void;
   onEditClick?: (item: ZoneType) => void;
   loadZoneCall: any;
 }) => {
@@ -58,7 +62,6 @@ const TableComponent = ({
 
   // States
   const [rowSelection, setRowSelection] = useState({});
-  const [globalFilter, setGlobalFilter] = useState("");
 
   // Drag to scroll hook
   const tableScrollRef = useDragToScroll<HTMLDivElement>();
@@ -175,7 +178,7 @@ const TableComponent = ({
     globalFilterFn: fuzzyFilter,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
-    onGlobalFilterChange: setGlobalFilter,
+    onGlobalFilterChange: onGlobalFilterChange,
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
