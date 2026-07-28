@@ -38,7 +38,7 @@ export const List = ({ props }: { props: CategoryListProps }) => {
   const init = useCallback(async () => {
     try {
       const { categoryList } = useCategoryStore.getState();
-      if (categoryList ) {
+      if (categoryList && categoryList.length > 0) {
         hasFetchedRef.current = true;
         setRender(true);
         return;

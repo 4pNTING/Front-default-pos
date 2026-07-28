@@ -40,7 +40,7 @@ export const List = ({ props }: { props: ZoneListProps }) => {
   const init = useCallback(async () => {
     try {
       const { zoneList } = useStore.getState();
-      if (zoneList) {
+      if (zoneList && zoneList.length > 0) {
         hasFetchedRef.current = true;
         setRender(true);
         return;
