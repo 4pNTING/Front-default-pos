@@ -23,6 +23,7 @@ export type ListNetworkProps = {
 
 export type CreateNetworkProps = {
   mutation: any;
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>; 
   firstName?: string;
   lastName?: string;
   phoneNumber?: string;
@@ -45,6 +46,7 @@ export type CreateNetworkProps = {
 
 export type UpdateNetworkProps = {
   mutation: any;
+  dictionary?: Awaited<ReturnType<typeof getDictionary>>; 
   _id: string;
   firstName?: string;
   lastName?: string;
@@ -64,6 +66,7 @@ export type UpdateNetworkProps = {
     district?: string;
     village?: string;
   };
+  deleteContact?: boolean;
 };
 
 export type RestoreNetworkProps = {

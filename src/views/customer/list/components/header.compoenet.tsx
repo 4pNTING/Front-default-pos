@@ -2,13 +2,13 @@ import { Breadcrumbs, Button } from "@mui/material";
 import Link from "next/link";
 import { CustomerListProps } from "../../type/customerType";
 import { useStore } from "../../store/customerStore";
-import { toast } from "react-toastify";
+import { ToastService } from "@/utils/toastService";
 import CustomAutocomplete from "@/@core/components/mui/Autocomplete";
 import CustomTextField from "@/@core/components/mui/TextField";
 import { ICustomerGender, ICustomerNationality } from "@/utils/base";
 import { useState, useEffect } from "react";
 
-const headerComponent = ({
+const HeaderComponent = ({
   props,
   globalFilter,
   setGlobalFilter,
@@ -41,7 +41,7 @@ const headerComponent = ({
   useEffect(() => {
     loadGenderList();
     loadNationList();
-  }, []);
+  }, [loadGenderList, loadNationList]);
 
   async function onSelectGender(value: any) {
     try {
@@ -58,7 +58,7 @@ const headerComponent = ({
         },
       });
     } catch (error: any) {
-      toast.error(error.message);
+      ToastService.error(error.message);
     }
   }
 
@@ -77,7 +77,7 @@ const headerComponent = ({
         },
       });
     } catch (error: any) {
-      toast.error(error.message);
+      ToastService.error(error.message);
     }
   }
 
@@ -221,4 +221,4 @@ const headerComponent = ({
   );
 };
 
-export default headerComponent;
+export default HeaderComponent;

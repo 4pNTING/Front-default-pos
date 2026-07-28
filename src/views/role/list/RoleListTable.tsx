@@ -276,7 +276,7 @@ const RoleListTable = ({ props }: { props: RolesListProps }) => {
     queryRoles({
       props: { dictionary: props.dictionary },
     });
-  }, []);
+  }, [queryRoles, props.dictionary]);
 
   return (
     <>

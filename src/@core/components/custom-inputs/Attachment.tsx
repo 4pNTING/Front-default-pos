@@ -1,7 +1,6 @@
 import React, { useState, useRef } from "react";
 import {Box,Button,Typography,Paper,LinearProgress,Alert, IconButton, Chip} from "@mui/material";
 import { ToastService } from '@/utils/toastService';
-import { useSession } from "next-auth/react";
 
 export interface AttachedFile {
   id: string;
@@ -34,7 +33,6 @@ const Attachment: React.FC<AttachmentProps> = ({
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { data: session } = useSession();
 
   const handleFileSelect = (selectedFiles: FileList | null) => {
     if (!selectedFiles) return;
@@ -144,31 +142,9 @@ const Attachment: React.FC<AttachmentProps> = ({
     if (file.url && file.url.trim() !== '') {
       // Remote file - download with authentication
       try {
-        // Get auth configuration
-        const token = session?.authorization ;
-        const backendKey = process.env.NEXT_PUBLIC_UPLOAD_BACKEND_KEY || '951ea066-48ab-490a-894c-d769f80d4653';
-        const platformKey = process.env.NEXT_PUBLIC_UPLOAD_PLATFORM_KEY || 'mms_svc';
-        const fileBaseUrl = 'https://files.laoworld.la';
-        
-        console.log('DEBUG DOWNLOAD:', { 
-          token: token ? 'PRESENT' : 'MISSING', 
-          backendKey, 
-          platformKey 
-        });
-
-        // Construct the full URL
-        const fullUrl = file.url.startsWith('http') 
-          ? file.url 
-          : `${fileBaseUrl}${file.url}`;
-        
         // Fetch the file with authentication headers
-        const response = await fetch(fullUrl, {
+        const response = await fetch(`/api/upload?url=${encodeURIComponent(file.url)}`, {
           method: 'GET',
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "backendKey": backendKey,
-            "platform": platformKey,
-          }
         });
         
         if (!response.ok) {

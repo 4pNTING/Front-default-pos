@@ -97,7 +97,7 @@ const TableComponent = ({
         enableSorting: false,
       }),
     ],
-    [dic],
+    [dic, props],
   );
 
   const table = useReactTable({

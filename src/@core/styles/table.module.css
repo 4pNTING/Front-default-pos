@@ -50,10 +50,10 @@
     td {
       font-size: 0.9375rem;
       line-height: 1.4667;
-      block-size: 50px;
+      block-size: 42px;
       &:not(:first-of-type):not(:last-of-type) {
-        padding-block: 0.5rem;
-        padding-inline: 1rem;
+        padding-block: 0.35rem;
+        padding-inline: 0.75rem;
       }
       &:first-of-type {
         &:not(:has(input[type='checkbox'])) {

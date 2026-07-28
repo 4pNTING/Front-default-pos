@@ -1,3 +1,6 @@
+// Next Imports
+import Image from 'next/image'
+
 // MUI Imports
 import Chip from '@mui/material/Chip'
 import Typography from '@mui/material/Typography'
@@ -32,10 +35,10 @@ const PlanDetails = ({ data, pricingPlan }: Props) => {
         />
       ) : null}
       <div className='flex justify-center'>
-        <img
-          src={data?.imgSrc}
-          height={data?.imgHeight}
-          width={data?.imgWidth}
+        <Image
+          src={data?.imgSrc || ''}
+          height={data?.imgHeight || 0}
+          width={data?.imgWidth || 0}
           alt={`${data?.title.toLowerCase().replace(' ', '-')}-img`}
         />
       </div>

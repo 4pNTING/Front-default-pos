@@ -153,3 +153,5 @@ export const DatePickerInput = React.forwardRef<HTMLInputElement, any>(
       />
     )
 );
+
+DatePickerInput.displayName = 'DatePickerInput';

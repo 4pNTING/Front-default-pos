@@ -3,7 +3,7 @@ import React from "react";
 import { IconButton, Tooltip } from "@mui/material";
 import { ZoneListProps, ZoneType } from "../../type/zoneType";
 import { useStore, useZoneMutations } from "../../store/zoneStore";
-import { ToastService } from "@/utils/toastService";
+import { CommonToastMessages, ToastService } from "@/utils/toastService";
 import { msgConfirm, msgSuccess, msgError } from "@/utils/sweetalert";
 
 interface ButtonOptionProps {
@@ -34,9 +34,9 @@ export function ButtonOption({
 
   const handleDeleteClick = async () => {
     const confirmed = await msgConfirm({
-      title: dic?.confirmDeleteTitle,
-      text: `ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການປິດໃຊ້ງານ "${currentToView.name}" ນີ້?`,
-      btnConfirmText: dic?.disabled,
+      title: dic?.confirmDeleteTitle || "ຢືນຢັນການລົບ",
+      text: dic?.confirmDeleteText || "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລົບ?",
+      btnConfirmText: dic?.confirm || "ຢືນຢັນ",
       btnCancelText: dic?.cancel,
       btnConfirmColor: "#1d5089ff",
     });
@@ -51,37 +51,18 @@ export function ButtonOption({
         },
       });
 
-      // if (loadZoneCall) {
-      //   await loadZoneAPI({
-      //     props: {
-      //       query: loadZoneCall,
-      //       dictionary: dic,
-      //     },
-      //   });
-      // }
-
-      await msgSuccess({
-        title: dic?.success,
-        text: "ປິດໃຊ້ງານ Zone ສຳເລັດແລ້ວ",
-        btnOKText: dic?.ok,
-        btnOKColor: "#1d5089ff",
-      });
+      ToastService.deleteSuccess(dic);
     } catch (error: any) {
-      await msgError({
-        title: dic?.error,
-        text: error.message,
-        btnOKText: dic?.ok,
-        btnOKColor: "#d33",
-      });
+      ToastService.actionError("ປິດໃຊ້ງານໂຊນ", error.message, dic);
     }
   };
 
   const handleRestoreClick = async () => {
     const confirmed = await msgConfirm({
       title: dic?.confirmRestoreTitle,
-      text: `ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການເປີດໃຊ້ງານ "${currentToView.name}" ນີ້?`,
+      text: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການເປີດໃຊ້ງານ?",
       btnCancelText: dic?.cancel,
-      btnConfirmText: dic?.restore,
+      btnConfirmText: dic?.confirm || "ຢືນຢັນ",
       btnConfirmColor: "#1d5089ff",
     });
 
@@ -95,28 +76,9 @@ export function ButtonOption({
         },
       });
 
-      // if (loadZoneCall) {
-      //   await loadZoneAPI({
-      //     props: {
-      //       query: loadZoneCall,
-      //       dictionary: dic,
-      //     },
-      //   });
-      // }
-
-      await msgSuccess({
-        title: dic?.success,
-        text: "ເປີດໃຊ້ງານ Zone ສຳເລັດແລ້ວ",
-        btnOKText: dic?.ok,
-        btnOKColor: "#1d5089ff",
-      });
+      ToastService.restoreSuccess(dic);
     } catch (error: any) {
-      await msgError({
-        title: dic?.error,
-        text: error.message,
-        btnOKText: dic?.ok,
-        btnOKColor: "#d33",
-      });
+      ToastService.actionError("ເປີດໃຊ້ງານໂຊນ", error.message, dic);
     }
   };
 

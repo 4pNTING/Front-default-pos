@@ -1,5 +1,8 @@
 'use client'
 
+// Next Imports
+import Image from 'next/image'
+
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -57,7 +60,7 @@ const ActivityTimeline = () => {
               </div>
               <Typography className='mbe-2'>Invoices have been paid to the company</Typography>
               <div className='flex items-center gap-2.5 is-fit rounded bg-actionHover plb-[5px] pli-2.5'>
-                <img height={20} alt='invoice.pdf' src='/images/icons/pdf-document.png' />
+                <Image height={20} width={20} alt='invoice.pdf' src='/images/icons/pdf-document.png' />
                 <Typography className='font-medium'>invoices.pdf</Typography>
               </div>
             </TimelineContent>

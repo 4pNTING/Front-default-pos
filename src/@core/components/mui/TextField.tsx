@@ -255,7 +255,7 @@ const TextFieldStyled = styled(TextField)<TextFieldProps>(({ theme }) => ({
   }
 }))
 
-const CustomTextField = forwardRef((props: TextFieldProps, ref) => {
+const CustomTextField = forwardRef(function CustomTextField(props: TextFieldProps, ref) {
   const { size = 'small', InputLabelProps, ...rest } = props
 
   return (
@@ -268,5 +268,7 @@ const CustomTextField = forwardRef((props: TextFieldProps, ref) => {
     />
   )
 })
+
+CustomTextField.displayName = 'CustomTextField'
 
 export default CustomTextField

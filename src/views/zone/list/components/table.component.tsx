@@ -23,11 +23,12 @@ import classNames from "classnames";
 import TableFetchPaginationComponent from "@/components/TableFetchPaginationComponent";
 import LineLoader from "@/components/loading/line/LineLoader";
 import { useSession } from "next-auth/react";
-import { currencyFormatInput, IRoleConfigLevel } from "@/utils/base";
+import { currencyFormatInput, IEntityStatus, IRoleConfigLevel } from "@/utils/base";
 import { ToastContainer, toast } from "react-toastify";
 import { ButtonOption } from "./btnOption";
 import { StatusBadge } from "@/utils/StatusBadge";
 import { useDragToScroll } from "@/hooks/useDragToScroll";
+import CustomChip from "@/@core/components/mui/Chip";
 
 type ListAction = ZoneType & {
   action?: string;
@@ -81,15 +82,15 @@ const TableComponent = ({
   const columns = useMemo<ColumnDef<ListAction, any>[]>(
     () => [
       columnHelper.accessor("_id", {
-        size: 5,
+        size: 8,
         header: () => (
           <div className="text-center font-bold text-[14px] text-white">#</div>
         ),
-        cell: ({ row }) => <div className="text-center">{row.index + 1}</div>,
+        cell: ({ row }) => <div className="text-center text-blue-600">{row.index + 1}</div>,
         enableSorting: false,
       }),
       columnHelper.accessor("name", {
-        size: 40,
+        size: 55,
         header: () => (
           <div className="text-center font-bold text-[14px] text-white">
             {dic.zone}
@@ -102,9 +103,33 @@ const TableComponent = ({
         ),
         sortingFn: "alphanumeric",
       }),
+      columnHelper.accessor("isActive", {
+        size: 22,
+        header: () => (
+          <div className="text-center font-bold text-[14px] text-white">
+            {dic?.status}
+          </div>
+        ),
+        cell: ({ row }) => {
+          const isActive = row.original.isActive === IEntityStatus.active;
+          return (
+            <div className="flex justify-center">
+              <CustomChip
+                size="small"
+                round="true"
+                variant="tonal"
+                label={isActive ? (dic?.active || "Active") : (dic?.inactive || "Inactive")}
+                color={isActive ? "success" : "secondary"}
+                sx={{ fontWeight: 600 }}
+              />
+            </div>
+          );
+        },
+        enableSorting: false,
+      }),
 
       columnHelper.accessor("action", {
-        size: 5,
+        size: 15,
         header: () => (
           <div className="text-center font-bold text-[16px] text-white flex justify-center pr-6">
             {dic.tableAction}
@@ -123,6 +148,7 @@ const TableComponent = ({
         enableSorting: false,
       }),
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [dic, pageIndex, pageSize],
   );
 

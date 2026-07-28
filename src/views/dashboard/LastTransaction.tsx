@@ -1,5 +1,8 @@
 'use client'
 
+// Next Imports
+import Image from 'next/image'
+
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -123,7 +126,7 @@ const LastTransaction = ({ serverMode }: { serverMode: SystemMode }) => {
                         'bg-actionHover': _mode === 'light'
                       })}
                     >
-                      <img width={30} alt={row.imgName} src={`/images/logos/${row.imgName}.png`} />
+                      <Image width={30} height={20} alt={row.imgName} src={`/images/logos/${row.imgName}.png`} />
                     </Avatar>
                     <div className='flex flex-col'>
                       <Typography color='text.primary'>{row.cardNumber}</Typography>

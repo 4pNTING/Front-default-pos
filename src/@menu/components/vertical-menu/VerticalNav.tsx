@@ -4,6 +4,9 @@
 import { useEffect, useRef } from 'react'
 import type { HTMLAttributes } from 'react'
 
+// Next Imports
+import Image from 'next/image'
+
 // Third-party Imports
 import classnames from 'classnames'
 import type { CSSObject } from '@emotion/styled'
@@ -216,10 +219,11 @@ const VerticalNav = (props: VerticalNavProps) => {
         {backgroundImage && (
           // eslint-disable-next-line lines-around-comment
           /* VerticalNav Background Image */
-          <img
+          <Image
             className={classnames(verticalNavClasses.image, styles.root)}
             src={backgroundImage}
             alt='verticalNav background'
+            fill
           />
         )}
       </StyledVerticalNavContainer>

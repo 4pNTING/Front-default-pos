@@ -1,216 +1,198 @@
-import { CategoryListProps, CategoryType } from "@/views/category/type/categoryType";
-import { IEntityStatus } from "@/utils/base";
-import { useCategoryStore, useCategoryMutations } from "@/views/category/store/categoryStore";
+import React, { useState, useEffect } from "react";
 import {
-  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
   IconButton,
-  FormControlLabel,
-  Switch,
+  Box,
+  Button,
 } from "@mui/material";
-import { useState, useRef, useEffect } from "react";
-import { msgError, msgSuccess } from "@/utils/sweetalert";
+import { CategoryListProps, CategoryType } from "@/views/category/type/categoryType";
+import {
+  useCategoryStore,
+  useCategoryMutations,
+} from "@/views/category/store/categoryStore";
 import CustomTextField from "@/@core/components/mui/TextField";
+import { msgError, msgSuccess } from "@/utils/sweetalert";
+import { ToastService } from "@/utils/toastService";
 
-const UpdateComponent = ({
+interface FormUpdateComponentProps {
+  props: CategoryListProps;
+  item?: CategoryType;
+  open: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+export default function FormUpdateComponent({
   props,
+  item,
+  open,
   onClose,
   onSuccess,
-  selectedItem
-}: {
-  props: CategoryListProps;
-  onClose?: () => void;
-  onSuccess?: () => void;
-  selectedItem: CategoryType;
-}) => {
+}: FormUpdateComponentProps) {
   const { dictionary: dic } = props;
-
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [isActive, setIsActive] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  const saveIntentRef = useRef(false);
-
+  const { updateCategoryAPI } = useCategoryStore();
   const { updateCategoryMutation } = useCategoryMutations();
-  const { setToggleUpdateComponent, updateCategoryAPI, setLoading } = useCategoryStore();
 
   useEffect(() => {
-    if (selectedItem) {
-      setName(selectedItem.name || "");
-      setDescription(selectedItem.description || "");
-      setIsActive(selectedItem.isActive === IEntityStatus.active);
+    if (item) {
+      setName(item.name || "");
+      setDescription(item.description || "");
     }
-  }, [selectedItem]);
+  }, [item]);
 
-  function closeUpdateComponent() {
-    setToggleUpdateComponent(false);
-    if (onClose) onClose();
-  }
+  const handleClose = () => {
+    setName("");
+    setDescription("");
+    setLoading(false);
+    onClose();
+  };
 
-  async function onSubmitUpdate() {
-    if (saveIntentRef.current) return;
-    saveIntentRef.current = true;
+  const handleSubmit = async () => {
+    if (!item?._id) {
+      ToastService.actionError("ແກ້ໄຂ Category", "ບໍ່ສາມາດແກ້ໄຂ Category ໄດ້", dic);
+      return;
+    }
+
     setLoading(true);
 
     try {
-      if (!name) {
-        throw new Error(dic?.pleaseFilledAllInformation);
-      }
-
       await updateCategoryAPI({
         props: {
+          _id: item._id,
           mutation: updateCategoryMutation,
-          _id: selectedItem._id || "",
-          name: name,
-          description: description,
-          isActive: isActive ? IEntityStatus.active : IEntityStatus.inactive,
+          name: name.trim(),
         },
       });
 
-      setToggleUpdateComponent(false);
-
-      await msgSuccess({
-        title: dic?.save,
-        text: name + " " + (dic?.savedSuccessfully),
-        btnOKText: dic?.ok,
-        btnOKColor: "#2F57AB",
-      });
-
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        closeUpdateComponent();
-      }
+      ToastService.updateSuccess(dic);
+      handleClose();
+      if (onSuccess) onSuccess();
     } catch (error: any) {
-      await msgError({
-        title: dic?.reject,
-        text: error?.message || dic?.reject,
-        btnOKText: dic?.ok,
-        btnOKColor: "#d33",
-      });
+      ToastService.actionError("ແກ້ໄຂ Category", error.message, dic);
     } finally {
       setLoading(false);
-      saveIntentRef.current = false;
-    }
-  }
-
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      closeUpdateComponent();
     }
   };
 
+  const isFormValid = name.trim();
+
   return (
-    <div className="fixed inset-0 z-[9999] flex justify-center items-start pt-[100px] overflow-y-auto">
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        onClick={handleBackdropClick}
-      ></div>
-
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 transform transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
-        {/* Form Header */}
-        <div
-          className="flex items-center justify-between p-4 border-b border-gray-100 rounded-t-2xl"
-          style={{ backgroundColor: "#2F57AB", color: "white" }}
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="xs"
+      fullWidth
+      disableRestoreFocus
+      disableEnforceFocus
+    >
+      {/* Modal Header */}
+      <DialogTitle
+        sx={{
+          m: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          backgroundColor: "#0A3981",
+          color: "white",
+          padding: "16px 24px",
+          fontWeight: 600,
+          fontSize: "18px",
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            color: "white",
+            fontWeight: 600,
+          }}
         >
-          <div className="flex items-center">
-            <div className="w-10 h-9 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mr-4">
-              <i className="tabler-category text-xl text-white"></i>
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">ແກ້ໄຂໝວດໝູ່</h2>
-            </div>
-          </div>
-          <IconButton onClick={closeUpdateComponent} sx={{ color: "white" }}>
-            <i className="tabler-x" />
-          </IconButton>
-        </div>
+          <i className="tabler-edit text-[20px] mr-2" />
+          {dic?.editCategory}
+        </Box>
+        <IconButton
+          onClick={handleClose}
+          sx={{
+            color: "white",
+            "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" },
+            padding: "4px",
+          }}
+        >
+          <i className="tabler-x text-[20px]" />
+        </IconButton>
+      </DialogTitle>
 
-        {/* Form Body */}
+      <DialogContent sx={{ p: 0 }}>
         <div className="p-6">
-          <div className="space-y-4">
-            <div className="bg-gradient-to-br from-blue-50/40 via-blue-25/20 to-white border border-blue-100/40 p-6 rounded-lg mb-4 shadow-sm">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="form-group">
-                  <label className="block text-l font-medium mb-2">
-                    {dic?.name} <span className="text-red-500">*</span>
-                  </label>
-                  <CustomTextField
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    fullWidth
-                    size="small"
-                    autoComplete="off"
-                    placeholder="Enter category name"
-                    InputProps={{
-                      startAdornment: (
-                        <i className="tabler-tag text-[18px] mr-1 text-gray-500" />
-                      ),
-                    }}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="block text-l font-medium mb-2">
-                    {dic?.description}
-                  </label>
-                  <CustomTextField
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    fullWidth
-                    multiline
-                    rows={3}
-                    size="small"
-                    autoComplete="off"
-                    placeholder="Enter description (optional)"
-                  />
-                </div>
-
-                <div className="form-group mt-2">
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={isActive}
-                        onChange={(e) => setIsActive(e.target.checked)}
-                        color="primary"
-                      />
-                    }
-                    label="Active Status"
-                  />
-                </div>
-              </div>
+          {/* Category Name */}
+          <div className="mb-4">
+            <div className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+              {dic?.name}
             </div>
+            <CustomTextField
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !loading && name.trim()) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
+              fullWidth
+              size="small"
+              placeholder="Enter category name"
+              disabled={loading}
+              autoFocus
+              InputProps={{
+                startAdornment: (
+                  <i className="tabler-tag text-[16px] mr-2 text-gray-500" />
+                ),
+              }}
+            />
+          </div>
+
+
+
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              onClick={handleClose}
+              variant="contained"
+              color="secondary"
+              disabled={loading}
+              size="medium"
+              className="min-w-[100px]"
+              startIcon={<i className="tabler-x text-[16px]" />}
+            >
+              {dic?.cancel}
+            </Button>
+
+            <Button
+              onClick={handleSubmit}
+              variant="contained"
+              color="warning"
+              disabled={loading || !isFormValid}
+              size="medium"
+              className="min-w-[120px] hover:bg-yellow-700"
+              startIcon={
+                loading ? (
+                  <i className="tabler-loader-2 text-[16px] animate-spin" />
+                ) : (
+                  <i className="tabler-edit text-[16px]" />
+                )
+              }
+            >
+              {loading ? "Updating..." : dic?.update}
+            </Button>
           </div>
         </div>
-
-        {/* Form Footer */}
-        <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 rounded-b-2xl">
-          <Button
-            variant="outlined"
-            color="secondary"
-            onClick={closeUpdateComponent}
-            startIcon={<i className="tabler-x" />}
-            sx={{ borderRadius: "8px", px: 3 }}
-          >
-            {dic?.cancel}
-          </Button>
-          <Button
-            variant="contained"
-            onClick={onSubmitUpdate}
-            startIcon={<i className="tabler-device-floppy" />}
-            disabled={!name}
-            sx={{
-              backgroundColor: "#2F57AB",
-              "&:hover": { backgroundColor: "#1e3a75" },
-              borderRadius: "8px",
-              px: 3,
-            }}
-          >
-            {dic?.save}
-          </Button>
-        </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
-};
-
-export default UpdateComponent;
+}

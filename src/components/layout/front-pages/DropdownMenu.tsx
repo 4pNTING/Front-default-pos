@@ -3,6 +3,7 @@ import { Fragment, useEffect, useState } from 'react'
 import type { CSSProperties, MouseEvent, ReactNode } from 'react'
 
 // Next Imports
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 
 // MUI Imports
@@ -367,7 +368,7 @@ const DropdownMenu = (props: Props) => {
         </div>
         {!isBelowLgScreen && (
           <div className='bg-backgroundDefault p-2 rounded'>
-            <img src='/images/front-pages/dropdown-image.png' width='385' alt='dropdown image' className='rounded' />
+            <Image src='/images/front-pages/dropdown-image.png' width={385} height={0} alt='dropdown image' className='rounded' />
           </div>
         )}
       </MenuWrapper>

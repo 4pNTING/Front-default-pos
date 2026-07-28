@@ -13,21 +13,17 @@ import themeConfig from "@configs/themeConfig";
 
 // Util Imports
 import { getLocalizedUrl } from "@/utils/i18n";
-import { useSession } from "next-auth/react";
+import { authOptions } from "@/libs/auth";
 
 const GuestOnlyRoute = async ({
   children,
   lang,
 }: ChildrenType & { lang: Locale }) => {
-  // const session = await getServerSession();
-  // const { data: session } = useSession();
-  // console.log(`0000der`, session);
-  // console.log(`0000der`, themeConfig.homePageUrl);
+  const session = await getServerSession(authOptions);
 
-  // return <>{children}</>;
-  // if (session) {
-  //   redirect(getLocalizedUrl(themeConfig.homePageUrl, lang));
-  // }
+  if (session) {
+    redirect(getLocalizedUrl(themeConfig.homePageUrl, lang));
+  }
 
   return <>{children}</>;
 };

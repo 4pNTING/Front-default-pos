@@ -2,6 +2,9 @@
 import { useState } from 'react'
 import type { ChangeEvent } from 'react'
 
+// Next Imports
+import Image from 'next/image'
+
 // MUI Imports
 import Typography from '@mui/material/Typography'
 import Radio from '@mui/material/Radio'
@@ -42,7 +45,7 @@ const DataBase = ({ activeStep, isLastStep, handleNext, handlePrev }: Props) => 
         <div onClick={() => setValue('firebase')} className='flex items-center justify-between cursor-pointer gap-4'>
           <div className='flex items-center gap-3'>
             <CustomAvatar skin='light' color='warning' variant='rounded' size={46}>
-              <img src='/images/logos/firebase.png' alt='firebase' height={30} width={30} />
+              <Image src='/images/logos/firebase.png' alt='firebase' height={30} width={30} />
             </CustomAvatar>
             <div className='flex flex-col gap-1'>
               <Typography color='text.primary' className='font-medium'>
@@ -56,7 +59,7 @@ const DataBase = ({ activeStep, isLastStep, handleNext, handlePrev }: Props) => 
         <div onClick={() => setValue('aws')} className='flex items-center justify-between cursor-pointer gap-4'>
           <div className='flex items-center gap-3'>
             <CustomAvatar skin='light' color='secondary' variant='rounded' size={46}>
-              <img src='/images/logos/aws.png' alt='aws' height={30} width={30} />
+              <Image src='/images/logos/aws.png' alt='aws' height={30} width={30} />
             </CustomAvatar>
             <div className='flex flex-col gap-1'>
               <Typography color='text.primary' className='font-medium'>

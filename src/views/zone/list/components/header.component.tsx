@@ -3,12 +3,13 @@ import { Breadcrumbs, Button, Typography } from "@mui/material";
 import Link from "next/link";
 import { ZoneListProps } from "../../type/zoneType";
 import { useStore } from "../../store/zoneStore";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { ToastContainer, toast } from "react-toastify";
 import { IEntityStatus, IRoleConfigLevel } from "@/utils/base";
 import CustomAutocomplete from "@/@core/components/mui/Autocomplete";
 import CustomTextField from "@/@core/components/mui/TextField";
+import { ToastService } from "@/utils/toastService";
 
 const HeaderComponent = ({
   props,
@@ -36,6 +37,20 @@ const HeaderComponent = ({
 
   const isFirstRender = useRef(true);
 
+  // funcs
+  const onSearch = useCallback(async () => {
+    try {
+      await loadZoneAPI({
+        props: {
+          query: loadZoneCall,
+          dictionary: dic,
+        },
+      });
+    } catch (error: any) {
+      ToastService.error(error.message);
+    }
+  }, [loadZoneAPI, loadZoneCall, dic]);
+
   // Handle search with debounce
   useEffect(() => {
     if (isFirstRender.current) {
@@ -49,27 +64,13 @@ const HeaderComponent = ({
       return;
     }
 
-    // รอ 500ms ก่อน search (debounce)
+    // รอ 800ms ก่อน search (debounce)
     const timer = setTimeout(() => {
       onSearch();
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [search]);
-
-  // funcs
-  async function onSearch() {
-    try {
-      await loadZoneAPI({
-        props: {
-          query: loadZoneCall,
-          dictionary: dic,
-        },
-      });
-    } catch (error) {
-      toast.error(error.message);
-    }
-  }
+  }, [search, onSearch]);
 
   function onSearchChange(value: string) {
     setPagination({
@@ -103,8 +104,8 @@ const HeaderComponent = ({
           isActive: value,
         },
       });
-    } catch (error) {
-      toast.error(error.message);
+    } catch (error: any) {
+      ToastService.error(error.message);
     }
   }
 

@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useStore } from "../store/homeStore";
 import CreateComponent from "./components/formCreate.component";
 import UpdateComponent from "./components/formUpdate.component";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { toast } from "react-toastify";
 import { LOAD_HOME } from "@/gql/queries/home";
 import { useLazyQuery } from "@apollo/client";
@@ -36,7 +36,7 @@ export const List = ({ props }: { props: HomeListProps }) => {
     fetchPolicy: "network-only",
   });
 
-  async function init() {
+  const init = useCallback(async () => {
     try {
       const promises: Promise<any>[] = [];
 
@@ -55,13 +55,13 @@ export const List = ({ props }: { props: HomeListProps }) => {
         await Promise.all(promises);
       }
     } catch (error) {}
-  }
+  }, [loadHomeAPI, loadHomeCall, dic, homeList]);
 
   useEffect(() => {
     init().then(() => {
       setRender(true);
     });
-  }, [user]);
+  }, [user, init]);
 
   useEffect(() => {
     setToggleCreateComponent(false);

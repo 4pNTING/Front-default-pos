@@ -3,18 +3,21 @@ import React from "react";
 import { IconButton, Tooltip } from "@mui/material";
 import { CustomerListProps, CustomerType } from "../../type/customerType";
 import { useStore, useCustomerMutations } from "../../store/customerStore";
-import { msgConfirm, msgSuccess, msgError } from "@/utils/sweetalert";
+import { msgConfirm } from "@/utils/sweetalert";
+import { ToastService } from "@/utils/toastService";
 import { IEntityStatus } from "@/utils/base";
 
 interface ButtonOptionProps {
   props: CustomerListProps;
   currentToView: CustomerType;
+  onEditClick?: (item: CustomerType) => void;
   loadCustomerCall?: any;
 }
 
 export function ButtonOption({
   props,
   currentToView,
+  onEditClick,
   loadCustomerCall,
 }: ButtonOptionProps) {
   const { lang, dictionary: dic } = props;
@@ -31,20 +34,19 @@ export function ButtonOption({
   const isActive = currentToView?.isActive === IEntityStatus.active;
 
   const handleEdit = () => {
-    setSelectedItem(currentToView);
-    setToggleUpdateComponent(true);
+    if (onEditClick) {
+      onEditClick(currentToView);
+    } else {
+      setSelectedItem(currentToView);
+      setToggleUpdateComponent(true);
+    }
   };
 
   const handleDeleteClick = async () => {
     const confirmed = await msgConfirm({
-      title: dic?.confirmDeleteTitle,
-      text:
-        dic?.delete +
-        " " +
-        currentToView.firstName +
-        " " +
-        currentToView.lastName,
-      btnConfirmText: dic?.confirm,
+      title: dic?.confirmDeleteTitle || "ຢືນຢັນການລົບ?",
+      text: dic?.confirmDeleteText || "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລົບ?",
+      btnConfirmText: dic?.confirm || "ຢືนຢັນ",
       btnCancelText: dic?.cancel,
       btnConfirmColor: "#1d5089ff",
     });
@@ -59,33 +61,18 @@ export function ButtonOption({
         },
       });
 
-      await msgSuccess({
-        title: dic?.success,
-        text: dic?.deleted,
-        btnOKText: dic?.ok,
-        btnOKColor: "#1d5089ff",
-      });
+      ToastService.deleteSuccess(dic);
     } catch (error: any) {
-      await msgError({
-        title: dic?.error,
-        text: error.message,
-        btnOKText: dic?.ok,
-        btnOKColor: "#d33",
-      });
+      ToastService.actionError("ປິດໃຊ້ງານ Customer", error.message, dic);
     }
   };
 
   const handleRestoreClick = async () => {
     const confirmed = await msgConfirm({
       title: dic?.confirmRestoreTitle,
-      text:
-        dic?.restore +
-        " " +
-        currentToView.firstName +
-        " " +
-        currentToView.lastName,
+      text: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການເປີດໃຊ້ງານ?",
       btnCancelText: dic?.cancel,
-      btnConfirmText: dic?.restore,
+      btnConfirmText: dic?.confirm || "ຢືນຢັນ",
       btnConfirmColor: "#1d5089ff",
     });
 
@@ -99,19 +86,9 @@ export function ButtonOption({
         },
       });
 
-      await msgSuccess({
-        title: dic?.success,
-        text: dic?.restore + "ລູກຄ້າສຳເລັດແລ້ວ",
-        btnOKText: dic?.ok,
-        btnOKColor: "#1d5089ff",
-      });
+      ToastService.restoreSuccess(dic);
     } catch (error: any) {
-      await msgError({
-        title: dic?.error,
-        text: error.message,
-        btnOKText: dic?.ok,
-        btnOKColor: "#d33",
-      });
+      ToastService.actionError("ເປີດໃຊ້ງານ Customer", error.message, dic);
     }
   };
 

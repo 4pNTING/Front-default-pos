@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { msgError, msgSuccess, msgConfirm } from "@/utils/sweetalert";
+import { ToastService } from "@/utils/toastService";
 import { IRoleConfigLevel, ILeasingFileType } from "@/utils/base";
 import CustomTextField from "@/@core/components/mui/TextField";
 import { toast } from "react-toastify";
@@ -87,7 +88,7 @@ const UpdateComponent = ({ props, selectedItem, onClose, onSuccess }) => {
     loadVillageList();
     loadGenderList();
     loadNationList();
-  }, []);
+  }, [loadProvinceList, loadDistrictList, loadVillageList, loadGenderList, loadNationList]);
 
   useEffect(() => {
     if (
@@ -119,8 +120,10 @@ const UpdateComponent = ({ props, selectedItem, onClose, onSuccess }) => {
 
       if (
         selectedItem.contact &&
-        selectedItem.contact.firstName &&
-        selectedItem.contact.lastName
+        (selectedItem.contact.firstName ||
+          selectedItem.contact.lastName ||
+          selectedItem.contact.phoneNumber ||
+          selectedItem.contact._id)
       ) {
         setCustomerType("2");
         setContactId(selectedItem.contact._id);
@@ -221,6 +224,7 @@ const UpdateComponent = ({ props, selectedItem, onClose, onSuccess }) => {
       const updatePayload = {
         props: {
           mutation: updateCustomerMutation,
+          dictionary: dic,
           _id: selectedItem._id,
           firstName: firstName,
           lastName: lastName,
@@ -231,8 +235,9 @@ const UpdateComponent = ({ props, selectedItem, onClose, onSuccess }) => {
           district: districtName,
           village: villageName,
           customerFile: customerFile,
+          deleteContact: customerType === "1",
           contact:
-            customerType === "2" && ContactFirstName && ContactLastName
+            customerType === "2" && (ContactFirstName || ContactLastName || ContactPhone)
               ? {
                   firstName: ContactFirstName,
                   lastName: ContactLastName,
@@ -247,17 +252,7 @@ const UpdateComponent = ({ props, selectedItem, onClose, onSuccess }) => {
 
       await updateCustomerAPI(updatePayload);
 
-      await msgSuccess({
-        title: dic?.save || "ແກ້ໄຂລູກຄ້າ",
-        text:
-          firstName +
-          " " +
-          lastName +
-          " " +
-          (dic?.savedSuccessfully || "ແກ້ໄຂລູກຄ້າສຳເລັດແລ້ວ"),
-        btnOKText: dic?.ok || "ຕົກລົງ",
-        btnOKColor: "#2F57AB",
-      });
+      ToastService.updateSuccess(dic);
 
       // Clear form and close modal after success message
       clearForm();
@@ -271,12 +266,7 @@ const UpdateComponent = ({ props, selectedItem, onClose, onSuccess }) => {
         closeUpdateComponent();
       }
     } catch (error: any) {
-      await msgError({
-        title: dic?.reject || "ແກ້ໄຂລູກຄ້າ",
-        text: error?.message || dic?.reject || "ແກ້ໄຂລູກຄ້າບໍ່ສຳເລັດແລ້ວ",
-        btnOKText: dic?.ok || "ຕົກລົງ",
-        btnOKColor: "#d33",
-      });
+      ToastService.actionError("ແກ້ໄຂລູກຄ້າ", error?.message, dic);
     } finally {
       setLoading(false);
       saveIntentRef.current = false;

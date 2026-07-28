@@ -41,11 +41,13 @@ const Avatar = styled(MuiAvatar)<CustomAvatarProps>(({ skin, color, size, theme 
   }
 })
 
-const CustomAvatar = forwardRef<HTMLDivElement, CustomAvatarProps>((props: CustomAvatarProps, ref) => {
+const CustomAvatar = forwardRef<HTMLDivElement, CustomAvatarProps>(function CustomAvatar(props: CustomAvatarProps, ref) {
   // Props
   const { color, skin = 'filled', ...rest } = props
 
   return <Avatar color={color} skin={skin} ref={ref} {...rest} />
 })
+
+CustomAvatar.displayName = 'CustomAvatar'
 
 export default CustomAvatar

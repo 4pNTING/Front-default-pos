@@ -38,6 +38,8 @@ import {
   createSortingChangeHandler,
 } from "@/utils/sortUtils";
 import { formatDateLocalUse } from "@/utils/dateTimeFormatter";
+import { IEntityStatus } from "@/utils/base";
+import CustomChip from "@/@core/components/mui/Chip";
 
 type ListAction = CategoryType & {
   action?: string;
@@ -55,6 +57,7 @@ const columnHelper = createColumnHelper<ListAction>();
 
 interface CategoryTableComponentProps {
   props: CategoryListProps;
+  onEditClick?: (item: CategoryType) => void;
   globalFilter?: string;
   onGlobalFilterChange?: Dispatch<SetStateAction<string>>;
   loadCategoryCall?: any;
@@ -62,6 +65,7 @@ interface CategoryTableComponentProps {
 
 const TableComponent = ({
   props,
+  onEditClick,
   globalFilter,
   onGlobalFilterChange,
   loadCategoryCall,
@@ -99,6 +103,7 @@ const TableComponent = ({
     initializeSortingState(sortField, sortOrder, columnToSortFieldMap),
   );
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleSortingChange = useCallback(
     createSortingChangeHandler({
       columnToSortFieldMap,
@@ -120,104 +125,77 @@ const TableComponent = ({
   const columns = useMemo<ColumnDef<ListAction, any>[]>(
     () => [
       columnHelper.accessor("_id", {
+        size: 8,
         header: () => (
-          <div className="text-center font-bold text-[16px]">#</div>
+          <div className="text-center font-bold text-[14px] text-white">#</div>
         ),
         cell: ({ row }) => (
-          <div className="text-l text-center text-blue-600 ">
+          <div className="text-center font-medium text-blue-600 text-[15px]">
             {row.index + 1}
           </div>
         ),
-        size: 50,
         enableSorting: false,
       }),
       columnHelper.accessor("name", {
+        size: 55,
         header: () => (
-          <div className="flex justify-center items-center mx-auto w-full">
-            <span className="font-bold text-[16px]">{dic?.name}</span>
+          <div className="text-center font-bold text-[14px] text-white">
+            {dic?.name}
           </div>
         ),
         cell: ({ row }) => (
-          <div className="text-left pl-4">
-            <div className="font-medium text-l">
-              {row.original.name}
-            </div>
+          <div className="text-center font-medium">
+            {row.original.name}
           </div>
         ),
-        size: 150,
-        sortingFn: "text",
+        sortingFn: "alphanumeric",
       }),
-      columnHelper.accessor("description", {
-        header: () => (
-          <div className="flex justify-center items-center mx-auto w-full">
-            <span className="font-bold text-[16px]">{dic?.description}</span>
-          </div>
-        ),
-        cell: ({ row }) => (
-          <div className="text-left pl-4">
-            <div className="font-medium text-l text-gray-600">
-              {row.original.description || "-"}
-            </div>
-          </div>
-        ),
-        size: 200,
-        sortingFn: "text",
-      }),
+
       columnHelper.accessor("isActive", {
+        size: 22,
         header: () => (
-          <div className="text-center font-bold text-[16px]">
+          <div className="text-center font-bold text-[14px] text-white">
             {dic?.status}
           </div>
         ),
-        cell: ({ row }) => (
-          <div className="flex justify-center">
-             <Typography
-                color={row.original.isActive ? "success.main" : "error.main"}
-                sx={{ fontWeight: 500 }}
-              >
-                {row.original.isActive ? dic?.active : dic?.inactive}
-              </Typography>
-          </div>
-        ),
-        size: 100,
+        cell: ({ row }) => {
+          const isActive = row.original.isActive === IEntityStatus.active;
+          return (
+            <div className="flex justify-center">
+              <CustomChip
+                size="small"
+                round="true"
+                variant="tonal"
+                label={isActive ? (dic?.active || "Active") : (dic?.inactive || "Inactive")}
+                color={isActive ? "success" : "secondary"}
+                sx={{ fontWeight: 600 }}
+              />
+            </div>
+          );
+        },
         enableSorting: false,
       }),
-      columnHelper.accessor("createdAt", {
-        header: () => (
-          <div className="flex justify-center items-center mx-auto w-full">
-            <span className="font-bold text-[16px]">{dic?.createdAt}</span>
-          </div>
-        ),
-        cell: ({ row }) => (
-          <div className="text-center">
-            <div className="font-medium text-l text-gray-600">
-              {formatDateLocalUse(row.original.createdAt || "")}
-            </div>
-          </div>
-        ),
-        size: 120,
-        sortingFn: "text",
-      }),
       columnHelper.accessor("action", {
+        size: 8,
         header: () => (
-          <div className="text-center font-bold text-[16px]">
-            {dic?.action}
+          <div className="text-center font-bold text-[16px] text-white flex justify-center pr-6">
+            {dic?.tableAction || dic?.action}
           </div>
         ),
         cell: ({ row }) => (
-          <div className="flex justify-center">
+          <div className="flex justify-center pr-6">
             <ButtonOption
               props={props}
               currentToView={row.original}
+              onEditClick={onEditClick}
               loadCategoryCall={loadCategoryCall}
             />
           </div>
         ),
-        size: 100,
         enableSorting: false,
       }),
     ],
-    [dic, props, loadCategoryCall],
+    [dic, props, onEditClick, loadCategoryCall],
   );
 
   const table = useReactTable({

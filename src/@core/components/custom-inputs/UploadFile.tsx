@@ -5,7 +5,6 @@ import {
   validateFile,
   getFileUploadType,
 } from "@/utils/fileUploadService";
-import { useSession } from "next-auth/react";
 
 export interface UploadFileProps {
   title?: string;
@@ -41,7 +40,6 @@ const UploadFile: React.FC<UploadFileProps> = ({
   autoUpload = true,
   generateDownloadFileName,
 }) => {
-  const { data: session } = useSession();
   const [uploading, setUploading] = useState(false);
 
   const handleFilesChange = async (newFiles: AttachedFile[]) => {
@@ -73,30 +71,11 @@ const UploadFile: React.FC<UploadFileProps> = ({
 
       setUploading(true);
 
-      console.log("DEBUG UPLOAD:", {
-        token: session?.authorization ? "PRESENT" : "MISSING",
-        backendKey: process.env.NEXT_PUBLIC_UPLOAD_BACKEND_KEY,
-        platformKey: process.env.NEXT_PUBLIC_UPLOAD_PLATFORM_KEY,
-      });
-
       try {
         const fileUrl = await uploadFile({
           file: newFile.file,
           ownerId,
           ownerType,
-          token: session?.authorization!,
-          backendKey: process.env.NEXT_PUBLIC_UPLOAD_BACKEND_KEY!,
-          platformKey: process.env.NEXT_PUBLIC_UPLOAD_PLATFORM_KEY!,
-          uploadType: getFileUploadType(newFile.file),
-        });
-
-        console.log("DEBUG UPLOAD: 111", {
-          file: newFile.file,
-          ownerId,
-          ownerType,
-          token: session?.authorization!,
-          backendKey: process.env.NEXT_PUBLIC_UPLOAD_BACKEND_KEY!,
-          platformKey: process.env.NEXT_PUBLIC_UPLOAD_PLATFORM_KEY!,
           uploadType: getFileUploadType(newFile.file),
         });
 
@@ -123,8 +102,6 @@ const UploadFile: React.FC<UploadFileProps> = ({
       }
     } else {
       // Manual upload mode or file already uploaded
-      // console.log('DEBUG UploadFile - Manual mode:', { newFile, autoUpload, hasFileObject: !!newFile.file, hasUrl: !!newFile.url });
-
       const finalName = generateDownloadFileName
         ? generateDownloadFileName(newFile)
         : newFile.name;
@@ -133,7 +110,6 @@ const UploadFile: React.FC<UploadFileProps> = ({
         ...newFile,
         name: finalName || newFile.name,
       };
-      // console.log('DEBUG UploadFile - Calling onFileChange with:', fileWithName);
       onFileChange(fileWithName);
     }
   };

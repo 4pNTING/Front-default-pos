@@ -37,7 +37,7 @@ import menuSectionStyles from "@core/styles/vertical/menuSectionStyles";
 import { useRoleStore } from "@/views/role/store/roleStore";
 
 // React/NextAuth
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useSession, signOut } from "next-auth/react";
 
 // Loader
@@ -61,119 +61,7 @@ interface TempRoleMenu {
 // Alias the temporary type to RoleMenu to satisfy the component's internal logic
 type RoleMenu = TempRoleMenu;
 
-// Import Enums
-import { IUserLevel, IUserPermissionFeature } from "@/utils/base";
 
-// ====================================================================================
-// ROLE-BASED FEATURE MAPPING
-// Maps level (role) to the features they can access
-// ====================================================================================
-const roleFeatureMap: Record<string, string[]> = {
-  [IUserLevel.saleOfficer]: [
-    IUserPermissionFeature.leasingIndex,
-    IUserPermissionFeature.customer,
-    IUserPermissionFeature.roomArea,
-    IUserPermissionFeature.roomAreaCategory,
-    IUserPermissionFeature.shopCategory,
-    IUserPermissionFeature.zone,
-    IUserPermissionFeature.leasingExpired,
-    IUserPermissionFeature.salesReport,
-  ],
-  [IUserLevel.saleManager]: [
-    IUserPermissionFeature.leasingIndex,
-    IUserPermissionFeature.customer,
-    IUserPermissionFeature.roomArea,
-    IUserPermissionFeature.roomAreaCategory,
-    IUserPermissionFeature.shopCategory,
-    IUserPermissionFeature.zone,
-    IUserPermissionFeature.leasingExpired,
-    // IUserPermissionFeature.salesReport,
-  ],
-  [IUserLevel.buildingOfficer]: [
-    IUserPermissionFeature.electric,
-    IUserPermissionFeature.leasingElectric,
-    IUserPermissionFeature.leasingWater,
-    IUserPermissionFeature.water,
-    IUserPermissionFeature.leasingEWInvoice,
-    IUserPermissionFeature.leasingExpired,
-  ],
-  [IUserLevel.buildingManager]: [
-    IUserPermissionFeature.electric,
-    IUserPermissionFeature.leasingElectric,
-    IUserPermissionFeature.leasingWater,
-    IUserPermissionFeature.water,
-    IUserPermissionFeature.leasingEWInvoice,
-    IUserPermissionFeature.leasingExpired,
-  ],
-  [IUserLevel.collectionOfficer]: [
-    IUserPermissionFeature.leasingEWInvoice,
-    IUserPermissionFeature.leasingExpired,
-  ],
-  [IUserLevel.collectionManager]: [
-    IUserPermissionFeature.leasingEWInvoice,
-    IUserPermissionFeature.leasingExpired,
-  ],
-  [IUserLevel.admin]: Object.values(IUserPermissionFeature), // Admin sees all features
-  [IUserLevel.user]: Object.values(IUserPermissionFeature), // Default user sees all features during testing
-};
-
-const hasPermission = (item: RoleMenu, permissions: any[], level?: string) => {
-  if (!item.feature) return true; // Always allow if no feature tag (e.g. Logout, generic containers)
-
-  // If level has a specific mapping, use that instead of permissions
-  if (level && roleFeatureMap[level]) {
-    return roleFeatureMap[level].includes(item.feature);
-  }
-
-  // Fallback to permission-based check
-  return permissions?.some(
-    (p) => p.feature === item.feature && p.action?.includes("r"),
-  );
-};
-
-const filterMenus = (
-  menus: RoleMenu[],
-  permissions: any[],
-  level?: string,
-): RoleMenu[] => {
-  if (!menus) return menus;
-
-  return menus.reduce((acc: RoleMenu[], item) => {
-    // 1. Check parent permission
-    const isParentAllowed = hasPermission(item, permissions, level);
-
-    // DEBUG LOG
-    if (
-      item?.enMenu?.includes("oduct") ||
-      item?.laMenu?.includes("oduct") ||
-      item?.enMenu?.includes("Shop") ||
-      item?.feature?.includes("shop")
-    ) {
-      // console.log(
-      //   `Checking menu: ${item.enMenu}, Feature: ${item.feature}, level: ${level}, Allowed: ${isParentAllowed}`,
-      // );
-    }
-
-    if (!isParentAllowed) return acc;
-
-    // 2. Process subMenu
-    let newItem = { ...item };
-    if (newItem.subMenu && newItem.subMenu.length > 0) {
-      newItem.subMenu = filterMenus(newItem.subMenu, permissions, level);
-
-      // 3. If parent has no href (is just a group) and no children left, hide it
-      const hasHref = newItem.href && newItem.href.trim() !== "";
-      if (!hasHref && newItem.subMenu.length === 0) {
-        return acc;
-      }
-    }
-
-    acc.push(newItem);
-    return acc;
-  }, []);
-};
-// ====================================================================================
-// ====================================================================================
 
 type RenderExpandIconProps = {
   open?: boolean;
@@ -255,13 +143,9 @@ const VerticalMenu = ({ dictionary, scrollMenu, lang }: Props) => {
     updateSettings({ mode: checked ? "dark" : "light" });
   };
 
-  const userPermissions = (session?.data?.user as any)?.permission || [];
-  const userLevel = (session?.data?.user as any)?.level;
-
   const filteredMenus = React.useMemo(() => {
-    if (!role?.menus) return [];
-    return filterMenus(role.menus, userPermissions, userLevel);
-  }, [role?.menus, userPermissions, userLevel]);
+    return role?.menus || [];
+  }, [role?.menus]);
 
   const handleUserLogout = async () => {
     try {

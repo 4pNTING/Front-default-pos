@@ -10,7 +10,7 @@ import {
 } from "@mui/material";
 import { ZoneListProps, ZoneType } from "../../type/zoneType";
 import { useStore, useZoneMutations } from "../../store/zoneStore";
-import { ToastService } from "@/utils/toastService";
+import { CommonToastMessages, ToastService } from "@/utils/toastService";
 import CustomTextField from "@/@core/components/mui/TextField";
 import { msgError, msgSuccess } from "@/utils/sweetalert";
 
@@ -71,21 +71,11 @@ export default function FormUpdateComponent({
         },
       });
 
-      await msgSuccess({
-        title: dic?.success,
-        text: "ແກ້ໄຂ Zone ສຳເລັດແລ້ວ",
-        btnOKText: dic?.ok,
-        btnOKColor: "#1d5089ff",
-      });
+      ToastService.updateSuccess(dic);
       handleClose();
       if (onSuccess) onSuccess();
     } catch (error: any) {
-      await msgError({
-        title: dic?.error,
-        text: error.message,
-        btnOKText: dic?.ok,
-        btnOKColor: "#d33",
-      });
+      ToastService.actionError("ແກ້ໄຂໂຊນ", error.message, dic);
     } finally {
       setLoading(false);
     }

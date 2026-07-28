@@ -285,8 +285,12 @@ export const useStore = create<IState>((set, get) => ({
             file: customerFile.file,
             ownerId,
             ownerType: ILeasingFileType.mmsCustomer,
+            dic: props.dictionary,
           });
-          fileUrl = uploadedUrl || undefined;
+          if (!uploadedUrl) {
+            throw new Error(props.dictionary?.uploadFileFailedCannotSave || props.dictionary?.uploadError);
+          }
+          fileUrl = uploadedUrl;
         } else if (customerFile.url) {
           fileUrl = customerFile.url;
         }
@@ -344,13 +348,17 @@ export const useStore = create<IState>((set, get) => ({
 
       if (customerFile) {
         if (customerFile.file) {
-          const ownerId = `temp-${Date.now()}`;
+          const ownerId = props._id;
           const uploadedUrl = await uploadOwnerFile({
             file: customerFile.file,
             ownerId,
             ownerType: ILeasingFileType.mmsCustomer,
+            dic: props.dictionary,
           });
-          fileUrl = uploadedUrl || undefined;
+          if (!uploadedUrl) {
+            throw new Error(props.dictionary?.uploadFileFailedCannotSave || props.dictionary?.uploadError );
+          }
+          fileUrl = uploadedUrl;
         } else if (customerFile.url) {
           fileUrl = customerFile.url;
         } else {
@@ -375,6 +383,9 @@ export const useStore = create<IState>((set, get) => ({
       if (typeof fileUrl !== "undefined") {
         input.fileUrl = fileUrl;
       }
+      if (typeof props.deleteContact !== "undefined") {
+        input.deleteContact = props.deleteContact;
+      }
       if (props.contact) {
         const contact = props.contact;
         input.contact = {
@@ -385,9 +396,6 @@ export const useStore = create<IState>((set, get) => ({
           district: contact.district,
           village: contact.village,
         };
-        input.deleteContact = false;
-      } else if (props.contact === null) {
-        input.deleteContact = true;
       }
 
       const { data } = await props.mutation({
@@ -395,8 +403,9 @@ export const useStore = create<IState>((set, get) => ({
       });
 
       if (data?.updateCustomer?.customer) {
-        set(() => ({
-          customerList: customerList.map((item) =>
+        set((state) => ({
+          selectedItem: data.updateCustomer.customer,
+          customerList: state.customerList.map((item) =>
             item._id === props._id ? data.updateCustomer.customer : item
           ),
         }));

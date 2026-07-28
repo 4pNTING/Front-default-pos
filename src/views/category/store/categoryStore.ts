@@ -186,7 +186,11 @@ export const useCategoryStore = create<IState>((set, get) => ({
 
       if (result.data?.loadCategory) {
         const categories = result.data.loadCategory.category || [];
-        const totalCount = result.data.loadCategory.count || 0;
+        const totalCount =
+          result.data.loadCategory.count !== undefined &&
+          result.data.loadCategory.count !== null
+            ? result.data.loadCategory.count
+            : categories.length;
 
         set(() => ({
           categoryList: categories,

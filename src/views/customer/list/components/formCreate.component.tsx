@@ -15,7 +15,8 @@ import {
 } from "@mui/material";
 import { useEffect, useMemo, useState, useRef } from "react";
 import { msgError, msgSuccess, msgConfirm } from "@/utils/sweetalert";
-import { IRoleConfigLevel, ILeasingFileType } from "@/utils/base";
+import { ToastService } from "@/utils/toastService";
+import { ILeasingFileType } from "@/utils/base";
 import CustomTextField from "@/@core/components/mui/TextField";
 import { toast } from "react-toastify";
 import { useLazyQuery, useMutation } from "@apollo/client";
@@ -93,7 +94,7 @@ const CreateComponent = ({
     loadVillageList();
     loadGenderList();
     loadNationList();
-  }, []);
+  }, [loadProvinceList, loadDistrictList, loadVillageList, loadGenderList, loadNationList]);
 
   useEffect(() => {
     setDistrictId("");
@@ -149,15 +150,16 @@ const CreateComponent = ({
 
       const contactProvinceName = provinceList.find(
         (p) => p._id === ContactProvinceId,
-      )?.name;
+      )?.laName;
       const contactDistrictName = districtList.find(
         (d) => d._id === ContactDistrictId,
-      )?.name;
+      )?.laName;
       const contactVillageName = ContactVillage;
 
       await createCustomerAPI({
         props: {
           mutation: createCustomerMutation,
+          dictionary: dic,
           firstName: firstName,
           lastName: lastName,
           phoneNumber: phone,
@@ -168,7 +170,7 @@ const CreateComponent = ({
           village: villageName,
           customerFile: customerFile,
           contact:
-            customerType === "2" && ContactFirstName && ContactLastName
+            customerType === "2" && (ContactFirstName || ContactLastName || ContactPhone)
               ? {
                   firstName: ContactFirstName,
                   lastName: ContactLastName,
@@ -184,12 +186,7 @@ const CreateComponent = ({
       clearForm();
       setToggleCreateComponent(false);
 
-      await msgSuccess({
-        title: dic?.save || "",
-        text: firstName + " " + lastName + " " + (dic?.savedSuccessfully || ""),
-        btnOKText: dic?.ok || "",
-        btnOKColor: "#2F57AB",
-      });
+      ToastService.createSuccess(dic);
 
       if (onSuccess) {
         onSuccess();
@@ -197,12 +194,7 @@ const CreateComponent = ({
         closeCreateComponent();
       }
     } catch (error: any) {
-      await msgError({
-        title: dic?.reject || "",
-        text: error?.message || dic?.reject || "",
-        btnOKText: dic?.ok || "",
-        btnOKColor: "#d33",
-      });
+      ToastService.actionError("ເພີ່ມ Customer", error?.message, dic);
     } finally {
       setLoading(false);
       saveIntentRef.current = false;

@@ -4,6 +4,9 @@
 import { useState } from 'react'
 import type { ChangeEvent } from 'react'
 
+// Next Imports
+import Image from 'next/image'
+
 // MUI Imports
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
@@ -101,7 +104,7 @@ const AppDialog = (handleAuthDialogClose: () => void) => {
           </Typography>
         </div>
         <div className='flex justify-center'>
-          <img alt='qr-code' height={150} width={150} src='/images/misc/barcode.png' />
+          <Image alt='qr-code' height={150} width={150} src='/images/misc/barcode.png' />
         </div>
         <div className='flex flex-col gap-4'>
           <Alert severity='warning' icon={false}>

@@ -2,24 +2,18 @@ import { Breadcrumbs, Button } from "@mui/material";
 import Link from "next/link";
 import { CategoryListProps } from "../../type/categoryType";
 import { useCategoryStore } from "../../store/categoryStore";
-import { toast } from "react-toastify";
-import CustomTextField from "@/@core/components/mui/TextField";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { ToastService } from "@/utils/toastService";
 import { IEntityStatus } from "@/utils/base";
 import CustomAutocomplete from "@/@core/components/mui/Autocomplete";
-import { useEffect } from "react";
+import CustomTextField from "@/@core/components/mui/TextField";
 
 const HeaderComponent = ({
   props,
-  globalFilter,
-  setGlobalFilter,
-  onGlobalFilterChange,
   loadCategoryCall,
 }: {
   props: CategoryListProps;
-  globalFilter: string;
-  setGlobalFilter: (value: string) => void;
-  onGlobalFilterChange?: (value: string) => void;
-  loadCategoryCall?: any;
+  loadCategoryCall: any;
 }) => {
   const { lang, dictionary: dic } = props;
 
@@ -27,15 +21,37 @@ const HeaderComponent = ({
     loading,
     setPagination,
     loadCategoryAPI,
-    isActive,
+    pageIndex,
     pageSize,
     keyword,
+    isActive,
     setToggleCreateComponent,
   } = useCategoryStore();
 
-  // Handle search with debounce (Sync logic from Zone)
+  const isFirstRender = useRef(true);
+
+  // funcs
+  const onSearch = useCallback(async () => {
+    try {
+      await loadCategoryAPI({
+        props: {
+          query: loadCategoryCall,
+          dictionary: dic,
+        },
+      });
+    } catch (error: any) {
+      ToastService.error(error.message);
+    }
+  }, [loadCategoryAPI, loadCategoryCall, dic]);
+
+  // Handle search with debounce
   useEffect(() => {
-    if (!globalFilter || globalFilter.length === 0) {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
+    if (!keyword || keyword.length === 0) {
       onSearch();
       return;
     }
@@ -45,28 +61,9 @@ const HeaderComponent = ({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [globalFilter]);
-
-  async function onSearch() {
-    try {
-      await loadCategoryAPI({
-        props: {
-          query: loadCategoryCall,
-          dictionary: dic,
-        },
-      });
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  }
+  }, [keyword, onSearch]);
 
   function onSearchChange(value: string) {
-    if (onGlobalFilterChange) {
-      onGlobalFilterChange(value);
-    } else {
-      setGlobalFilter(value);
-    }
-    // Simple Style: Pass all 4 fields
     setPagination({
       pageIndex: 0,
       pageSize: pageSize,
@@ -79,7 +76,6 @@ const HeaderComponent = ({
 
   async function onSelectStatus(value: string) {
     try {
-      // Simple Style: Pass all 4 fields
       setPagination({
         pageIndex: 0,
         pageSize: pageSize,
@@ -96,7 +92,7 @@ const HeaderComponent = ({
         },
       });
     } catch (error: any) {
-      toast.error(error.message);
+      ToastService.error(error.message);
     }
   }
 
@@ -126,7 +122,7 @@ const HeaderComponent = ({
                   className="text-[#41669D] hover:underline hover:underline-offset-1 font-bold"
                   href="/category"
                 >
-                  {dic.pageBreadcrumbs?.categoryPage}
+                  {dic.pageBreadcrumbs?.categoryPage || dic?.category}
                 </Link>
               </Breadcrumbs>
             </div>
@@ -141,7 +137,6 @@ const HeaderComponent = ({
                 <CustomAutocomplete
                   sx={{ width: "100%" }}
                   options={[
-                    { label: dic["all"], value: IEntityStatus.all },
                     { label: dic["active"], value: IEntityStatus.active },
                     { label: dic["inactive"], value: IEntityStatus.inactive },
                   ]}
@@ -181,7 +176,7 @@ const HeaderComponent = ({
               <div className="flex-1 max-w-[400px]">
                 <CustomTextField
                   placeholder={dic.placeHolder?.search}
-                  value={globalFilter ?? ""}
+                  value={keyword ?? ""}
                   onChange={(e) => onSearchChange(e.target.value)}
                   InputProps={{
                     startAdornment: (
@@ -210,7 +205,7 @@ const HeaderComponent = ({
                 }}
                 startIcon={<i className="tabler-circle-plus text-[20px]"></i>}
               >
-                {dic?.addNew}
+                {dic?.createCategory}
               </Button>
             </div>
           </div>

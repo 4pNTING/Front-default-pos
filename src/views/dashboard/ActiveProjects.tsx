@@ -1,3 +1,6 @@
+// Next Imports
+import Image from 'next/image'
+
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -75,7 +78,7 @@ const ActiveProjects = () => {
       <CardContent className='flex flex-col gap-4'>
         {data.map((item, index) => (
           <div key={index} className='flex items-center gap-4'>
-            <img src={item.imgSrc} alt={item.title} width={32} />
+            <Image src={item.imgSrc} alt={item.title} width={32} height={32} />
             <div className='flex flex-wrap justify-between items-center gap-x-4 gap-y-1 is-full'>
               <div className='flex flex-col'>
                 <Typography className='font-medium' color='text.primary'>

@@ -1,15 +1,20 @@
+import { useState } from "react";
 import { CategoryListProps } from "@/views/category/type/categoryType";
-import { IEntityStatus } from "@/utils/base";
-import { useCategoryStore, useCategoryMutations } from "@/views/category/store/categoryStore";
+import {
+  useCategoryStore,
+  useCategoryMutations,
+} from "@/views/category/store/categoryStore";
 import {
   Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Box,
   IconButton,
-  FormControlLabel,
-  Switch,
 } from "@mui/material";
-import { useState, useRef } from "react";
 import { msgError, msgSuccess } from "@/utils/sweetalert";
 import CustomTextField from "@/@core/components/mui/TextField";
+import { ToastService } from "@/utils/toastService";
 
 const CreateComponent = ({
   props,
@@ -24,12 +29,15 @@ const CreateComponent = ({
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [isActive, setIsActive] = useState(true);
-
-  const saveIntentRef = useRef(false);
 
   const { createCategoryMutation } = useCategoryMutations();
-  const { setToggleCreateComponent, createCategoryAPI, setLoading } = useCategoryStore();
+  const {
+    toggleCreateComponent,
+    setToggleCreateComponent,
+    createCategoryAPI,
+    loading,
+    setLoading,
+  } = useCategoryStore();
 
   function closeCreateComponent() {
     setToggleCreateComponent(false);
@@ -40,171 +48,150 @@ const CreateComponent = ({
   function clearForm() {
     setName("");
     setDescription("");
-    setIsActive(true);
   }
 
   async function onSubmitCreate() {
-    if (saveIntentRef.current) return;
-    saveIntentRef.current = true;
-    setLoading(true);
-
     try {
-      if (!name) {
-        throw new Error(dic?.pleaseFilledAllInformation);
+      if (!name.trim()) {
+        ToastService.formInvalid(dic);
+        return;
       }
 
       await createCategoryAPI({
         props: {
           mutation: createCategoryMutation,
-          name: name
+          name: name.trim(),
         },
       });
 
       clearForm();
-      setToggleCreateComponent(false);
+      closeCreateComponent();
 
-      await msgSuccess({
-        title: dic?.save,
-        text: name + " " + (dic?.savedSuccessfully),
-        btnOKText: dic?.ok,
-        btnOKColor: "#2F57AB",
-      });
+      ToastService.createSuccess(dic);
 
       if (onSuccess) {
         onSuccess();
-      } else {
-        closeCreateComponent();
       }
     } catch (error: any) {
-      await msgError({
-        title: dic?.reject,
-        text: error?.message || dic?.reject,
-        btnOKText: dic?.ok,
-        btnOKColor: "#d33",
-      });
-    } finally {
-      setLoading(false);
-      saveIntentRef.current = false;
+      ToastService.actionError("ເພີ່ມ Category", error?.message, dic);
     }
   }
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      closeCreateComponent();
-    }
-  };
-
   return (
-    <div className="fixed inset-0 z-[9999] flex justify-center items-start pt-[100px] overflow-y-auto">
-      <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        onClick={handleBackdropClick}
-      ></div>
-
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl mx-4 transform transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
-        {/* Form Header */}
-        <div
-          className="flex items-center justify-between p-4 border-b border-gray-100 rounded-t-2xl"
-          style={{ backgroundColor: "#2F57AB", color: "white" }}
+    <Dialog
+      open={toggleCreateComponent}
+      onClose={closeCreateComponent}
+      maxWidth="xs"
+      fullWidth
+      disableRestoreFocus
+      disableEnforceFocus
+      PaperProps={{
+        sx: { borderRadius: "12px", overflow: "hidden" },
+      }}
+    >
+      {/* Modal Header */}
+      <DialogTitle
+        sx={{
+          m: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          backgroundColor: "#0A3981",
+          color: "white",
+          padding: "16px 24px",
+          fontWeight: 600,
+          fontSize: "18px",
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <i className="tabler-circle-plus text-[20px]"></i>
+          {dic?.createCategory}
+        </Box>
+        <IconButton
+          onClick={closeCreateComponent}
+          sx={{
+            color: "white",
+            "&:hover": { backgroundColor: "rgba(255, 255, 255, 0.1)" },
+            padding: "4px",
+          }}
         >
-          <div className="flex items-center">
-            <div className="w-10 h-9 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mr-4">
-              <i className="tabler-category text-xl text-white"></i>
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">ເພີ່ມໝວດໝູ່ໃໝ່</h2>
-            </div>
-          </div>
-          <IconButton onClick={closeCreateComponent} sx={{ color: "white" }}>
-            <i className="tabler-x" />
-          </IconButton>
-        </div>
+          <i className="tabler-x text-[18px]"></i>
+        </IconButton>
+      </DialogTitle>
 
-        {/* Form Body */}
+      <DialogContent sx={{ p: 0 }}>
         <div className="p-6">
-          <div className="space-y-4">
-            <div className="bg-gradient-to-br from-blue-50/40 via-blue-25/20 to-white border border-blue-100/40 p-6 rounded-lg mb-4 shadow-sm">
-              <div className="grid grid-cols-1 gap-4">
-                <div className="form-group">
-                  <label className="block text-l font-medium mb-2">
-                    {dic?.name} <span className="text-red-500">*</span>
-                  </label>
-                  <CustomTextField
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    fullWidth
-                    size="small"
-                    autoComplete="off"
-                    placeholder="Enter category name"
-                    InputProps={{
-                      startAdornment: (
-                        <i className="tabler-tag text-[18px] mr-1 text-gray-500" />
-                      ),
-                    }}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label className="block text-l font-medium mb-2">
-                    {dic?.description}
-                  </label>
-                  <CustomTextField
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    fullWidth
-                    multiline
-                    rows={3}
-                    size="small"
-                    autoComplete="off"
-                    placeholder="Enter description (optional)"
-                  />
-                </div>
-
-                <div className="form-group mt-2">
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={isActive}
-                        onChange={(e) => setIsActive(e.target.checked)}
-                        color="primary"
-                      />
-                    }
-                    label="Active Status"
-                  />
-                </div>
-              </div>
+          {/* Category Name Input */}
+          <div className="mb-4">
+            <div className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+              {dic?.name} <span className="text-red-500 ml-1">*</span>
             </div>
+            <CustomTextField
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !loading && name.trim()) {
+                  e.preventDefault();
+                  onSubmitCreate();
+                }
+              }}
+              fullWidth
+              size="small"
+              className="w-full"
+              autoFocus
+              autoComplete="off"
+              placeholder="Enter category name"
+              InputProps={{
+                startAdornment: (
+                  <i className="tabler-tag text-[16px] mr-2 text-gray-500" />
+                ),
+              }}
+            />
+          </div>
+
+
+
+          {/* Footer Buttons */}
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-gray-200">
+            <Button
+              onClick={closeCreateComponent}
+              variant="contained"
+              color="secondary"
+              disabled={loading}
+              size="medium"
+              className="min-w-[100px]"
+            >
+              <i className="tabler-x text-[16px] mr-1"></i>
+              {dic?.cancel}
+            </Button>
+
+            <Button
+              onClick={onSubmitCreate}
+              variant="contained"
+              disabled={loading || !name.trim()}
+              size="medium"
+              className="min-w-[100px]"
+              sx={{
+                backgroundColor: "#0A3981",
+                "&:hover": { backgroundColor: "#082d5c" },
+              }}
+            >
+              {loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {dic?.creating || "Saving..."}
+                </>
+              ) : (
+                <>
+                  <i className="tabler-device-floppy text-[18px] mr-2"></i>
+                  {dic?.confirm || dic?.save}
+                </>
+              )}
+            </Button>
           </div>
         </div>
-
-        {/* Form Footer */}
-        <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3 rounded-b-2xl">
-          <Button
-            variant="outlined"
-            color="secondary"
-            onClick={closeCreateComponent}
-            startIcon={<i className="tabler-x" />}
-            sx={{ borderRadius: "8px", px: 3 }}
-          >
-            {dic?.cancel}
-          </Button>
-          <Button
-            variant="contained"
-            onClick={onSubmitCreate}
-            startIcon={<i className="tabler-device-floppy" />}
-            disabled={!name}
-            sx={{
-              backgroundColor: "#2F57AB",
-              "&:hover": { backgroundColor: "#1e3a75" },
-              borderRadius: "8px",
-              px: 3,
-            }}
-          >
-            {dic?.save}
-          </Button>
-        </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

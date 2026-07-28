@@ -105,7 +105,7 @@ const Login = ({
     "/images/illustrations/auth/v2-login-light-border.png";
 
   // Hooks
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -170,10 +170,10 @@ const Login = ({
   };
 
   useEffect(() => {
-    if (session?.user?.empId && session?.user?.level) {
+    if (status === "authenticated" && session?.user) {
       router.replace(getLocalizedUrl("/", locale as Locale));
     }
-  }, [session]);
+  }, [session, status, locale, router]);
 
   return (
     <div className="flex bs-full justify-center">

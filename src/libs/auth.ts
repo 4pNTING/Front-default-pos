@@ -4,14 +4,6 @@ import GoogleProvider from "next-auth/providers/google";
 import type { LoginData, TokenData, NextAuthOptions, UserLoginData, } from "next-auth";
 import { print } from "graphql";
 import { LOGIN_MUTATION } from "@/gql/queries";
-const url = process.env.NEXT_PUBLIC_API_URL;
-
-
-
-// Old queries - ไม่ใช้แล้ว
-// const loadUserDetailQuery = `...`;
-// const loginMutation = `...`;
-
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialProvider({
@@ -26,10 +18,7 @@ export const authOptions: NextAuthOptions = {
           username: string;
           password: string;
         };
-        console.log(`---, username`, username);
-        console.log(`--- password`, password);
-        console.log(`API URL::`, url);
-
+        const url = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://pos_backend:3000/api-gateway";
         if (!url) {
           throw new Error("API URL is not configured");
         }
@@ -53,9 +42,6 @@ export const authOptions: NextAuthOptions = {
           });
 
           let result = await response.json();
-          console.log("📦 [Frontend] GraphQL Response Status:", response.status);
-          // console.log("GraphQL raw response:", JSON.stringify(result, null, 2));
-          // GraphQL Auth error handling
           if (result.errors && result.errors.length > 0) {
             throw new Error(result.errors[0].message);
           }

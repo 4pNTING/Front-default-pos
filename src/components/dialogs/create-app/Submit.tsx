@@ -1,3 +1,6 @@
+// Next Imports
+import Image from 'next/image'
+
 // MUI Imports
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
@@ -20,7 +23,7 @@ const Submit = ({ activeStep, isLastStep, handleNext, handlePrev }: Props) => {
           <Typography variant='h5'>Submit</Typography>
           <Typography variant='body2'>Submit to kickstart your project.</Typography>
         </div>
-        <img alt='submit-img' src='/images/illustrations/characters/4.png' height={200} width={176} />
+        <Image alt='submit-img' src='/images/illustrations/characters/4.png' height={200} width={176} />
       </div>
       <div className='flex items-center justify-between'>
         <Button

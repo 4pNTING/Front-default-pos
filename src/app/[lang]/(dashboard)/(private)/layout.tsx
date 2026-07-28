@@ -25,18 +25,21 @@ import { getDictionary } from '@/utils/getDictionary'
 import { getMode, getSystemMode } from '@core/utils/serverHelpers'
 import GlobalModalWrapper from '@/modal/wrapper/GlobalModalWrapper'
 import { ApolloWrapper } from '@/gql/ApolloWrapper'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/libs/auth'
 
 const Layout = async ({ children, params }: ChildrenType & { params: { lang: Locale } }) => {
   // Vars
   const direction = i18n.langDirection[params.lang]
   const dictionary = await getDictionary(params.lang)
+  const session = await getServerSession(authOptions)
   const mode = getMode()
   const systemMode = getSystemMode()
 
   return (
     <Providers direction={direction}>
       <AuthGuard locale={params.lang}>
-        <ApolloWrapper dic={dictionary}>
+        <ApolloWrapper session={session} dic={dictionary}>
           <LayoutWrapper
             systemMode={systemMode}
             verticalLayout={

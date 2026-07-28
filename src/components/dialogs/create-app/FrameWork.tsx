@@ -2,6 +2,9 @@
 import { useState } from 'react'
 import type { ChangeEvent } from 'react'
 
+// Next Imports
+import Image from 'next/image'
+
 // MUI Imports
 import Typography from '@mui/material/Typography'
 import Radio from '@mui/material/Radio'
@@ -33,7 +36,7 @@ const FrameWork = ({ activeStep, isLastStep, handleNext, handlePrev }: Props) =>
         <div onClick={() => setValue('react')} className='flex items-center justify-between cursor-pointer gap-4'>
           <div className='flex items-center gap-3'>
             <CustomAvatar skin='light' color='info' variant='rounded' size={46}>
-              <img src='/images/logos/react.png' alt='react' height={30} width={30} />
+              <Image src='/images/logos/react.png' alt='react' height={30} width={30} />
             </CustomAvatar>
             <div className='flex flex-col gap-1'>
               <Typography color='text.primary' className='font-medium'>
@@ -48,7 +51,7 @@ const FrameWork = ({ activeStep, isLastStep, handleNext, handlePrev }: Props) =>
         <div onClick={() => setValue('angular')} className='flex items-center justify-between cursor-pointer gap-4'>
           <div className='flex items-center gap-3'>
             <CustomAvatar skin='light' color='error' variant='rounded' size={46}>
-              <img src='/images/logos/angular.png' alt='angular' height={30} width={30} />
+              <Image src='/images/logos/angular.png' alt='angular' height={30} width={30} />
             </CustomAvatar>
             <div className='flex flex-col gap-1'>
               <Typography color='text.primary' className='font-medium'>
@@ -62,7 +65,7 @@ const FrameWork = ({ activeStep, isLastStep, handleNext, handlePrev }: Props) =>
         <div onClick={() => setValue('vuejs')} className='flex items-center justify-between cursor-pointer gap-4'>
           <div className='flex items-center gap-3'>
             <CustomAvatar skin='light' color='success' variant='rounded' size={46}>
-              <img src='/images/logos/vue.png' alt='vue' height={30} width={30} />
+              <Image src='/images/logos/vue.png' alt='vue' height={30} width={30} />
             </CustomAvatar>
             <div className='flex flex-col gap-1'>
               <Typography color='text.primary' className='font-medium'>
@@ -76,7 +79,7 @@ const FrameWork = ({ activeStep, isLastStep, handleNext, handlePrev }: Props) =>
         <div onClick={() => setValue('laravel')} className='flex items-center justify-between cursor-pointer gap-4'>
           <div className='flex items-center gap-3'>
             <CustomAvatar skin='light' color='warning' variant='rounded'>
-              <img src='/images/logos/laravel.png' alt='laravel' height={30} width={30} />
+              <Image src='/images/logos/laravel.png' alt='laravel' height={30} width={30} />
             </CustomAvatar>
             <div className='flex flex-col gap-1'>
               <Typography color='text.primary' className='font-medium'>

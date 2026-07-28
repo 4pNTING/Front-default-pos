@@ -4,12 +4,16 @@ import type { Operation } from '@apollo/client';
 import {ApolloClient,ApolloLink,ApolloProvider,HttpLink,InMemoryCache,Observable,} from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { onError } from '@apollo/client/link/error';
-import { signOut } from 'next-auth/react';
 
 const TIMEOUT_DURATION = 20000;
 
-const laoWorld = new HttpLink({
-  uri: process.env.NEXT_PUBLIC_API_URL,
+const URL = new HttpLink({
+  uri: () => {
+    if (typeof window === 'undefined') {
+      return process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://pos_backend:3000/api-gateway';
+    }
+    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api-gateway';
+  },
 });
 
 type LinkConditionPair = {
@@ -70,8 +74,6 @@ export const ApolloWrapper: React.FC<ApolloWrapperProps> = ({
 
   const authLink = setContext((_, { headers }) => {
     const token = session?.authorization ?? '';
-    console.log(`::::token`, token)
-    // console.log(token);
 
     return {
       headers: {
@@ -109,7 +111,7 @@ export const ApolloWrapper: React.FC<ApolloWrapperProps> = ({
           condition: (operation: Operation) => {
             return operation.operationName.toLowerCase().includes('gateway');
           },
-          link: laoWorld,
+          link: URL,
         },
       ]),
     ]),

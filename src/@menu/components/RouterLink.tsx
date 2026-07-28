@@ -15,7 +15,7 @@ type RouterLinkProps = LinkProps &
     className?: string
   }
 
-export const RouterLink = forwardRef((props: RouterLinkProps, ref: any) => {
+export const RouterLink = forwardRef(function RouterLink(props: RouterLinkProps, ref: any) {
   // Props
   const { href, className, ...other } = props
 
@@ -25,3 +25,5 @@ export const RouterLink = forwardRef((props: RouterLinkProps, ref: any) => {
     </Link>
   )
 })
+
+RouterLink.displayName = 'RouterLink'

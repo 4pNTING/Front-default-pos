@@ -10,7 +10,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { ToastService } from "@/utils/toastService";
+import { CommonToastMessages, ToastService } from "@/utils/toastService";
 import { IRoleConfigLevel } from "@/utils/base";
 import CustomTextField from "@/@core/components/mui/TextField";
 import { msgError, msgSuccess,msgConfirm } from "@/utils/sweetalert";
@@ -43,32 +43,23 @@ const FromInputComponent = ({ props }: { props: ZoneListProps }) => {
 
   async function onCreateZone() {
     try {
-      if (!name)
-        throw new Error(dic?.pleaseFilledAllInformation);
+      if (!name || !name.trim()) {
+        ToastService.nameRequired(dic);
+        return;
+      }
 
       await createZoneAPI({
         props: {
-          name: name,
+          name: name.trim(),
           mutation: createZoneMutation,
         },
       });
 
+      ToastService.createSuccess(dic);
       setName("");
       closeCreateComponent();
-      
-      await msgSuccess({
-        title: dic?.save,
-        text: (dic as any)?.zoneCreatedSuccessfully,
-        btnOKText: dic?.ok,
-        btnOKColor: "#2F57AB",
-      });
     } catch (error: any) {
-      await msgError({
-        title: dic?.reject,
-        text: error?.message || dic?.reject,
-        btnOKText: dic?.ok,
-        btnOKColor: "#d33",
-      });
+      ToastService.actionError("ເພີ່ມໂຊນ", error?.message, dic);
     }
   }
 

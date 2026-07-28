@@ -2,14 +2,13 @@
 import React, { useMemo } from 'react';
 import CustomAutocomplete from '@core/components/mui/Autocomplete';
 import CustomTextField from '@core/components/mui/TextField';
-import type { CustomerType } from '@/gql/models/graphql';
-
+import type { Customer } from '@/gql/models/graphql';
 
 export interface CustomerDropdownProps {
   selectedCustomerId: string;
-  selectedCustomer?: CustomerType | null;
-  onChange: (customer: CustomerType | null) => void;
-  customers?: CustomerType[]; // ✅ รับ data จาก props
+  selectedCustomer?: Customer | null;
+  onChange: (customer: Customer | null) => void;
+  customers?: Customer[]; // ✅ รับ data จาก props
   loading?: boolean; // ✅ รับ loading state จาก props
   disabled?: boolean;
   required?: boolean;
@@ -41,7 +40,7 @@ const CustomerDropdown: React.FC<CustomerDropdownProps> = ({
 
 
   // ✅ Use customers directly (GraphQL CustomerType)
-  const items = useMemo((): CustomerType[] => {
+  const items = useMemo((): Customer[] => {
     if (!Array.isArray(customers) || customers.length === 0) {
       return [];
     }

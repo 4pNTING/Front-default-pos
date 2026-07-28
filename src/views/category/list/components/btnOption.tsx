@@ -5,46 +5,51 @@ import { CategoryListProps, CategoryType } from "../../type/categoryType";
 import { useCategoryStore, useCategoryMutations } from "../../store/categoryStore";
 import { IEntityStatus } from "@/utils/base";
 import { msgConfirm, msgSuccess, msgError } from "@/utils/sweetalert";
+import { ToastService } from "@/utils/toastService";
 
 interface ButtonOptionProps {
   props: CategoryListProps;
   currentToView: CategoryType;
+  onEditClick?: (item: CategoryType) => void;
   loadCategoryCall?: any;
 }
 
 export function ButtonOption({
   props,
   currentToView,
+  onEditClick,
   loadCategoryCall,
 }: ButtonOptionProps) {
-  const { dictionary: dic } = props;
+  const { lang, dictionary: dic } = props;
 
   const {
     deleteCategoryAPI,
     restoreCategoryAPI,
+    loadCategoryAPI,
     setSelectedItem,
     setToggleUpdateComponent,
   } = useCategoryStore();
   const { deleteCategoryMutation, restoreCategoryMutation } =
     useCategoryMutations();
 
-  const isActive = currentToView?.isActive === IEntityStatus.active;
+  const isActive = currentToView?.isActive === "active";
 
   const handleEdit = () => {
-    setSelectedItem(currentToView);
-    setToggleUpdateComponent(true);
+    if (onEditClick) {
+      onEditClick(currentToView);
+    } else {
+      setSelectedItem(currentToView);
+      setToggleUpdateComponent(true);
+    }
   };
 
   const handleDeleteClick = async () => {
     const confirmed = await msgConfirm({
-      title: dic?.confirmDelete,
-      text:
-        dic?.confirmDeleteText +
-        " " +
-        currentToView.name,
-      btnConfirmText: dic?.confirm,
+      title: dic?.confirmDeleteTitle || "ຢືນຢັນການລົບ?",
+      text: dic?.confirmDeleteText || "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລົບ?",
+      btnConfirmText: dic?.confirm || "ຢືນຢັນ",
       btnCancelText: dic?.cancel,
-      btnConfirmColor: "#2F57AB",
+      btnConfirmColor: "#1d5089ff",
     });
 
     if (!confirmed) return;
@@ -57,32 +62,19 @@ export function ButtonOption({
         },
       });
 
-      await msgSuccess({
-        title: dic?.success,
-        text: dic?.deleteSuccess,
-        btnOKText: dic?.ok,
-        btnOKColor: "#2F57AB",
-      });
+      ToastService.deleteSuccess(dic);
     } catch (error: any) {
-      await msgError({
-        title: dic?.error,
-        text: error.message,
-        btnOKText: dic?.ok,
-        btnOKColor: "#d33",
-      });
+      ToastService.actionError("ປິດໃຊ້ງານ Category", error.message, dic);
     }
   };
 
   const handleRestoreClick = async () => {
     const confirmed = await msgConfirm({
       title: dic?.confirmRestoreTitle,
-      text:
-        dic?.restore +
-        " " +
-        currentToView.name,
+      text: "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການເປີດໃຊ້ງານ?",
       btnCancelText: dic?.cancel,
-      btnConfirmText: dic?.restore,
-      btnConfirmColor: "#2F57AB",
+      btnConfirmText: dic?.confirm || "ຢືນຢັນ",
+      btnConfirmColor: "#1d5089ff",
     });
 
     if (!confirmed) return;
@@ -95,19 +87,9 @@ export function ButtonOption({
         },
       });
 
-      await msgSuccess({
-        title: dic?.success,
-        text: dic?.restore + "ໝວດໝູ່ສຳເລັດແລ້ວ",
-        btnOKText: dic?.ok,
-        btnOKColor: "#2F57AB",
-      });
+      ToastService.restoreSuccess(dic);
     } catch (error: any) {
-      await msgError({
-        title: dic?.error,
-        text: error.message,
-        btnOKText: dic?.ok,
-        btnOKColor: "#d33",
-      });
+      ToastService.actionError("ເປີດໃຊ້ງານ Category", error.message, dic);
     }
   };
 
@@ -126,7 +108,7 @@ export function ButtonOption({
               </IconButton>
             </Tooltip>
 
-            <Tooltip title={dic?.delete}>
+            <Tooltip title={dic?.disabled || dic?.delete}>
               <IconButton
                 onClick={handleDeleteClick}
                 size="small"

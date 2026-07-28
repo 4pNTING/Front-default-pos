@@ -4,6 +4,9 @@
 import { useEffect, useRef } from 'react'
 import type { CSSProperties } from 'react'
 
+// Next Imports
+import Image from 'next/image'
+
 // Third-party Imports
 import styled from '@emotion/styled'
 
@@ -68,9 +71,11 @@ const Logo = ({ color }: { color?: CSSProperties['color'] }) => {
 
   return (
     <div className='flex items-center justify-center'>
-      <img
+      <Image
         src="/images/logos/LW-500x302.png"
         alt="Logo"
+        width={500}
+        height={302}
         className={`transition-all duration-300 ${layout === "collapsed" ? 'h-6' : 'h-20'} w-auto`}
       />
     </div>

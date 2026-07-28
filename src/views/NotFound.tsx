@@ -1,6 +1,7 @@
 'use client'
 
 // Next Imports
+import Image from 'next/image'
 import Link from 'next/link'
 
 // MUI Imports
@@ -51,9 +52,11 @@ const NotFound = ({ mode }: { mode: SystemMode }) => {
         <Button href='/' component={Link} variant='contained'>
           Back To Home
         </Button>
-        <img
+        <Image
           alt='error-404-illustration'
           src='/images/illustrations/characters/1.png'
+          width={500}
+          height={500}
           className='object-cover bs-[400px] md:bs-[450px] lg:bs-[500px] mbs-10 md:mbs-14 lg:mbs-20'
         />
       </div>

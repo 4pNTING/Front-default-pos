@@ -3,12 +3,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: frontend-pos-image:latest
+    image: frontend-pos:v1.0.1
     container_name: frontend-pos
     restart: always
-    volumes:
-      - .:/app
-      - frontend-pos-next:/app/.next
     networks:
       - share-container-network
     deploy:
@@ -41,6 +38,3 @@ services:
 networks:
   share-container-network:
     external: true
-
-volumes:
-  frontend-pos-next:

@@ -5,7 +5,7 @@ import HeaderComponent from "./components/header.component";
 import TableComponent from "./components/table.component";
 import { useSession } from "next-auth/react";
 import { useStore, useZoneMutations } from "../store/zoneStore";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { delay } from "@/utils/base";
 import { toast } from "react-toastify";
 import LazyLoading from "@/utils/lazyLoading";
@@ -35,7 +35,7 @@ export const List = ({ props }: { props: ZoneListProps }) => {
   // Ref to track if initial data has been loaded
   const hasFetchedRef = useRef(false);
 
-  async function init() {
+  const init = useCallback(async () => {
     try {
       const { zoneList } = useStore.getState();
       if (zoneList && zoneList.length > 0) {
@@ -55,13 +55,13 @@ export const List = ({ props }: { props: ZoneListProps }) => {
           dictionary: dic,
         },
       });
-
-      setRender(true);
     } catch (error: any) {
-      hasFetchedRef.current = false; 
-      toast.error(error.message);
+      hasFetchedRef.current = false;
+      toast.error(error?.message );
+    } finally {
+      setRender(true);
     }
-  }
+  }, [loadZoneAPI, loadZoneCall, dic]);
 
   const handleEditClick = (item: ZoneType) => {
     setEditingItem(item);
@@ -89,7 +89,7 @@ export const List = ({ props }: { props: ZoneListProps }) => {
     // }
 
     init();
-  }, [user]);
+  }, [user, init]);
 
   return (
     <>

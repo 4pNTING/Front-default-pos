@@ -1,6 +1,6 @@
+import PageRender from "@/views/category/list/index";
 import { Locale } from "@/configs/i18n";
 import { getDictionary } from "@/utils/getDictionary";
-import { List as PageRender } from "@/views/category/list/categoryList";
 import Grid from "@mui/material/Grid";
 
 const CategoryPage = async ({ params }: { params: { lang: Locale } }) => {

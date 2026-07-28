@@ -8,7 +8,7 @@ import Autocomplete from '@mui/material/Autocomplete'
 import type { AutocompleteProps } from '@mui/material/Autocomplete'
 
 const CustomAutocomplete = forwardRef(
-  <
+  function CustomAutocomplete<
     T,
     Multiple extends boolean | undefined,
     DisableClearable extends boolean | undefined,
@@ -17,7 +17,7 @@ const CustomAutocomplete = forwardRef(
   >(
     props: AutocompleteProps<T, Multiple, DisableClearable, FreeSolo, ChipComponent>,
     ref: any
-  ) => {
+  ) {
     return (
       // eslint-disable-next-line lines-around-comment
       <Autocomplete {...props} ref={ref} PaperComponent={props => <Paper {...props} />} />

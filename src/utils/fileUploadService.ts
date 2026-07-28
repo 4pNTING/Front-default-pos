@@ -1,15 +1,10 @@
 // utils/fileUploadService.ts
 import { ToastService } from '@/utils/toastService';
-import { getSession } from 'next-auth/react';
-import { ILeasingFileType } from '@/utils/base';
 
 interface UploadOptions {
   file: File;
   ownerId: string;
   ownerType: string;
-  token: string;
-  backendKey: string;
-  platformKey: string;
   uploadType?: 'pdf' | 'image'; // 'pdf' or 'image'
   dic?: any; // Add dictionary for localized messages
 }
@@ -40,7 +35,7 @@ interface UploadResponse {
  * @returns Promise<string> - File URL or empty string on failure
  */
 export const uploadFile = async (options: UploadOptions): Promise<string> => {
-  const { file, ownerId, ownerType, token, backendKey, platformKey, uploadType = 'pdf', dic } = options;
+  const { file, ownerId, ownerType, uploadType = 'pdf', dic } = options;
 
   // Validate ownerId
   if (!ownerId) {
@@ -57,26 +52,12 @@ export const uploadFile = async (options: UploadOptions): Promise<string> => {
   formData.append('ownerType', ownerType);
   formData.append('originalName', nameWithoutExt);
 
-  // Determine upload endpoint (hard-coded for now)
-  const uploadEndpoint = uploadType === 'image'
-    ? 'https://files.laoworld.la/api/image-files/upload'
-    : 'https://files.laoworld.la/api/pdf-files/upload';
-
-  if (!uploadEndpoint) {
-    ToastService.error(dic?.uploadEndpointNotConfigured || 'ບໍ່ໄດ້ກຳນົດຈຸດປາຍທາງການອັບໂຫລດ');
-    console.error('Missing upload endpoint');
-    return '';
-  }
+  formData.append('uploadType', uploadType);
 
   try {
-    const response = await fetch(uploadEndpoint, {
+    const response = await fetch('/api/upload', {
       method: 'POST',
       body: formData,
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'backendKey': backendKey,
-        'platform': platformKey,
-      },
     });
 
     if (!response.ok) {
@@ -175,17 +156,11 @@ export const uploadOwnerFile = async (params: {
   dic?: any;
 }): Promise<string> => {
   const { file, ownerId, ownerType, dic } = params;
-  const session = await getSession();
-  const model = {
+  return uploadFile({
     file,
     ownerId,
     ownerType,
-    token: session?.authorization!,
-    backendKey: process.env.NEXT_PUBLIC_UPLOAD_BACKEND_KEY!,
-    platformKey: process.env.NEXT_PUBLIC_UPLOAD_PLATFORM_KEY!,
     uploadType: getFileUploadType(file),
     dic,
-  }
-  console.log(`model:::`, model)
-  return uploadFile(model);
+  });
 };

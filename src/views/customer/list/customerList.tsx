@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useStore } from "../store/customerStore";
 import CreateComponent from "./components/formCreate.component";
 import UpdateComponent from "./components/formUpdate.component";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { toast } from "react-toastify";
 import { LOAD_CUSTOMER } from "@/gql/queries";
 import { useLazyQuery } from "@apollo/client";
@@ -36,7 +36,7 @@ export const List = ({ props }: { props: CustomerListProps }) => {
     fetchPolicy: "network-only",
   });
 
-  async function init() {
+  const init = useCallback(async () => {
     try {
       const promises: Promise<any>[] = [];
 
@@ -56,12 +56,13 @@ export const List = ({ props }: { props: CustomerListProps }) => {
         await Promise.all(promises);
       }
     } catch (error) {}
-  }
+  }, [loadCustomerAPI, loadCustomerCall, dic, customerList]);
+
   useEffect(() => {
     init().then(() => {
       setRender(true);
     });
-  }, [user]);
+  }, [user, init]);
 
   useEffect(() => {
     setToggleCreateComponent(false);

@@ -1,5 +1,8 @@
 'use client'
 
+// Next Imports
+import Image from 'next/image'
+
 // MUI Imports
 import Avatar from '@mui/material/Avatar'
 import Dialog from '@mui/material/Dialog'
@@ -103,7 +106,7 @@ const PaymentMethod = ({ open, setOpen }: PaymentMethodProps) => {
                     'bg-actionHover': mode === 'light'
                   })}
                 >
-                  <img src={card.image} alt={card.alt} height={card.imgHeight} width={card.imgWidth} />
+                  <Image src={card.image} alt={card.alt} height={card.imgHeight ? Number.parseInt(card.imgHeight) : undefined} width={card.imgWidth ? Number.parseInt(card.imgWidth) : undefined} />
                 </Avatar>
                 <Typography className='font-medium' color='text.primary'>
                   {card.cardName}

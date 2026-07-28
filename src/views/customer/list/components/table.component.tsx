@@ -28,9 +28,10 @@ import {
 import { useStore } from "../../store/customerStore";
 import classNames from "classnames";
 import TableFetchPaginationComponent from "@/components/TableFetchPaginationComponent";
+import CustomChip from "@/@core/components/mui/Chip";
 import LineLoader from "@/components/loading/line/LineLoader";
 import Link from "next/link";
-import { currencyFormatInput, IRoleConfigLevel } from "@/utils/base";
+import { currencyFormatInput, IEntityStatus, IRoleConfigLevel } from "@/utils/base";
 import { ToastContainer, toast } from "react-toastify";
 import { ButtonOption } from "./btnOption";
 import { CustomerType } from "../../type/customerType";
@@ -114,23 +115,20 @@ const TableComponent = ({
   );
 
   // Handle sorting change
-  const handleSortingChange = useCallback(
-    createSortingChangeHandler({
-      columnToSortFieldMap,
-      setSortingState,
-      setSorting,
-      loadAPI: async () => {
-        await loadCustomerAPI({
-          props: {
-            dictionary: dic,
-            query: loadCustomerCall,
-          },
-        });
-      },
-      onError: (error) => toast.error(error.message),
-    }),
-    [columnToSortFieldMap, dic, loadCustomerCall, loadCustomerAPI, setSorting],
-  );
+  const handleSortingChange = createSortingChangeHandler({
+    columnToSortFieldMap,
+    setSortingState,
+    setSorting,
+    loadAPI: async () => {
+      await loadCustomerAPI({
+        props: {
+          dictionary: dic,
+          query: loadCustomerCall,
+        },
+      });
+    },
+    onError: (error) => toast.error(error.message),
+  });
 
   const columns = useMemo<ColumnDef<ListAction, any>[]>(
     () => [
@@ -276,23 +274,29 @@ const TableComponent = ({
         size: 120,
         sortingFn: "alphanumeric",
       }),
-      // columnHelper.accessor("isActive", {
-      //   header: () => (
-      //     <div className="text-center font-bold text-[16px]">
-      //       {dic.status}
-      //     </div>
-      //   ),
-      //   cell: ({ row }) => (
-      //     <div className="flex justify-center">
-      //       <StatusBadge
-      //         status={row?.original?.isActive}
-      //         dictionary={dic}
-      //         size="md"
-      //       />
-      //     </div>
-      //   ),
-      //   size: 100,
-      // }),
+      columnHelper.accessor("isActive", {
+        header: () => (
+          <div className="text-center font-bold text-[16px]">
+            {dic?.status}
+          </div>
+        ),
+        cell: ({ row }) => {
+          const isActive = row?.original?.isActive === IEntityStatus.active;
+          return (
+            <div className="flex justify-center">
+              <CustomChip
+                size="small"
+                round="true"
+                variant="tonal"
+                label={isActive ? (dic?.active || "Active") : (dic?.inactive || "Inactive")}
+                color={isActive ? "success" : "secondary"}
+                sx={{ fontWeight: 600 }}
+              />
+            </div>
+          );
+        },
+        size: 100,
+      }),
       columnHelper.accessor("action", {
         header: () => (
           <div className="text-center font-bold text-[16px]">
@@ -312,7 +316,8 @@ const TableComponent = ({
         enableSorting: false,
       }),
     ],
-    [dic, genderList, nationList],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dic, genderList, nationList, loadCustomerCall, props],
   );
 
   const table = useReactTable({

@@ -1,5 +1,8 @@
 'use client'
 
+// Next Imports
+import Image from 'next/image'
+
 // MUI Imports
 import Grid from '@mui/material/Grid'
 import Typography from '@mui/material/Typography'
@@ -39,7 +42,7 @@ const Footer = ({ mode }: { mode: Mode }) => {
   return (
     <footer className={frontLayoutClasses.footer}>
       <div className='relative'>
-        <img src={dashboardImage} alt='footer bg' className='absolute inset-0 is-full bs-full object-cover -z-[1]' />
+        <Image src={dashboardImage} alt='footer bg' className='absolute inset-0 is-full bs-full object-cover -z-[1]' fill />
         <div className={classnames('plb-12 text-white')}>
         {/* , frontCommonStyles.layoutSpacing */}
           <Grid container rowSpacing={10} columnSpacing={12}>
@@ -137,7 +140,7 @@ const Footer = ({ mode }: { mode: Mode }) => {
               <div className='flex flex-col gap-4'>
                 <Link className='bg-[#282C3E] bs-[56px] is-[211px] rounded'>
                   <div className='flex items-center pli-5 plb-[7px] gap-6'>
-                    <img src='/images/front-pages/apple-icon.png' alt='apple store' className='bs-[34px]' />
+                    <Image src='/images/front-pages/apple-icon.png' alt='apple store' className='bs-[34px]' height={34} width={34} />
                     <div className='flex flex-col items-start'>
                       <Typography variant='body2' color='white' className='capitalize opacity-[75]'>
                         Download on the
@@ -150,7 +153,7 @@ const Footer = ({ mode }: { mode: Mode }) => {
                 </Link>
                 <Link className='bg-[#282C3E] bs-[56px] is-[211px] rounded'>
                   <div className='flex items-center pli-5 plb-[7px] gap-6'>
-                    <img src='/images/front-pages/google-play-icon.png' alt='Google play' className='bs-[34px]' />
+                    <Image src='/images/front-pages/google-play-icon.png' alt='Google play' className='bs-[34px]' height={34} width={34} />
                     <div className='flex flex-col items-start'>
                       <Typography variant='body2' color='white' className='opacity-[75]'>
                         Download on the
