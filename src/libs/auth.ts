@@ -23,6 +23,10 @@ export const authOptions: NextAuthOptions = {
           throw new Error("API URL is not configured");
         }
 
+        if (url.startsWith("https://")) {
+          process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+        }
+
         try {
           // Step 1: Login with new Login mutation
           let response = await fetch(url, {
