@@ -29,6 +29,20 @@ interface UploadResponse {
   downloadUrl?: string;
 }
 
+const getUploadApiUrl = () => {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '';
+  if (apiUrl.includes('/api-gateway')) {
+    return apiUrl.replace('/api-gateway', '/api/upload');
+  }
+  if (apiUrl.endsWith('/')) {
+    return `${apiUrl}api/upload`;
+  }
+  if (apiUrl) {
+    return `${apiUrl}/api/upload`;
+  }
+  return '/api/upload';
+};
+
 /**
  * Upload file to server
  * @param options - Upload configuration
@@ -55,7 +69,8 @@ export const uploadFile = async (options: UploadOptions): Promise<string> => {
   formData.append('uploadType', uploadType);
 
   try {
-    const response = await fetch('/api/upload', {
+    const uploadUrl = getUploadApiUrl();
+    const response = await fetch(uploadUrl, {
       method: 'POST',
       body: formData,
     });
