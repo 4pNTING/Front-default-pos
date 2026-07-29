@@ -327,29 +327,8 @@ export const useStore = create<IState>((set, get) => ({
       });
 
       if (data?.createCustomer?.customer) {
-        const createdCust = data.createCustomer.customer;
-        if (fileUrl && props.createAttachmentMutation) {
-          try {
-            await props.createAttachmentMutation({
-              variables: {
-                input: {
-                  ownerId: createdCust._id,
-                  ownerType: 'customer',
-                  originalName: customerFile?.name || 'customer_file',
-                  fileUrl: fileUrl,
-                  fileSize: customerFile?.size,
-                  mimeType: customerFile?.type,
-                  uploadType: customerFile?.type?.includes('image') ? 'image' : 'pdf',
-                  status: 'completed'
-                }
-              }
-            });
-          } catch (attErr) {
-            console.warn('Failed to record attachment metadata:', attErr);
-          }
-        }
         set(() => ({
-          customerList: [createdCust, ...customerList],
+          customerList: [data.createCustomer.customer, ...customerList],
           count: count + 1,
         }));
       }
@@ -379,7 +358,7 @@ export const useStore = create<IState>((set, get) => ({
             dic: props.dictionary,
           });
           if (!uploadedUrl) {
-            throw new Error(props.dictionary?.uploadFileFailedCannotSave || props.dictionary?.uploadError );
+            throw new Error(props.dictionary?.uploadFileFailedCannotSave || props.dictionary?.uploadError);
           }
           fileUrl = uploadedUrl;
         } else if (customerFile.url) {
@@ -426,31 +405,10 @@ export const useStore = create<IState>((set, get) => ({
       });
 
       if (data?.updateCustomer?.customer) {
-        const updatedCust = data.updateCustomer.customer;
-        if (fileUrl && props.createAttachmentMutation) {
-          try {
-            await props.createAttachmentMutation({
-              variables: {
-                input: {
-                  ownerId: updatedCust._id,
-                  ownerType: 'customer',
-                  originalName: customerFile?.name || 'customer_file',
-                  fileUrl: fileUrl,
-                  fileSize: customerFile?.size,
-                  mimeType: customerFile?.type,
-                  uploadType: customerFile?.type?.includes('image') ? 'image' : 'pdf',
-                  status: 'completed'
-                }
-              }
-            });
-          } catch (attErr) {
-            console.warn('Failed to record attachment metadata:', attErr);
-          }
-        }
         set((state) => ({
-          selectedItem: updatedCust,
+          selectedItem: data.updateCustomer.customer,
           customerList: state.customerList.map((item) =>
-            item._id === props._id ? updatedCust : item
+            item._id === props._id ? data.updateCustomer.customer : item
           ),
         }));
       }

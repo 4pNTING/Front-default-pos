@@ -5,49 +5,7 @@ export enum IEntityStatus {
   empty = "empty",
 }
 
-export enum IWalletCardStatus {
-  lost = "lost",
-  inuse = "inuse",
-  all = "all",
-  added = "added",
-  notAddedYet = "not_added_yet",
-}
 
-export enum IWalletReferenceGroup {
-  bu = "bu",
-  bu_member = "bu_member",
-}
-
-export enum IWalletCardType {
-  staff = "staff",
-  general = "general",
-}
-
-export enum IIssuedStatus {
-  all = "all",
-  pending = "pending",
-  paid = "paid",
-  denied = "denied",
-}
-
-export enum ITopupBatchTarget {
-  all = "all",
-  card = "card",
-  wallet = "wallet",
-}
-export enum ITopupBatchStatus {
-  all = "all",
-  pending = "pending",
-  confirm = "confirm",
-  denied = "denied",
-  processing = "processing",
-}
-
-export enum ILeasingEWInvoiceStatus {
-  approved_and_no_invoice = "approved_and_no_invoice",
-  approved_and_invoice = "approved_and_invoice",
-  pending = "pending",
-}
 
 export const currencyFormatInput = (value: string) => {
   // Remove all non-numeric and non-dot characters
@@ -86,21 +44,7 @@ export enum IRoleConfigLevel {
   superAdmin = "superAdmin",
 }
 
-export enum IRoomAreaHoldStatus {
-  rent = "rent",
-  buyer = "buyer",
-}
 
-export enum IRoomAreaStatus {
-  using = "using",
-  empty = "empty",
-}
-
-export enum IRoomAreaAgentHoldStatus {
-  owner = "owner",
-  agent = "agent",
-  bu = "bu",
-}
 
 export enum IRoomAreaCurrency {
   LAK = "LAK",
@@ -125,10 +69,7 @@ export enum ILeasingIndexPaymentMethod {
   month = "month",
   installment = "installment",
 }
-export enum ILeasingIndexContractCategory {
-  buy_sell = "buy_sell",
-  rent = "rent",
-}
+
 export enum ILeasingIndexStatus {
   pending_approve = "pending_approve",
   pending_active = "pending_active",
@@ -145,29 +86,16 @@ export enum ILeasingIndexStatus {
   invalid = "invalid",
 }
 
-export enum ILeasingBatchElectricStatus {
-  pending_submit = "pending_submit",
-  pending_approve = "pending_approve",
-  approved = "approved",
-}
 
-export enum IFixedAmountMethod {
-  electric_amount_kwh = "electric_amount_kwh",
-  water_amount_per_unit = "water_amount_per_unit",
-  water_maintenance_amount = "water_maintenance_amount",
-}
 
-// Water batch ใช้ status เดียวกับ Electric
-export const ILeasingBatchWaterStatus = ILeasingBatchElectricStatus;
-export type ILeasingBatchWaterStatus = ILeasingBatchElectricStatus;
 
-export enum ILeasingFileType {
-  mmsLeasing = "mmsLeasing",
-  mmsCancelLeasing = "mmsCancelLeasing",
+
+
+export enum IPosFileType {
   mmsCustomer = "mmsCustomer",
-  mmsRoomAreaOwnership = "mmsRoomAreaOwnership",
-  mmsRoomAreaOwnershipAgent = "mmsRoomAreaOwnershipAgent",
 }
+
+export { IPosFileType as ILeasingFileType };
 
 export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
