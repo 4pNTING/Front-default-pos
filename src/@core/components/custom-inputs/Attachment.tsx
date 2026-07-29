@@ -121,13 +121,21 @@ const Attachment: React.FC<AttachmentProps> = ({
   };
 
 
+  const getBackendBaseUrl = () => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '';
+    if (apiUrl.includes('/api-gateway')) {
+      return apiUrl.replace('/api-gateway', '');
+    }
+    return apiUrl;
+  };
+
   const handleDownload = async (e: React.MouseEvent, file: AttachedFile) => {
     e.stopPropagation();
     
     const downloadName = file.downloadFileName || file.name;
     
     if (file.file) {
-      // Local file - direct download
+      // Local file object - direct download
       const fileUrl = URL.createObjectURL(file.file);
       const link = document.createElement('a');
       link.href = fileUrl;
@@ -140,10 +148,11 @@ const Attachment: React.FC<AttachmentProps> = ({
     }
     
     if (file.url && file.url.trim() !== '') {
-      // Remote file - download with authentication
       try {
-        // Fetch the file with authentication headers
-        const response = await fetch(`/api/upload?url=${encodeURIComponent(file.url)}`, {
+        const baseUrl = getBackendBaseUrl();
+        const fullUrl = file.url.startsWith('http') ? file.url : `${baseUrl}${file.url.startsWith('/') ? '' : '/'}${file.url}`;
+        
+        const response = await fetch(fullUrl, {
           method: 'GET',
         });
         
@@ -153,11 +162,9 @@ const Attachment: React.FC<AttachmentProps> = ({
           return;
         }
         
-        // Create a blob from the response
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);
         
-        // Create download link
         const link = document.createElement('a');
         link.href = blobUrl;
         link.download = file.downloadFileName || file.name;
@@ -165,9 +172,7 @@ const Attachment: React.FC<AttachmentProps> = ({
         link.click();
         document.body.removeChild(link);
         
-        // Clean up the blob URL after a delay
         setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-        
       } catch (error) {
         console.error('Download error:', error);
         ToastService.error(`ເກີດຂໍ້ຜິດພາດໃນການດາວໂຫຼດໄຟລ໌: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -177,18 +182,14 @@ const Attachment: React.FC<AttachmentProps> = ({
     }
   };
 
-
   const handlePreview = (e: React.MouseEvent, file: AttachedFile) => {
     e.stopPropagation();
     if (file.file) {
       const fileUrl = URL.createObjectURL(file.file);
       window.open(fileUrl, '_blank');
     } else if (file.url) {
-      // For remote files, we can also try to preview if it's an image or PDF
-      // For now, treat remote preview same as download or open in new tab if possible
-      // But user specifically asked for "preview local file" and "download exist file"
-      // So we might keep preview for local only, or open remote URL in new tab
-      const fullUrl = file.url.startsWith('http') ? file.url : `https://files.laoworld.la${file.url}`;
+      const baseUrl = getBackendBaseUrl();
+      const fullUrl = file.url.startsWith('http') ? file.url : `${baseUrl}${file.url.startsWith('/') ? '' : '/'}${file.url}`;
       window.open(fullUrl, '_blank');
     }
   };

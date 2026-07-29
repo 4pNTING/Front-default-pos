@@ -65,7 +65,6 @@ export const uploadFile = async (options: UploadOptions): Promise<string> => {
   formData.append('ownerId', ownerId);
   formData.append('ownerType', ownerType);
   formData.append('originalName', nameWithoutExt);
-
   formData.append('uploadType', uploadType);
 
   try {
@@ -83,21 +82,12 @@ export const uploadFile = async (options: UploadOptions): Promise<string> => {
     }
 
     const result: UploadResponse = await response.json();
-
-    // Get download URL - support both formats
-    let fileUrl = result.url || result.fileUrl || result.downloadUrl || '';
-
-    // If not found, try to build from urls.download
-    if (!fileUrl && result.urls?.download) {
-      fileUrl = 'https://files.laoworld.la' + result.urls.download;
-    }
+    const fileUrl = result.url || result.fileUrl || result.downloadUrl || '';
 
     if (fileUrl) {
-      // toast.success('อัปโหลดไฟล์สำเร็จ');
       return fileUrl;
     } else {
-      // toast.warning('File uploaded but URL not found in response');
-      console.warn('Response:', result);
+      console.warn('Upload response:', result);
       return '';
     }
   } catch (error) {
