@@ -4,6 +4,7 @@ import { useMutation } from "@apollo/client";
 import { CreateNetworkProps, ListNetworkProps, CustomerType, CustomerInput, UpdateNetworkProps, DeleteNetworkProps, RestoreNetworkProps } from "../type/customerType";
 import { MOCK_PROVINCES, MOCK_DISTRICTS, MOCK_VILLAGES, } from "@/data/mockup/locationData";
 import { CREATE_CUSTOMER, UPDATE_CUSTOMER, DELETE_CUSTOMER, RESTORE_DELETE_CUSTOMER, } from "@/gql/queries/customer";
+import { CREATE_ATTACHMENT } from "@/gql/queries/attachment";
 import { uploadOwnerFile } from "@/utils/fileUploadService";
 import { ICustomerSortField } from "@/utils/enumSortField";
 
@@ -12,8 +13,9 @@ export const useCustomerMutations = () => {
   const [updateCustomerMutation] = useMutation(UPDATE_CUSTOMER);
   const [deleteCustomerMutation] = useMutation(DELETE_CUSTOMER);
   const [restoreCustomerMutation] = useMutation(RESTORE_DELETE_CUSTOMER);
+  const [createAttachmentMutation] = useMutation(CREATE_ATTACHMENT);
 
-  return { createCustomerMutation, updateCustomerMutation, deleteCustomerMutation, restoreCustomerMutation };
+  return { createCustomerMutation, updateCustomerMutation, deleteCustomerMutation, restoreCustomerMutation, createAttachmentMutation };
 };
 
 interface IState {
@@ -325,8 +327,29 @@ export const useStore = create<IState>((set, get) => ({
       });
 
       if (data?.createCustomer?.customer) {
+        const createdCust = data.createCustomer.customer;
+        if (fileUrl && props.createAttachmentMutation) {
+          try {
+            await props.createAttachmentMutation({
+              variables: {
+                input: {
+                  ownerId: createdCust._id,
+                  ownerType: 'customer',
+                  originalName: customerFile?.name || 'customer_file',
+                  fileUrl: fileUrl,
+                  fileSize: customerFile?.size,
+                  mimeType: customerFile?.type,
+                  uploadType: customerFile?.type?.includes('image') ? 'image' : 'pdf',
+                  status: 'completed'
+                }
+              }
+            });
+          } catch (attErr) {
+            console.warn('Failed to record attachment metadata:', attErr);
+          }
+        }
         set(() => ({
-          customerList: [data.createCustomer.customer, ...customerList],
+          customerList: [createdCust, ...customerList],
           count: count + 1,
         }));
       }
@@ -403,10 +426,31 @@ export const useStore = create<IState>((set, get) => ({
       });
 
       if (data?.updateCustomer?.customer) {
+        const updatedCust = data.updateCustomer.customer;
+        if (fileUrl && props.createAttachmentMutation) {
+          try {
+            await props.createAttachmentMutation({
+              variables: {
+                input: {
+                  ownerId: updatedCust._id,
+                  ownerType: 'customer',
+                  originalName: customerFile?.name || 'customer_file',
+                  fileUrl: fileUrl,
+                  fileSize: customerFile?.size,
+                  mimeType: customerFile?.type,
+                  uploadType: customerFile?.type?.includes('image') ? 'image' : 'pdf',
+                  status: 'completed'
+                }
+              }
+            });
+          } catch (attErr) {
+            console.warn('Failed to record attachment metadata:', attErr);
+          }
+        }
         set((state) => ({
-          selectedItem: data.updateCustomer.customer,
+          selectedItem: updatedCust,
           customerList: state.customerList.map((item) =>
-            item._id === props._id ? data.updateCustomer.customer : item
+            item._id === props._id ? updatedCust : item
           ),
         }));
       }

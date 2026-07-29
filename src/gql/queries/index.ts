@@ -5,3 +5,4 @@ export * from './customer';
 export * from './home';
 export * from './roomArea';
 export * from './roomAreaCategory';
+export * from './attachment';

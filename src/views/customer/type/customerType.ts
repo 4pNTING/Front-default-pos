@@ -23,6 +23,7 @@ export type ListNetworkProps = {
 
 export type CreateNetworkProps = {
   mutation: any;
+  createAttachmentMutation?: any;
   dictionary?: Awaited<ReturnType<typeof getDictionary>>; 
   firstName?: string;
   lastName?: string;
@@ -46,6 +47,7 @@ export type CreateNetworkProps = {
 
 export type UpdateNetworkProps = {
   mutation: any;
+  createAttachmentMutation?: any;
   dictionary?: Awaited<ReturnType<typeof getDictionary>>; 
   _id: string;
   firstName?: string;

@@ -67,7 +67,7 @@ const CreateComponent = ({
 
   // hello world
 
-  const { createCustomerMutation } = useCustomerMutations();
+  const { createCustomerMutation, createAttachmentMutation } = useCustomerMutations();
 
   const {
     toggleCreateComponent,
@@ -159,6 +159,7 @@ const CreateComponent = ({
       await createCustomerAPI({
         props: {
           mutation: createCustomerMutation,
+          createAttachmentMutation: createAttachmentMutation,
           dictionary: dic,
           firstName: firstName,
           lastName: lastName,

@@ -55,7 +55,7 @@ const UpdateComponent = ({ props, selectedItem, onClose, onSuccess }) => {
   const saveIntentRef = useRef(false);
   const copyingRef = useRef(false);
 
-  const { updateCustomerMutation } = useCustomerMutations();
+  const { updateCustomerMutation, createAttachmentMutation } = useCustomerMutations();
 
   const [loadCustomerCall] = useLazyQuery(LOAD_CUSTOMER, {
     fetchPolicy: "network-only",
@@ -224,6 +224,7 @@ const UpdateComponent = ({ props, selectedItem, onClose, onSuccess }) => {
       const updatePayload = {
         props: {
           mutation: updateCustomerMutation,
+          createAttachmentMutation: createAttachmentMutation,
           dictionary: dic,
           _id: selectedItem._id,
           firstName: firstName,
