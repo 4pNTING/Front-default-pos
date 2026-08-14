@@ -5,12 +5,12 @@ export const LOAD_CATEGORY = gql`
     loadCategory(input: $input) {
       category {
         _id
+        name
+        description
+        photo
+        isActive
         createdAt
         updatedAt
-        description
-        isActive
-        name
-        photo
       }
     }
   }
@@ -21,12 +21,12 @@ export const LOAD_CATEGORY_BY_ID = gql`
     loadCategoryById(input: $input) {
       category {
         _id
+        name
+        description
+        photo
+        isActive
         createdAt
         updatedAt
-        description
-        isActive
-        name
-        photo
       }
     }
   }
@@ -37,10 +37,12 @@ export const CREATE_CATEGORY = gql`
     createCategory(input: $input) {
       category {
         _id
-        description
-        isActive
         name
+        description
         photo
+        isActive
+        createdAt
+        updatedAt
       }
     }
   }
@@ -51,10 +53,12 @@ export const UPDATE_CATEGORY = gql`
     updateCategory(input: $input) {
       category {
         _id
-        description
-        isActive
         name
+        description
         photo
+        isActive
+        createdAt
+        updatedAt
       }
     }
   }
@@ -80,3 +84,4 @@ export const RESTORE_CATEGORY = gql`
     }
   }
 `;
+

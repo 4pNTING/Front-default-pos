@@ -6,3 +6,4 @@ export * from './home';
 export * from './roomArea';
 export * from './roomAreaCategory';
 export * from './attachment';
+export * from './menuItem';

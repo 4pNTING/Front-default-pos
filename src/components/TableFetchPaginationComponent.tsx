@@ -5,11 +5,10 @@ import { MenuItem } from "@mui/material";
 import Pagination from "@mui/material/Pagination";
 import Typography from "@mui/material/Typography";
 
-// Third Party Imports
-import type { useReactTable } from "@tanstack/react-table";
+import { Table } from "@tanstack/react-table";
 import { ReactElement } from "react";
 
-const TableFetchPaginationComponent = ({
+const TableFetchPaginationComponent = <TData extends unknown>({
   table,
   count,
   startChild,
@@ -17,12 +16,12 @@ const TableFetchPaginationComponent = ({
   onPageChange,
   cb,
 }: {
-  table: ReturnType<typeof useReactTable>;
+  table: Table<TData>;
   count: number;
   dictionary: Awaited<ReturnType<typeof getDictionary>>;
   onPageChange?: (page: number) => void;
   startChild?: ReactElement;
-  cb?: (e) => void;
+  cb?: (e: any) => void;
 }) => {
   return (
     <div

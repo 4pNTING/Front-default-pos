@@ -8,12 +8,7 @@ import { onError } from '@apollo/client/link/error';
 const TIMEOUT_DURATION = 20000;
 
 const URL = new HttpLink({
-  uri: () => {
-    if (typeof window === 'undefined') {
-      return process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://pos_backend:3000/api-gateway';
-    }
-    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api-gateway';
-  },
+  uri: process.env.API_URL,
 });
 
 type LinkConditionPair = {
@@ -101,7 +96,11 @@ export const ApolloWrapper: React.FC<ApolloWrapperProps> = ({
   });
 
   const client = new ApolloClient({
-    cache: new InMemoryCache(),
+    cache: new InMemoryCache(
+      {
+        addTypename: false
+      }
+    ),
     link: ApolloLink.from([
       authLink,
       errorLink,
@@ -116,6 +115,8 @@ export const ApolloWrapper: React.FC<ApolloWrapperProps> = ({
       ]),
     ]),
   });
+
+  
 
   return <ApolloProvider client={client}>{children}</ApolloProvider>;
 };

@@ -30,17 +30,13 @@ interface UploadResponse {
 }
 
 const getUploadApiUrl = () => {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || '';
-  if (apiUrl.includes('/api-gateway')) {
-    return apiUrl.replace('/api-gateway', '/api/upload');
-  }
-  if (apiUrl.endsWith('/')) {
-    return `${apiUrl}api/upload`;
-  }
-  if (apiUrl) {
-    return `${apiUrl}/api/upload`;
-  }
-  return '/api/upload';
+  const apiUrl = process.env.API_URL || '';
+
+  // if (!apiUrl) {
+  //   throw new Error('API_URL is not configured URL upload');
+  // }
+
+  return `${apiUrl.replace(/\/api-gateway\/?$/, '')}/api/upload`;
 };
 
 /**
@@ -82,7 +78,14 @@ export const uploadFile = async (options: UploadOptions): Promise<string> => {
     }
 
     const result: UploadResponse = await response.json();
-    const fileUrl = result.url || result.fileUrl || result.downloadUrl || '';
+    const fileUrl =
+      result.url ||
+      result.fileUrl ||
+      result.downloadUrl ||
+      result.urls?.preview ||
+      result.urls?.download ||
+      result.file?.filePath ||
+      '';
 
     if (fileUrl) {
       return fileUrl;
@@ -111,7 +114,7 @@ export const validateFile = (
     dic?: any; // Add dictionary for localized messages
   }
 ): boolean => {
-  const maxSize = options?.maxSize || 10; // Default 10MB
+  const maxSize = options?.maxSize || 5; // Default 5MB
   const allowedTypes = options?.allowedTypes || [
     'application/pdf',
     'image/jpeg',

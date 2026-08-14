@@ -92,7 +92,8 @@ export enum ILeasingIndexStatus {
 
 
 export enum IPosFileType {
-  mmsCustomer = "mmsCustomer",
+  posCustomer = "posCustomer",
+  mmsCustomer = "posCustomer",
 }
 
 export { IPosFileType as ILeasingFileType };
@@ -101,31 +102,8 @@ export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export function getRoomCategoryInfo(value: string) {
-  const dict = {
-    company: { id: "1", code: "ຫ້ອງບໍລິສັດ", color: "info" },
-    "1": { id: "1", code: "ຫ້ອງບໍລິສັດ", color: "info" },
-    purchase: { id: "2", code: "ຫ້ອງຊື້", color: "success" },
-    "2": { id: "2", code: "ຫ້ອງຊື້", color: "success" },
-  } as const;
 
-  const m = (dict as any)[value];
-  if (!m) return undefined;
-  return { color: m.color, label: m.code }; // ← ใช้ code เສมอ
-}
 
-export function getOwnershipTypeInfo(value: string) {
-  const dict = {
-    owner_occupied: { id: "1", code: "ເຈົ້າຂອງຢູ່ເອງ", color: "success" },
-    "1": { id: "1", code: "ເຈົ້າຂອງຢູ່ເອງ", color: "success" },
-    transfer_management: { id: "2", code: "ໂອນສິດບໍລິຫານ", color: "warning" },
-    "2": { id: "2", code: "ໂອນສິດບໍລິຫານ", color: "warning" },
-  } as const;
-
-  const m = (dict as any)[value];
-  if (!m) return undefined;
-  return { color: m.color, label: m.code }; // ← ใช้ code เสมอ
-}
 
 export function getCurrencyColor(currencyCode: string): string {
   const colorMap: Record<string, string> = {
@@ -150,21 +128,10 @@ export function formatCurrency(
 }
 
 export enum IUserPermissionFeature {
+  category = "category",
   customer = "customer",
-  electric = "electric",
-  fixedAmount = "fixedAmount",
-  leasingBatchElectric = "leasingBatchElectric",
-  leasingBatchElectricDetail = "leasingBatchElectricDetail",
-  leasingBatchWater = "leasingBatchWater",
-  leasingBatchWaterDetail = "leasingBatchWaterDetail",
-  leasingElectric = "leasingElectric",
-  leasingEWInvoice = "leasingEWInvoice",
-  leasingExpired = "leasingExpired",
-  salesReport = "salesReport",
-  leasingIndex = "leasingIndex",
-  leasingWater = "leasingWater",
-  roomArea = "roomArea",
-  roomAreaCategory = "roomAreaCategory",
+  menuItem = "menuItem",
+  posCard = "posCard",
   shopCategory = "shopCategory",
   user = "user",
   water = "water",

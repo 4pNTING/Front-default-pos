@@ -28,7 +28,7 @@ export interface AttachmentProps {
 const Attachment: React.FC<AttachmentProps> = ({
   title = "", files = [], onFilesChange, maxFiles = 10, maxFileSize = 10, 
   acceptedTypes = [".pdf", ".jpg", ".png"], disabled = false, multiple = true, 
-  dic, placeholder = dic?.clickToSelectFile || "ຄລິກເພື່ອເລືອກໄຟລ໌",
+  dic, placeholder = dic?.clickToSelectFile,
 }) => {
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -41,25 +41,33 @@ const Attachment: React.FC<AttachmentProps> = ({
 
     if (!multiple) {
       if (fileArray.length > 1) {
-        ToastService.error("ສາມາດເລືອກໄດ້ພຽງໄຟລ໌ດຽວເທົ່ານັ້ນ");
+        ToastService.error(dic?.onlySingleFileAllowed);
         return;
       }
     } else {
       if (files.length + fileArray.length > maxFiles) {
-        ToastService.error(`ສາມາດແນບໄດ້ສູງສຸດ ${maxFiles} ໄຟລ໌`);
+        ToastService.error(
+          dic?.maxFilesReached?.replace('{maxFiles}', maxFiles.toString())
+        );
         return;
       }
     }
 
     for (const file of fileArray) {
       if (file.size > maxFileSize * 1024 * 1024) {
-        ToastService.error(`ໄຟລ໌ ${file.name} ມີຂະໜາດໃຫຍ່ເກີນ ${maxFileSize}MB`);
+        ToastService.error(
+          dic?.fileSizeExceeded
+            ?.replace('{fileName}', file.name)
+            .replace('{maxSize}', maxFileSize.toString())
+        );
         return;
       }
 
       const fileExtension = "." + file.name.split(".").pop()?.toLowerCase();
       if (acceptedTypes.length > 0 && !acceptedTypes.includes(fileExtension)) {
-        ToastService.error(`ປະເພດໄຟລ໌ ${fileExtension} ບໍ່ຖືກຮອງຮັບ`);
+        ToastService.error(
+          dic?.fileTypeNotSupported?.replace('{type}', fileExtension)
+        );
         continue;
       }
 
@@ -157,8 +165,7 @@ const Attachment: React.FC<AttachmentProps> = ({
         });
         
         if (!response.ok) {
-          console.error(`Failed to fetch file: ${response.status} - ${response.statusText}`);
-          ToastService.error(`ດາວໂຫຼດໄຟລ໌ລົ້ມເຫລວ: ${response.status}`);
+          ToastService.error(`${dic?.fileDownloadFailed}: ${response.status}`);
           return;
         }
         
@@ -174,11 +181,10 @@ const Attachment: React.FC<AttachmentProps> = ({
         
         setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
       } catch (error) {
-        console.error('Download error:', error);
-        ToastService.error(`ເກີດຂໍ້ຜິດພາດໃນການດາວໂຫຼດໄຟລ໌: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        ToastService.error(dic?.downloadError);
       }
     } else {
-      ToastService.error("ບໍ່ພົບໄຟລ໌");
+      ToastService.error(dic?.fileNotFound);
     }
   };
 
@@ -304,7 +310,7 @@ const Attachment: React.FC<AttachmentProps> = ({
             >
               <i className="tabler-upload text-[18px] text-gray-400" />
               <Typography variant="body2" sx={{ color: "#9ca3af", fontSize: '0.875rem' }}>
-                {dic?.clickToUpload || "ຄລິກເພື່ອອັບໂຫລດ"}
+                {dic?.clickToUpload}
               </Typography>
             </Paper>
           )}
@@ -400,7 +406,7 @@ const Attachment: React.FC<AttachmentProps> = ({
         <Box sx={{ mt: 2 }}>
           <LinearProgress />
           <Typography variant="caption" sx={{ color: "#6b7280", mt: 1 }}>
-            {dic?.loading || "ກຳລັງໂຫລດ..."}
+            {dic?.loading}
           </Typography>
         </Box>
       )}

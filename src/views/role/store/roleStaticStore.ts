@@ -71,6 +71,18 @@ const basic_section = [
     feature: "category",
     __typename: "RoleMenu",
   },
+  {
+    href: "/menuitem",
+    icon: "tabler-meat",
+    exactMatch: false,
+    laMenu: "ອາຫານ ແລະ ສິນຄ້າ",
+    enMenu: "Menu Item",
+    laSection: "ຂໍ້ມູນພື້ນຖານ",
+    enSection: "Basic information",
+    permission: ["c", "r", "u", "d"],
+    feature: "menuItem",
+    __typename: "RoleMenu",
+  },
 ];
 
 const settings_section = [

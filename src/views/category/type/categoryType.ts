@@ -24,6 +24,7 @@ export type CreateNetworkProps = {
   mutation: any;
   name: string;
   description?: string;
+  photo?: string;
   isActive?: string;
 };
 
@@ -33,6 +34,7 @@ export type UpdateNetworkProps = {
   _id: string;
   name?: string;
   description?: string;
+  photo?: string;
   isActive?: string;
 };
 
@@ -51,6 +53,7 @@ export interface CategoryType {
   _id?: string;
   name: string;
   description?: string;
+  photo?: string;
   isActive?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -60,6 +63,7 @@ export interface CategoryInput {
   _id?: string;
   name?: string | null;
   description?: string | null;
+  photo?: string | null;
   isActive?: string | null;
   
   page?: number;

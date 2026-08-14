@@ -58,6 +58,7 @@ const UploadFile: React.FC<UploadFileProps> = ({
         if (ext === ".pdf") mimeTypes.push("application/pdf");
         if (ext === ".jpg" || ext === ".jpeg") mimeTypes.push("image/jpeg");
         if (ext === ".png") mimeTypes.push("image/png");
+        if (ext === ".webp") mimeTypes.push("image/webp");
       });
 
       if (

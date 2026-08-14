@@ -32,6 +32,9 @@
 const nextConfig = {
   reactStrictMode: false,
   basePath: process.env.BASEPATH,
+  env: {
+    API_URL: process.env.API_URL,
+  },
   redirects: async () => {
     return [
       {

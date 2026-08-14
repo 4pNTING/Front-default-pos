@@ -36,6 +36,18 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
           }
         ]
       },
+      // Menu Item Management
+      {
+        label: dictionary.menuItemPage.title,
+        icon: 'tabler-meat',
+        children: [
+          {
+            label: dictionary.menuItemPage.list,
+            icon: 'tabler-circle',
+            href: '/menuitem'
+          }
+        ]
+      },
       // Leasing Management
       {
         label: 'Leasing Management',

@@ -96,6 +96,7 @@ const CreateComponent = ({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+
           backgroundColor: "#0A3981",
           color: "white",
           padding: "16px 24px",
