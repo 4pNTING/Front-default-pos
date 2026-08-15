@@ -13,7 +13,7 @@ import {
   FormHelperText,
 } from "@mui/material";
 import { useState } from "react";
-import { msgSuccess, msgError } from "@/utils/sweetalert";
+import { ToastService } from "@/utils/toastService";
 import CustomTextField from "@/@core/components/mui/TextField";
 import { UploadFile } from "@core/components/custom-inputs";
 import type { AttachedFile } from "@core/components/custom-inputs";
@@ -61,7 +61,10 @@ const CreateComponent = ({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      ToastService.formInvalid(props.dictionary);
+      return;
+    }
 
     try {
       await createMenuItemAPI({
@@ -76,21 +79,11 @@ const CreateComponent = ({
         },
       });
 
-      msgSuccess({
-        title: props.dictionary.success,
-        text: labels.createSuccess,
-        btnOKText: props.dictionary.ok,
-        btnOKColor: "#3085d6",
-      });
+      ToastService.createSuccess(props.dictionary);
       handleClose();
       if (onSuccess) onSuccess();
-    } catch (error) {
-      msgError({
-        title: props.dictionary.error,
-        text: labels.createError,
-        btnOKText: props.dictionary.ok,
-        btnOKColor: "#d33",
-      });
+    } catch (error: any) {
+      ToastService.actionError("ເພີ່ມ MenuItem", error?.message, props.dictionary);
     }
   };
 
@@ -126,7 +119,7 @@ const CreateComponent = ({
         <form id="create-menu-item-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 space-y-4">
           <CustomTextField
             fullWidth
-            label={`${labels.name} *`}
+            label={labels.name}
             value={name}
             onChange={(e) => setName(e.target.value)}
             error={!!errors.name}
@@ -135,10 +128,10 @@ const CreateComponent = ({
           />
 
           <FormControl fullWidth size="small" error={!!errors.categoryId}>
-            <InputLabel id="category-select-label">{labels.category} *</InputLabel>
+            <InputLabel id="category-select-label">{labels.category}</InputLabel>
             <Select
               labelId="category-select-label"
-              label={`${labels.category} *`}
+              label={labels.category}
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value as string)}
             >
@@ -160,7 +153,7 @@ const CreateComponent = ({
           <CustomTextField
             fullWidth
             type="number"
-            label={`${labels.price} (${labels.currency}) *`}
+            label={`${labels.price} (${labels.currency})`}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             error={!!errors.price}
@@ -190,7 +183,7 @@ const CreateComponent = ({
               ownerId={"temp-" + Date.now()}
               ownerType="menuItem"
               maxFileSize={5}
-              acceptedTypes={[".jpg", ".png", ".webp"]}
+              acceptedTypes={[".jpg", ".png", ".jpeg"]}
               disabled={loading}
               dic={props.dictionary}
               autoUpload={false}
@@ -206,10 +199,21 @@ const CreateComponent = ({
             type="submit"
             form="create-menu-item-form"
             variant="contained"
-            color="primary"
             disabled={loading}
+            className="min-w-[100px]"
+            sx={{
+              backgroundColor: "#0A3981",
+              "&:hover": { backgroundColor: "#082d5c" },
+            }}
+            startIcon={
+              loading ? (
+                <i className="tabler-loader-2 text-[16px] animate-spin" />
+              ) : (
+                <i className="tabler-device-floppy text-[18px]" />
+              )
+            }
           >
-            {loading ? props.dictionary.loading : props.dictionary.save}
+            {props.dictionary.save}
           </Button>
         </div>
       </div>

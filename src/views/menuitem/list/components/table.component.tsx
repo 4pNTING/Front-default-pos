@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo } from "react";
 import tableStyles from "@core/styles/table.module.css";
 import {
   ColumnDef,
@@ -31,7 +31,7 @@ const TableComponent = ({
   onEditClick?: (item: MenuItemType) => void;
 }) => {
   const { dictionary: dic } = props;
-  const labels = dic?.menuItemPage;
+  const labels = dic.menuItemPage;
 
   const tableScrollRef = useDragToScroll<HTMLDivElement>();
 
@@ -88,7 +88,7 @@ const TableComponent = ({
         size: 8,
         header: () => (
           <div className="text-center font-bold text-[14px] text-white">
-            {labels?.image || "Image"}
+            {labels.image}
           </div>
         ),
         cell: ({ row }) => {
@@ -125,7 +125,7 @@ const TableComponent = ({
         size: 25,
         header: () => (
           <div className="text-center font-bold text-[14px] text-white">
-            {labels?.name || dic?.name || "Name"}
+            {labels.name}
           </div>
         ),
         cell: ({ row }) => (
@@ -138,7 +138,7 @@ const TableComponent = ({
         size: 15,
         header: () => (
           <div className="text-center font-bold text-[14px] text-white">
-            {labels?.category || dic?.category || "Category"}
+            {labels.category}
           </div>
         ),
         cell: ({ row }) => (
@@ -158,12 +158,12 @@ const TableComponent = ({
         size: 15,
         header: () => (
           <div className="text-center font-bold text-[14px] text-white">
-            {labels?.price || "Price"} ({labels?.currency || "₭"})
+            {labels.price} ({labels.currency})
           </div>
         ),
         cell: ({ row }) => (
           <div className="text-center font-bold text-[#0A3981] text-[15px]">
-            {Number(row.original.price || 0).toLocaleString()} ₭
+            {Number(row.original.price ?? 0).toLocaleString()} ₭
           </div>
         ),
       }),
@@ -171,7 +171,7 @@ const TableComponent = ({
         size: 20,
         header: () => (
           <div className="text-center font-bold text-[14px] text-white">
-            {labels?.description || dic?.description || "Description"}
+            {labels.description}
           </div>
         ),
         cell: ({ row }) => (
@@ -184,7 +184,7 @@ const TableComponent = ({
         size: 12,
         header: () => (
           <div className="text-center font-bold text-[14px] text-white">
-            {dic?.status || "Status"}
+            {dic.status}
           </div>
         ),
         cell: ({ row }) => {
@@ -195,11 +195,7 @@ const TableComponent = ({
                 size="small"
                 round="true"
                 variant="tonal"
-                label={
-                  isItemActive
-                    ? dic?.active || "Active"
-                    : dic?.inactive || "Inactive"
-                }
+                label={isItemActive ? dic.active : dic.inactive}
                 color={isItemActive ? "success" : "secondary"}
                 sx={{ fontWeight: 600 }}
               />
@@ -212,7 +208,7 @@ const TableComponent = ({
         size: 10,
         header: () => (
           <div className="text-center font-bold text-[16px] text-white flex justify-center pr-6">
-            {dic?.tableAction || dic?.action || "Action"}
+            {dic.action}
           </div>
         ),
         cell: ({ row }) => (
@@ -232,7 +228,7 @@ const TableComponent = ({
   );
 
   const table = useReactTable({
-    data: menuItemList || [],
+    data: menuItemList ?? [],
     columns,
     state: {
       pagination: {
@@ -312,7 +308,7 @@ const TableComponent = ({
                   >
                     <div className="flex flex-col items-center text-gray-500">
                       <i className="tabler-database-off text-4xl mb-2"></i>
-                      <span>{labels?.noData || dic.noDataAvailable || "No data available"}</span>
+                      <span>{labels.noData}</span>
                     </div>
                   </td>
                 </tr>
@@ -321,7 +317,7 @@ const TableComponent = ({
               <tbody>
                 {table.getRowModel().rows.map((row, index) => (
                   <tr
-                    key={`menuitem-row-${row?.original?._id || ""}-${index}`}
+                    key={`menuitem-row-${row?.original?._id ?? ""}-${index}`}
                     className={classNames(
                       "even:bg-[#F3FAFB] hover:bg-[rgba(14,116,144,0.10)] transition-colors",
                     )}

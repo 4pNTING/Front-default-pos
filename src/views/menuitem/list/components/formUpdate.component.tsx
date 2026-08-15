@@ -1,4 +1,4 @@
-import { MenuItemListProps, MenuItemType } from "../../type/menuItemType";
+import { MenuItemListProps } from "../../type/menuItemType";
 import { useMenuItemStore, useMenuItemMutations } from "../../store/menuItemStore";
 import {
   Drawer,
@@ -15,7 +15,7 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { msgSuccess, msgError } from "@/utils/sweetalert";
+import { ToastService } from "@/utils/toastService";
 import CustomTextField from "@/@core/components/mui/TextField";
 import { UploadFile } from "@core/components/custom-inputs";
 import type { AttachedFile } from "@core/components/custom-inputs";
@@ -45,10 +45,10 @@ const UpdateComponent = ({
 
   useEffect(() => {
     if (selectedItem) {
-      setName(selectedItem.name || "");
-      setDescription(selectedItem.description || "");
+      setName(selectedItem.name ?? "");
+      setDescription(selectedItem.description ?? "");
       setPrice(selectedItem.price ? String(selectedItem.price) : "");
-      setCategoryId(selectedItem.categoryId || "");
+      setCategoryId(selectedItem.categoryId ?? "");
       setIsActive(selectedItem.isActive !== "inactive");
 
       if (selectedItem.photo) {
@@ -81,7 +81,12 @@ const UpdateComponent = ({
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selectedItem || !validate()) return;
+    if (!selectedItem) return;
+
+    if (!validate()) {
+      ToastService.formInvalid(props.dictionary);
+      return;
+    }
 
     try {
       await updateMenuItemAPI({
@@ -98,21 +103,11 @@ const UpdateComponent = ({
         },
       });
 
-      msgSuccess({
-        title: props.dictionary.success,
-        text: labels.updateSuccess,
-        btnOKText: props.dictionary.ok,
-        btnOKColor: "#3085d6",
-      });
+      ToastService.updateSuccess(props.dictionary);
       handleClose();
       if (onSuccess) onSuccess();
-    } catch (error) {
-      msgError({
-        title: props.dictionary.error,
-        text: labels.updateError,
-        btnOKText: props.dictionary.ok,
-        btnOKColor: "#d33",
-      });
+    } catch (error: any) {
+      ToastService.actionError("ແກ້ໄຂ MenuItem", error?.message, props.dictionary);
     }
   };
 
@@ -148,7 +143,7 @@ const UpdateComponent = ({
         <form id="update-menu-item-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 space-y-4">
           <CustomTextField
             fullWidth
-            label={`${labels.name} *`}
+            label={labels.name}
             value={name}
             onChange={(e) => setName(e.target.value)}
             error={!!errors.name}
@@ -156,10 +151,10 @@ const UpdateComponent = ({
           />
 
           <FormControl fullWidth size="small" error={!!errors.categoryId}>
-            <InputLabel id="category-update-select-label">{labels.category} *</InputLabel>
+            <InputLabel id="category-update-select-label">{labels.category}</InputLabel>
             <Select
               labelId="category-update-select-label"
-              label={`${labels.category} *`}
+              label={labels.category}
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value as string)}
             >
@@ -181,7 +176,7 @@ const UpdateComponent = ({
           <CustomTextField
             fullWidth
             type="number"
-            label={`${labels.price} (${labels.currency}) *`}
+            label={`${labels.price} (${labels.currency}) `}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             error={!!errors.price}
@@ -217,7 +212,7 @@ const UpdateComponent = ({
             <UploadFile
               file={menuItemFile}
               onFileChange={setMenuItemFile}
-              ownerId={selectedItem?._id || `temp-${Date.now()}`}
+              ownerId={selectedItem?._id ?? ""}
               ownerType="menuItem"
               maxFileSize={5}
               acceptedTypes={[".jpg", ".png", ".webp"]}
@@ -236,10 +231,18 @@ const UpdateComponent = ({
             type="submit"
             form="update-menu-item-form"
             variant="contained"
-            color="primary"
+            color="warning"
             disabled={loading}
+            className="min-w-[120px] hover:bg-yellow-700"
+            startIcon={
+              loading ? (
+                <i className="tabler-loader-2 text-[16px] animate-spin" />
+              ) : (
+                <i className="tabler-edit text-[16px]" />
+              )
+            }
           >
-            {loading ? props.dictionary.loading : props.dictionary.save}
+            {props.dictionary.update}
           </Button>
         </div>
       </div>

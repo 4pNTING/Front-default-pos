@@ -49,14 +49,14 @@ const HeaderComponent = ({
                 className="text-[#333] hover:underline hover:underline-offset-1"
                 href="/"
               >
-                {dic.pageBreadcrumbs?.homePage}
+                {dic.pageBreadcrumbs.homePage}
               </Link>
 
               <Link
                 className="text-[#41669D] hover:underline hover:underline-offset-1 font-bold"
                 href="/menuitem"
               >
-                {labels?.title || dic.pageBreadcrumbs?.foodAndProductManagement}
+                {labels.title}
               </Link>
             </Breadcrumbs>
           </div>
@@ -71,9 +71,9 @@ const HeaderComponent = ({
               <CustomAutocomplete
                 sx={{ width: "100%" }}
                 options={[
-                  { label: dic["all"] || "All", value: IEntityStatus.all },
-                  { label: dic["active"] || "Active", value: IEntityStatus.active },
-                  { label: dic["inactive"] || "Inactive", value: IEntityStatus.inactive },
+                  { label: dic["all"], value: IEntityStatus.all },
+                  { label: dic["active"], value: IEntityStatus.active },
+                  { label: dic["inactive"], value: IEntityStatus.inactive },
                 ]}
                 isOptionEqualToValue={(option, value) => option.value === value.value}
                 getOptionLabel={(option) => option.label}
@@ -90,14 +90,14 @@ const HeaderComponent = ({
                   />
                 )}
                 onChange={(_, value) => {
-                  onStatusChange(value?.value || IEntityStatus.all);
+                  onStatusChange(value?.value ?? IEntityStatus.all);
                 }}
                 value={
                   isActive === IEntityStatus.active
-                    ? { label: dic["active"] || "Active", value: IEntityStatus.active }
+                    ? { label: dic["active"], value: IEntityStatus.active }
                     : isActive === IEntityStatus.inactive
-                    ? { label: dic["inactive"] || "Inactive", value: IEntityStatus.inactive }
-                    : { label: dic["all"] || "All", value: IEntityStatus.all }
+                    ? { label: dic["inactive"], value: IEntityStatus.inactive }
+                    : { label: dic["all"], value: IEntityStatus.all }
                 }
                 size="small"
                 loading={loading}
@@ -110,10 +110,10 @@ const HeaderComponent = ({
               <CustomAutocomplete
                 sx={{ width: "100%" }}
                 options={[
-                  { label: labels?.allCategories || dic["all"] || "All Categories", value: "" },
+                  { label: labels.allCategories, value: "" },
                   ...categoryList.map((cat) => ({
                     label: cat.name,
-                    value: cat._id || "",
+                    value: cat._id,
                   })),
                 ]}
                 isOptionEqualToValue={(option, value) => option.value === value.value}
@@ -121,7 +121,7 @@ const HeaderComponent = ({
                 renderInput={(params) => (
                   <CustomTextField
                     {...params}
-                    placeholder={labels?.category || dic.category || "Category"}
+                    placeholder={labels.category}
                     InputProps={{
                       ...params.InputProps,
                       startAdornment: (
@@ -131,18 +131,18 @@ const HeaderComponent = ({
                   />
                 )}
                 onChange={(_, value) => {
-                  onCategoryChange(value?.value || "");
+                  onCategoryChange(value?.value ?? "");
                 }}
                 value={
                   selectedCategory
                     ? {
                         label:
-                          categoryList.find((c) => c._id === selectedCategory)?.name ||
+                          categoryList.find((c) => c._id === selectedCategory)?.name ??
                           selectedCategory,
                         value: selectedCategory,
                       }
                     : {
-                        label: labels?.allCategories || dic["all"] || "All Categories",
+                        label: labels.allCategories,
                         value: "",
                       }
                 }
@@ -157,7 +157,7 @@ const HeaderComponent = ({
               <CustomTextField
                 fullWidth
                 type="search"
-                placeholder={labels?.searchPlaceholder || dic.placeHolder?.search || "Search..."}
+                placeholder={labels.searchPlaceholder}
                 value={searchValue}
                 onChange={(e) => onSearch(e.target.value)}
                 inputProps={{ autoComplete: "off" }}
@@ -184,7 +184,7 @@ const HeaderComponent = ({
               }}
               startIcon={<i className="tabler-circle-plus text-[20px]"></i>}
             >
-              {labels?.create || dic?.create}
+              {labels.create}
             </Button>
           </div>
         </div>

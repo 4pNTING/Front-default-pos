@@ -3,7 +3,7 @@ import React from "react";
 import { IconButton, Tooltip } from "@mui/material";
 import { MenuItemListProps, MenuItemType } from "../../type/menuItemType";
 import { useMenuItemStore, useMenuItemMutations } from "../../store/menuItemStore";
-import { msgConfirm, msgSuccess, msgError } from "@/utils/sweetalert";
+import { msgConfirm } from "@/utils/sweetalert";
 import { ToastService } from "@/utils/toastService";
 
 interface ButtonOptionProps {
@@ -20,7 +20,7 @@ export function ButtonOption({
   onRefresh,
 }: ButtonOptionProps) {
   const { dictionary: dic } = props;
-  const labels = dic?.menuItemPage;
+  const labels = dic.menuItemPage;
 
   const {
     deleteMenuItemAPI,
@@ -40,10 +40,10 @@ export function ButtonOption({
 
   const handleDeleteClick = async () => {
     const confirmed = await msgConfirm({
-      title: labels?.deleteTitle || dic?.confirmDeleteTitle || "Delete Item",
-      text: labels?.deleteQuestion ? labels.deleteQuestion.replace("{name}", currentToView.name) : (dic?.confirmDeleteText || `Do you want to delete ${currentToView.name}?`),
-      btnConfirmText: labels?.deleteConfirm || dic?.confirm || "Delete",
-      btnCancelText: dic?.cancel || "Cancel",
+      title: labels.deleteTitle,
+      text: labels.deleteQuestion.replace("{name}", currentToView.name),
+      btnConfirmText: labels.deleteConfirm,
+      btnCancelText: dic.cancel,
       btnConfirmColor: "#1d5089ff",
     });
 
@@ -53,7 +53,7 @@ export function ButtonOption({
       await deleteMenuItemAPI({
         props: {
           mutation: deleteMenuItemMutation,
-          _id: currentToView._id || "",
+          _id: currentToView._id,
         },
       });
 
@@ -62,13 +62,13 @@ export function ButtonOption({
         await onRefresh();
       }
     } catch (error: any) {
-      ToastService.actionError("Delete Menu Item", error.message, dic);
+      ToastService.actionError("ລຶບ MenuItem", error.message, dic);
     }
   };
 
   return (
     <div className="flex gap-2 items-center justify-center">
-      <Tooltip title={dic?.edit || "Edit"}>
+      <Tooltip title={dic.edit}>
         <IconButton
           onClick={handleEdit}
           size="small"
@@ -78,7 +78,7 @@ export function ButtonOption({
         </IconButton>
       </Tooltip>
 
-      <Tooltip title={dic?.delete || "Delete"}>
+      <Tooltip title={dic.delete}>
         <IconButton
           onClick={handleDeleteClick}
           size="small"
