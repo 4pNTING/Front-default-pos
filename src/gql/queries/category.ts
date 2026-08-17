@@ -3,6 +3,7 @@ import { gql } from "@apollo/client";
 export const LOAD_CATEGORY = gql`
   query LoadCategory($input: LoadCategoryDto) {
     loadCategory(input: $input) {
+      count
       category {
         _id
         name
