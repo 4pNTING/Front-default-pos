@@ -9,11 +9,13 @@ import {
   CreateMenuItemNetworkProps,
   UpdateMenuItemNetworkProps,
   DeleteMenuItemNetworkProps,
+  RestoreMenuItemNetworkProps,
 } from "../type/menuItemType";
 import {
   CREATE_MENU_ITEM,
   UPDATE_MENU_ITEM,
   DELETE_MENU_ITEM,
+  RESTORE_MENU_ITEM,
 } from "@/gql/queries/menuItem";
 import { uploadOwnerFile } from "@/utils/fileUploadService";
 
@@ -23,11 +25,13 @@ export const useMenuItemMutations = () => {
   const [createMenuItemMutation] = useMutation(CREATE_MENU_ITEM);
   const [updateMenuItemMutation] = useMutation(UPDATE_MENU_ITEM);
   const [deleteMenuItemMutation] = useMutation(DELETE_MENU_ITEM);
+  const [restoreMenuItemMutation] = useMutation(RESTORE_MENU_ITEM);
 
   return {
     createMenuItemMutation,
     updateMenuItemMutation,
     deleteMenuItemMutation,
+    restoreMenuItemMutation,
   };
 };
 
@@ -70,6 +74,7 @@ interface IState {
   createMenuItemAPI: ({ props }: { props: CreateMenuItemNetworkProps }) => Promise<void>;
   updateMenuItemAPI: ({ props }: { props: UpdateMenuItemNetworkProps }) => Promise<void>;
   deleteMenuItemAPI: ({ props }: { props: DeleteMenuItemNetworkProps }) => Promise<void>;
+  restoreMenuItemAPI: ({ props }: { props: RestoreMenuItemNetworkProps }) => Promise<void>;
 
   menuItemList: MenuItemType[];
   categoryList: MenuItemCategory[];
@@ -128,14 +133,14 @@ export const useMenuItemStore = create<IState>((set, get) => ({
   setIsActive: (value) => set({ isActive: value, pageIndex: 0 }),
   setSelectedCategory: (value) => set({ selectedCategory: value, pageIndex: 0 }),
 
-  setPagination: ({ pageIndex, pageSize, isActive, keyword, selectedCategory }) => {
-    set((state) => ({
-      pageIndex,
-      pageSize,
-      isActive: isActive !== undefined ? isActive : state.isActive,
-      keyword: keyword !== undefined ? keyword : state.keyword,
-      selectedCategory: selectedCategory !== undefined ? selectedCategory : state.selectedCategory,
-    }));
+  setPagination: (pagination) => {
+    set({
+      pageIndex: pagination.pageIndex,
+      pageSize: pagination.pageSize,
+      isActive: pagination.isActive,
+      keyword: pagination.keyword,
+      selectedCategory: pagination.selectedCategory,
+    });
   },
 
   menuItemList: [],
@@ -329,6 +334,29 @@ export const useMenuItemStore = create<IState>((set, get) => ({
       }
     } catch (error) {
       console.error('deleteMenuItemAPI Error:', error);
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  restoreMenuItemAPI: async ({ props }) => {
+    set({ loading: true });
+    try {
+      const { data } = await props.mutation({
+        variables: {
+          input: { _id: props._id },
+        },
+      });
+
+      if (data?.restoreMenuItem?.menuItem) {
+        set((state) => ({
+          menuItemList: state.menuItemList.filter((item) => item._id !== props._id),
+          count: Math.max(0, state.count - 1),
+        }));
+      }
+    } catch (error) {
+      console.error('restoreMenuItemAPI Error:', error);
       throw error;
     } finally {
       set({ loading: false });

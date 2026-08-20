@@ -90,3 +90,13 @@ export const DELETE_MENU_ITEM = gql`
     }
   }
 `;
+
+export const RESTORE_MENU_ITEM = gql`
+  mutation RestoreMenuItem($input: RestoreMenuItemDto!) {
+    restoreMenuItem(input: $input) {
+      menuItem {
+        _id
+      }
+    }
+  }
+`;

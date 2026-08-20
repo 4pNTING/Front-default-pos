@@ -50,6 +50,11 @@ export type DeleteMenuItemNetworkProps = {
   _id: string;
 };
 
+export type RestoreMenuItemNetworkProps = {
+  mutation: any;
+  _id: string;
+};
+
 export interface MenuItemType {
   _id: string;
   uniqueId?: number;

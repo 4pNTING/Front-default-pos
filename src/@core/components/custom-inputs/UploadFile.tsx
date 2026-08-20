@@ -34,7 +34,7 @@ const UploadFile: React.FC<UploadFileProps> = ({
   ownerId,
   ownerType,
   disabled = false,
-  maxFileSize = 10,
+  maxFileSize = 5,
   acceptedTypes = [".pdf", ".jpg", ".png"],
   dic,
   autoUpload = true,

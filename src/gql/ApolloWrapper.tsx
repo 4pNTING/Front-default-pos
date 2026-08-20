@@ -74,7 +74,7 @@ export const ApolloWrapper: React.FC<ApolloWrapperProps> = ({
       headers: {
         ...headers,
         authorization: `Bearer ${token}`,
-        platform: 'mms_svc',
+        platform: 'pos_svc',
       },
     };
   });

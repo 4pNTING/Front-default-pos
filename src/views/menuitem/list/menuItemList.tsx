@@ -35,8 +35,21 @@ export const MenuItemList = ({ props }: { props: MenuItemListProps }) => {
     });
   }, [loadMenuItemAPI, loadMenuItemCall]);
 
+  const hasFetchedRef = useRef(false);
+
   const initData = useCallback(async () => {
     try {
+      const { menuItemList } = useMenuItemStore.getState();
+      if (menuItemList && menuItemList.length > 0) {
+        hasFetchedRef.current = true;
+        return;
+      }
+
+      if (hasFetchedRef.current) {
+        return;
+      }
+      hasFetchedRef.current = true;
+
       const [, catRes] = await Promise.all([
         refreshList(),
         loadCategoryCall({
@@ -48,6 +61,7 @@ export const MenuItemList = ({ props }: { props: MenuItemListProps }) => {
         setCategoryList(catRes.data.loadCategory.category);
       }
     } catch (err) {
+      hasFetchedRef.current = false;
       ToastService.error(err instanceof Error ? err.message : props.dictionary.menuItemPage.loadError);
     }
   }, [refreshList, loadCategoryCall, setCategoryList]);

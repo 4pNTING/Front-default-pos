@@ -176,7 +176,7 @@ const UpdateComponent = ({
           <CustomTextField
             fullWidth
             type="number"
-            label={`${labels.price} (${labels.currency}) `}
+            label={`${labels.price} (${labels.currency})`}
             value={price}
             onChange={(e) => setPrice(e.target.value)}
             error={!!errors.price}
@@ -233,7 +233,7 @@ const UpdateComponent = ({
             variant="contained"
             color="warning"
             disabled={loading}
-            className="min-w-[120px] hover:bg-yellow-700"
+            className="min-w-[100px] hover:bg-yellow-700"
             startIcon={
               loading ? (
                 <i className="tabler-loader-2 text-[16px] animate-spin" />
