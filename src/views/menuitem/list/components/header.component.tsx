@@ -71,7 +71,6 @@ const HeaderComponent = ({
               <CustomAutocomplete
                 sx={{ width: "100%" }}
                 options={[
-                  { label: dic["all"], value: IEntityStatus.all },
                   { label: dic["active"], value: IEntityStatus.active },
                   { label: dic["inactive"], value: IEntityStatus.inactive },
                 ]}

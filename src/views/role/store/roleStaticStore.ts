@@ -11,6 +11,18 @@ const basic_section = [
     feature: "leasingIndex",
     __typename: "RoleMenu",
   },
+    {
+    href: "/pos",
+    icon: "tabler-cash-register",
+    exactMatch: false,
+    laMenu: "ໜ້າຂາຍ / ສັ່ງອາຫານ",
+    enMenu: "POS Ordering",
+    laSection: "ລະບົບຂາຍໜ້າຮ້ານ",
+    enSection: "POS System",
+    permission: ["c", "r", "u", "d"],
+    feature: "pos",
+    __typename: "RoleMenu",
+  },
   {
     href: "/customer",
     icon: "tabler-users",
@@ -83,6 +95,19 @@ const basic_section = [
     feature: "menuItem",
     __typename: "RoleMenu",
   },
+  {
+    href: "/table",
+    icon: "tabler-armchair",
+    exactMatch: false,
+    laMenu: "ໂຕະອາຫານ",
+    enMenu: "Table",
+    laSection: "ຂໍ້ມູນພື້ນຖານ",
+    enSection: "Basic information",
+    permission: ["c", "r", "u", "d"],
+    feature: "table",
+    __typename: "RoleMenu",
+  },
+
 ];
 
 const settings_section = [

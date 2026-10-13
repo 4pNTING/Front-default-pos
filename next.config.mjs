@@ -34,6 +34,7 @@ const nextConfig = {
   basePath: process.env.BASEPATH,
   env: {
     API_URL: process.env.API_URL,
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
   redirects: async () => {
     return [
@@ -56,10 +57,18 @@ const nextConfig = {
       //   locale: false,
       // },
       {
-        source: "/((?!(?:en|fr|ar|front-pages|favicon.ico|wallet)\\b)):path",
+        source: "/((?!(?:en|fr|ar|front-pages|favicon.ico|wallet|uploads)\\b)):path",
         destination: "/la/:path",
         permanent: false,
         locale: false,
+      },
+    ];
+  },
+  rewrites: async () => {
+    return [
+      {
+        source: "/uploads/:path*",
+        destination: "http://localhost:3000/uploads/:path*",
       },
     ];
   },

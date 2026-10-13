@@ -24,6 +24,18 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
     label: dictionary['navigation'].appsPages,
     isSection: true,
     children: [
+      // POS Ordering (Phase 2)
+      {
+        label: dictionary.posPage.title,
+        icon: 'tabler-cash-register',
+        children: [
+          {
+            label: dictionary.posPage.floorPlan,
+            icon: 'tabler-circle',
+            href: '/pos'
+          }
+        ]
+      },
       // Customer Management
       {
         label: 'Customer Management',
@@ -45,6 +57,18 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
             label: dictionary.menuItemPage.list,
             icon: 'tabler-circle',
             href: '/menuitem'
+          }
+        ]
+      },
+      // Table Management
+      {
+        label: dictionary.tablePage.title,
+        icon: 'tabler-armchair',
+        children: [
+          {
+            label: dictionary.tablePage.list,
+            icon: 'tabler-circle',
+            href: '/table'
           }
         ]
       },

@@ -98,6 +98,35 @@ export enum IPosFileType {
 
 export { IPosFileType as ILeasingFileType };
 
+export enum IPosOrderStatus {
+  all = "all",
+  pending = "pending",
+  confirmed = "confirmed",
+  preparing = "preparing",
+  served = "served",
+  paid = "paid",
+  cancelled = "cancelled",
+}
+
+export enum IPosTableStatus {
+  all = "all",
+  available = "available",
+  occupied = "occupied",
+  reserved = "reserved",
+}
+
+export enum IPosPaymentMethod {
+  cash = "cash",
+  qr = "qr",
+  card = "card",
+}
+
+export enum IPosViewMode {
+  table = "table",
+  order = "order",
+  orders_list = "orders_list",
+}
+
 export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }

@@ -63,8 +63,13 @@ export const authOptions: NextAuthOptions = {
 
           // Return user data with new token format
           return {
-            id: _id || username,
+            id: _id ?? username,
+            userId: _id,
             user: {
+              _id: _id,
+              userId: _id,
+              id: _id,
+              uid: _id,
               prefix: username,
               username: username,
               fNameLa: "",
@@ -77,7 +82,6 @@ export const authOptions: NextAuthOptions = {
             authorization: token,
             token: token,
             refreshToken: refreshToken,
-            userId: _id,
           };
         } catch (e: any) {
           throw new Error(e.message);
@@ -106,7 +110,12 @@ export const authOptions: NextAuthOptions = {
 
         // Ensure token.user object exists before assignment
         if (loginPayload.user) {
-          token.user = loginPayload.user;
+          token.user = {
+            ...loginPayload.user,
+            userId: loginPayload.userId ?? loginPayload.id ?? (loginPayload.user as any).userId,
+            _id: loginPayload.userId ?? loginPayload.id ?? (loginPayload.user as any)._id,
+            id: loginPayload.userId ?? loginPayload.id ?? (loginPayload.user as any).id,
+          };
         }
 
         token.authorization = loginPayload.authorization;

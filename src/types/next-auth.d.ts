@@ -17,6 +17,9 @@ declare module "next-auth" {
     isActive?: boolean;
     uid?: string;
     uniqueId?: string;
+    _id?: string;
+    id?: string;
+    userId?: string;
   }
 
   export interface Session {

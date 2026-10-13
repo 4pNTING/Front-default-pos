@@ -8,7 +8,7 @@ import { onError } from '@apollo/client/link/error';
 const TIMEOUT_DURATION = 20000;
 
 const URL = new HttpLink({
-  uri: process.env.API_URL,
+  uri: process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'http://localhost:3000/api-gateway',
 });
 
 type LinkConditionPair = {

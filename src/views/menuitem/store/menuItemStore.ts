@@ -89,7 +89,7 @@ export const useMenuItemStore = create<IState>((set, get) => ({
       selectedItem: null,
       pageIndex: 0,
       pageSize: 50,
-      isActive: IEntityStatus.all,
+      isActive: IEntityStatus.active,
       keyword: '',
       selectedCategory: '',
     });
@@ -126,7 +126,7 @@ export const useMenuItemStore = create<IState>((set, get) => ({
   count: 0,
   pageIndex: 0,
   pageSize: 50,
-  isActive: IEntityStatus.all,
+  isActive: IEntityStatus.active,
   keyword: "",
   selectedCategory: "",
 

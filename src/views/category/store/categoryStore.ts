@@ -164,6 +164,7 @@ export const useCategoryStore = create<IState>((set, get) => ({
           limit: pageSize,
         },
       };
+      console.log("variables", variables);
 
       if (sortField) {
         variables.input.sortField = sortField;
@@ -183,6 +184,7 @@ export const useCategoryStore = create<IState>((set, get) => ({
       const result = await props.query({
         variables,
       });
+      
 
       if (result.data?.loadCategory) {
         const categories = result.data.loadCategory.category || [];

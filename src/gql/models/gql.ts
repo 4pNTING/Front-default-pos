@@ -39,6 +39,12 @@ const documents = {
     "\n  mutation UpdateMenuItem($input: UpdateMenuItemDto!) {\n    updateMenuItem(input: $input) {\n      menuItem {\n        _id\n        uniqueId\n        uid\n        name\n        description\n        photo\n        price\n        categoryId\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n": types.UpdateMenuItemDocument,
     "\n  mutation DeleteMenuItem($input: DeleteMenuItemDto!) {\n    deleteMenuItem(input: $input) {\n      menuItem {\n        _id\n      }\n    }\n  }\n": types.DeleteMenuItemDocument,
     "\n  mutation RestoreMenuItem($input: RestoreMenuItemDto!) {\n    restoreMenuItem(input: $input) {\n      menuItem {\n        _id\n      }\n    }\n  }\n": types.RestoreMenuItemDocument,
+    "\n  query LoadTable($input: LoadTableDto) {\n    loadTable(input: $input) {\n      count\n      table {\n        _id\n        uniqueId\n        uid\n        number\n        zoneId\n        capacity\n        status\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n": types.LoadTableDocument,
+    "\n  query LoadTableById($input: LoadTableByIdDto!) {\n    loadTableById(input: $input) {\n      table {\n        _id\n        uniqueId\n        uid\n        number\n        zoneId\n        capacity\n        status\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n": types.LoadTableByIdDocument,
+    "\n  mutation CreateTable($input: CreateTableDto!) {\n    createTable(input: $input) {\n      table {\n        _id\n        uniqueId\n        uid\n        number\n        zoneId\n        capacity\n        status\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n": types.CreateTableDocument,
+    "\n  mutation UpdateTable($input: UpdateTableDto!) {\n    updateTable(input: $input) {\n      table {\n        _id\n        uniqueId\n        uid\n        number\n        zoneId\n        capacity\n        status\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n": types.UpdateTableDocument,
+    "\n  mutation DeleteTable($input: DeleteTableDto!) {\n    deleteTable(input: $input) {\n      table {\n        _id\n      }\n    }\n  }\n": types.DeleteTableDocument,
+    "\n  mutation RestoreTable($input: RestoreTableDto!) {\n    restoreTable(input: $input) {\n      table {\n        _id\n      }\n    }\n  }\n": types.RestoreTableDocument,
     "\n  query loadZone($input: LoadZoneDto!) {\n    loadZone(input: $input) {\n      count\n      zone {\n        _id\n        name\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n": types.LoadZoneDocument,
     "\n  mutation createZone($input: CreateZoneDto!) {\n    createZone(input: $input) {\n      zone {\n        _id\n        name\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n": types.CreateZoneDocument,
     "\n  mutation updateZone($input: UpdateZoneDto!) {\n    updateZone(input: $input) {\n      zone {\n        _id\n        name\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n": types.UpdateZoneDocument,
@@ -160,6 +166,30 @@ export function gql(source: "\n  mutation DeleteMenuItem($input: DeleteMenuItemD
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(source: "\n  mutation RestoreMenuItem($input: RestoreMenuItemDto!) {\n    restoreMenuItem(input: $input) {\n      menuItem {\n        _id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation RestoreMenuItem($input: RestoreMenuItemDto!) {\n    restoreMenuItem(input: $input) {\n      menuItem {\n        _id\n      }\n    }\n  }\n"];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(source: "\n  query LoadTable($input: LoadTableDto) {\n    loadTable(input: $input) {\n      count\n      table {\n        _id\n        uniqueId\n        uid\n        number\n        zoneId\n        capacity\n        status\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n"): (typeof documents)["\n  query LoadTable($input: LoadTableDto) {\n    loadTable(input: $input) {\n      count\n      table {\n        _id\n        uniqueId\n        uid\n        number\n        zoneId\n        capacity\n        status\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n"];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(source: "\n  query LoadTableById($input: LoadTableByIdDto!) {\n    loadTableById(input: $input) {\n      table {\n        _id\n        uniqueId\n        uid\n        number\n        zoneId\n        capacity\n        status\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n"): (typeof documents)["\n  query LoadTableById($input: LoadTableByIdDto!) {\n    loadTableById(input: $input) {\n      table {\n        _id\n        uniqueId\n        uid\n        number\n        zoneId\n        capacity\n        status\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n"];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(source: "\n  mutation CreateTable($input: CreateTableDto!) {\n    createTable(input: $input) {\n      table {\n        _id\n        uniqueId\n        uid\n        number\n        zoneId\n        capacity\n        status\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation CreateTable($input: CreateTableDto!) {\n    createTable(input: $input) {\n      table {\n        _id\n        uniqueId\n        uid\n        number\n        zoneId\n        capacity\n        status\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n"];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(source: "\n  mutation UpdateTable($input: UpdateTableDto!) {\n    updateTable(input: $input) {\n      table {\n        _id\n        uniqueId\n        uid\n        number\n        zoneId\n        capacity\n        status\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateTable($input: UpdateTableDto!) {\n    updateTable(input: $input) {\n      table {\n        _id\n        uniqueId\n        uid\n        number\n        zoneId\n        capacity\n        status\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n"];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(source: "\n  mutation DeleteTable($input: DeleteTableDto!) {\n    deleteTable(input: $input) {\n      table {\n        _id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation DeleteTable($input: DeleteTableDto!) {\n    deleteTable(input: $input) {\n      table {\n        _id\n      }\n    }\n  }\n"];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(source: "\n  mutation RestoreTable($input: RestoreTableDto!) {\n    restoreTable(input: $input) {\n      table {\n        _id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation RestoreTable($input: RestoreTableDto!) {\n    restoreTable(input: $input) {\n      table {\n        _id\n      }\n    }\n  }\n"];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

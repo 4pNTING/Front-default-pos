@@ -17,6 +17,9 @@ import NavSearch from "@components/layout/shared/search";
 // Util Imports
 import { verticalLayoutClasses } from "@layouts/utils/layoutClasses";
 import { PageDefaultProps } from "@/types/pageDefaultTypes";
+import LanguageDropdown from "../shared/LanguageDropdown";
+import ModeDropdown from "../shared/ModeDropdown";
+import UserDropdown from "../shared/UserDropdown";
 
 // Vars
 const shortcuts: ShortcutsType[] = [
@@ -115,14 +118,14 @@ const NavbarContent = ({ props }: { props: PageDefaultProps }) => {
       )}
     >
       <div className="flex items-center gap-4">
-        {/* <NavToggle />
-        <NavSearch /> */}
+        <NavToggle />
+        <NavSearch /> 
       </div>
       <div className="flex items-center">
-        {/* <LanguageDropdown />
+         <LanguageDropdown />
         <ModeDropdown />
         <div style={{ width: "10px" }} />
-        <UserDropdown props={props} /> */}
+        <UserDropdown props={props} /> 
       </div>
     </div>
   );
