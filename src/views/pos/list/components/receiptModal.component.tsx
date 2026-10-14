@@ -210,6 +210,10 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
     setTimeout(() => {
       iframe.contentWindow?.focus();
       iframe.contentWindow?.print();
+
+      // Auto-close modal immediately upon triggering print
+      closeReceiptModal();
+
       setTimeout(() => {
         if (document.body.contains(iframe)) {
           document.body.removeChild(iframe);
