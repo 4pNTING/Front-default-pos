@@ -96,6 +96,12 @@ const MenuComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
     }
   };
 
+  const toggleAlphabeticalSort = () => {
+    const next: SortMode =
+      sortMode === "asc" ? "desc" : sortMode === "desc" ? "default" : "asc";
+    handleSortChange(next);
+  };
+
   // Helper to get category name by id
   const getCategoryName = (catId?: string) => {
     if (!catId) return "";
@@ -152,7 +158,7 @@ const MenuComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden p-4 md:p-6 space-y-4">
-      {/* Top Toolbar: Categories + Side-by-Side Dropdowns (A-Z Sort & Grid/List View) */}
+      {/* Top Toolbar: Categories + Side-by-Side (A-Z Sort + Grid/List Icons) */}
       <div className="flex items-center justify-between gap-3">
         {/* Category Pills Slider */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin flex-1 min-w-0">
@@ -184,61 +190,63 @@ const MenuComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
           })}
         </div>
 
-        {/* Right Side: A-Z Sort Dropdown + Grid/List View Dropdown (Side-by-Side) */}
+        {/* Right Side: A-Z Sort + View Mode Switcher (Grid vs List Icons) */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* A-Z Sort Dropdown */}
-          <div className="relative min-w-[125px] sm:min-w-[145px]">
-            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-gray-400">
-              <i
-                className={`text-sm ${
-                  sortMode === "asc"
-                    ? "tabler-sort-ascending-letters text-[#2F57AB] dark:text-blue-400"
-                    : sortMode === "desc"
-                    ? "tabler-sort-descending-letters text-[#2F57AB] dark:text-blue-400"
-                    : "tabler-arrows-sort"
-                }`}
-              />
-            </div>
-            <select
-              value={sortMode}
-              onChange={(e) => handleSortChange(e.target.value as SortMode)}
-              className={`w-full pl-8 pr-7 py-1.5 text-xs font-semibold bg-white dark:bg-gray-800 border rounded-lg shadow-xs appearance-none outline-none cursor-pointer transition-all ${
-                sortMode !== "default"
-                  ? "border-[#2F57AB] text-[#2F57AB] dark:text-blue-300 ring-1 ring-[#2F57AB]/20"
-                  : "border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:border-[#2F57AB] focus:border-[#2F57AB]"
+          {/* A-Z Quick Sort Button */}
+          <button
+            type="button"
+            onClick={toggleAlphabeticalSort}
+            className={`h-9 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1.5 border shadow-xs transition-all ${
+              sortMode === "asc" || sortMode === "desc"
+                ? "bg-[#2F57AB] text-white border-[#2F57AB]"
+                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 hover:border-[#2F57AB] hover:text-[#2F57AB]"
+            }`}
+            title={
+              sortMode === "asc"
+                ? "A - Z (Ascending) - Click for Z - A"
+                : sortMode === "desc"
+                ? "Z - A (Descending) - Click to Reset"
+                : "Sort A - Z"
+            }
+          >
+            <i
+              className={`text-base ${
+                sortMode === "asc"
+                  ? "tabler-sort-ascending-letters"
+                  : sortMode === "desc"
+                  ? "tabler-sort-descending-letters"
+                  : "tabler-arrows-sort text-gray-400"
               }`}
-            >
-              <option value="default">{lang === "la" ? "ຄ່າເລີ່ມຕົ້ນ" : "Default Sort"}</option>
-              <option value="asc">A - Z ({lang === "la" ? "ກ - ຮ" : "Ascending"})</option>
-              <option value="desc">Z - A ({lang === "la" ? "ຮ - ກ" : "Descending"})</option>
-              <option value="price_asc">{lang === "la" ? "ລາຄາ: ຕ່ຳ - ສູງ" : "Price: Low - High"}</option>
-              <option value="price_desc">{lang === "la" ? "ລາຄາ: ສູງ - ຕ່ຳ" : "Price: High - Low"}</option>
-            </select>
-            <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-gray-400">
-              <i className="tabler-chevron-down text-xs" />
-            </div>
-          </div>
+            />
+            <span>{sortMode === "desc" ? "Z - A" : "A - Z"}</span>
+          </button>
 
-          {/* Grid / List View Dropdown */}
-          <div className="relative min-w-[110px] sm:min-w-[125px]">
-            <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-[#2F57AB] dark:text-blue-400">
-              <i
-                className={`text-sm ${
-                  layoutMode === "grid" ? "tabler-layout-grid" : "tabler-list"
-                }`}
-              />
-            </div>
-            <select
-              value={layoutMode}
-              onChange={(e) => handleLayoutModeChange(e.target.value as "grid" | "list")}
-              className="w-full pl-8 pr-7 py-1.5 text-xs font-semibold bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 rounded-lg shadow-xs appearance-none outline-none cursor-pointer hover:border-[#2F57AB] focus:border-[#2F57AB] focus:ring-1 focus:ring-[#2F57AB]/20 transition-all"
+          {/* View Mode Switcher: Grid vs List (Icon Style) */}
+          <div className="inline-flex items-center rounded-lg p-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-xs shrink-0">
+            <button
+              type="button"
+              onClick={() => handleLayoutModeChange("grid")}
+              className={`p-1.5 rounded-md transition-all ${
+                layoutMode === "grid"
+                  ? "bg-[#2F57AB] text-white shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+              }`}
+              title="Grid View"
             >
-              <option value="grid">{lang === "la" ? "ຕາຕະລາງ (Grid)" : "Grid View"}</option>
-              <option value="list">{lang === "la" ? "ລາຍການ (List)" : "List View"}</option>
-            </select>
-            <div className="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none text-gray-400">
-              <i className="tabler-chevron-down text-xs" />
-            </div>
+              <i className="tabler-layout-grid text-base" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleLayoutModeChange("list")}
+              className={`p-1.5 rounded-md transition-all ${
+                layoutMode === "list"
+                  ? "bg-[#2F57AB] text-white shadow-xs"
+                  : "text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+              }`}
+              title="List View"
+            >
+              <i className="tabler-list text-base" />
+            </button>
           </div>
         </div>
       </div>
