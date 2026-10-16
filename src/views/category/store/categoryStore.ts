@@ -61,7 +61,7 @@ interface IState {
 
 
   setSorting: (sortField: string | null, sortOrder: 'ASC' | 'DESC' | null) => void;
-  setIsActive: (value: any) => void;
+  setIsActive: (value: string) => void;
   setKeyword: (value: string) => void;
 
   loadCategoryAPI: ({ props }: { props: ListNetworkProps }) => Promise<void>;
@@ -231,7 +231,11 @@ export const useCategoryStore = create<IState>((set, get) => ({
       const { categoryList, count } = get();
 
       const result = await props.mutation({
-        variables: { input: props.name },
+        variables: {
+          input: {
+            name: props.name,
+          },
+        },
       });
 
 
@@ -254,10 +258,9 @@ export const useCategoryStore = create<IState>((set, get) => ({
 
       const { categoryList } = get();
 
-      const input: any = {
+      const input: CategoryInput = {
         _id: props._id,
         name: props.name,
-
       };
 
       const result = await props.mutation({
