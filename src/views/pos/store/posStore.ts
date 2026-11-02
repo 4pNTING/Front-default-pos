@@ -60,6 +60,7 @@ interface POSState {
   zones: { _id: string; name: string }[];
   categories: { _id: string; name: string }[];
   menuItems: any[];
+  allOrders: OrderType[];
   activeOrders: OrderType[];
   currencies: CurrencyType[];
 
@@ -132,6 +133,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
   zones: [],
   categories: [],
   menuItems: [],
+  allOrders: [],
   activeOrders: [],
   currencies: [],
 
@@ -223,6 +225,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
       zones,
       categories,
       menuItems,
+      allOrders,
       activeOrders,
       currencies,
       currentOrder: updatedCurrentOrder,

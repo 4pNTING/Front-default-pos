@@ -16,6 +16,7 @@ import MenuComponent from "./components/menu.component";
 import CartComponent from "./components/cart.component";
 import PaymentComponent from "./components/payment.component";
 import OrderQueueComponent from "./components/orderQueue.component";
+import OrderHistoryComponent from "./components/orderHistory.component";
 import ReceiptModalComponent from "./components/receiptModal.component";
 import MoveTableModalComponent from "./components/moveTableModal.component";
 
@@ -161,6 +162,7 @@ export const POSList: React.FC<{ props: POSListProps }> = ({ props }) => {
           {viewMode === IPosViewMode.table && <TableComponent props={props} />}
           {viewMode === IPosViewMode.order && <MenuComponent props={props} />}
           {viewMode === IPosViewMode.orders_list && <OrderQueueComponent props={props} />}
+          {viewMode === IPosViewMode.history && <OrderHistoryComponent props={props} />}
         </div>
 
         {/* Right Order Cart Panel (Shown in Order Mode or whenever a table is actively selected) */}

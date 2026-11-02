@@ -75,6 +75,18 @@ const HeaderComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
             <i className="tabler-clipboard-list text-base" />
             <span>{dic.posPage?.ordersQueueTab ?? "Orders Queue"}</span>
           </button>
+
+          <button
+            onClick={() => setViewMode(IPosViewMode.history)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              viewMode === IPosViewMode.history
+                ? "bg-[#2F57AB] text-white shadow-sm"
+                : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            <i className="tabler-receipt text-base" />
+            <span>{dic.posPage?.historyTab ?? (lang === "la" ? "ປະຫວັດບິນ & ຍອດຂາຍ" : "History & Sales")}</span>
+          </button>
         </div>
 
         {/* Selected Table Chip */}
