@@ -55,3 +55,4 @@ export const DELETE_MENU_OPTION = gql`
     }
   }
 `;
+
