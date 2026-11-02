@@ -3,6 +3,7 @@ import HeaderComponent from "./components/header.component";
 import TableComponent from "./components/table.component";
 import CreateComponent from "./components/formCreate.component";
 import UpdateComponent from "./components/formUpdate.component";
+import MenuOptionModalComponent from "./components/menuOptionModal.component";
 import { useEffect, useCallback, useRef, useState } from "react";
 import { useMenuItemStore } from "../store/menuItemStore";
 import { LOAD_MENU_ITEM, LOAD_CATEGORY } from "@/gql/queries";
@@ -112,6 +113,7 @@ export const MenuItemList = ({ props }: { props: MenuItemListProps }) => {
       <TableComponent props={props} onRefresh={refreshList} />
       <CreateComponent props={props} onSuccess={refreshList} />
       <UpdateComponent props={props} onSuccess={refreshList} />
+      <MenuOptionModalComponent props={props} />
     </div>
   );
 };

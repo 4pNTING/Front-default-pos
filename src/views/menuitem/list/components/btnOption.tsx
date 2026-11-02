@@ -3,6 +3,7 @@ import React from "react";
 import { IconButton, Tooltip } from "@mui/material";
 import { MenuItemListProps, MenuItemType } from "../../type/menuItemType";
 import { useMenuItemStore, useMenuItemMutations } from "../../store/menuItemStore";
+import { useMenuOptionStore } from "../../store/menuOptionStore";
 import { msgConfirm } from "@/utils/sweetalert";
 import { ToastService } from "@/utils/toastService";
 
@@ -19,8 +20,10 @@ export function ButtonOption({
   onEditClick,
   onRefresh,
 }: ButtonOptionProps) {
-  const { dictionary: dic } = props;
+  const { lang, dictionary: dic } = props;
   const labels = dic.menuItemPage;
+
+  const { openOptionsModal } = useMenuOptionStore();
 
   const {
     deleteMenuItemAPI,
@@ -95,6 +98,21 @@ export function ButtonOption({
     <div className="flex gap-2 items-center justify-center">
       {isActive ? (
         <>
+          <Tooltip title={lang === "la" ? "ຕົວເລືອກ / ທັອບປິ້ງ" : "Options / Toppings"}>
+            <IconButton
+              onClick={() =>
+                openOptionsModal({
+                  _id: currentToView._id,
+                  name: currentToView.name,
+                })
+              }
+              size="small"
+              className="text-gray-600 hover:bg-gray-50"
+            >
+              <i className="tabler-adjustments-alt text-[18px] text-blue-600"></i>
+            </IconButton>
+          </Tooltip>
+
           <Tooltip title={dic?.edit || "Edit"}>
             <IconButton
               onClick={handleEdit}

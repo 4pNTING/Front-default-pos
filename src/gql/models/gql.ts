@@ -39,6 +39,10 @@ const documents = {
     "\n  mutation UpdateMenuItem($input: UpdateMenuItemDto!) {\n    updateMenuItem(input: $input) {\n      menuItem {\n        _id\n        uniqueId\n        uid\n        name\n        description\n        photo\n        price\n        categoryId\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n": types.UpdateMenuItemDocument,
     "\n  mutation DeleteMenuItem($input: DeleteMenuItemDto!) {\n    deleteMenuItem(input: $input) {\n      menuItem {\n        _id\n      }\n    }\n  }\n": types.DeleteMenuItemDocument,
     "\n  mutation RestoreMenuItem($input: RestoreMenuItemDto!) {\n    restoreMenuItem(input: $input) {\n      menuItem {\n        _id\n      }\n    }\n  }\n": types.RestoreMenuItemDocument,
+    "\n  query LoadMenuOptionByMenuItem($input: LoadMenuOptionByMenuItemDto!) {\n    loadMenuOptionByMenuItem(input: $input) {\n      menuOption {\n        _id\n        menuItemId\n        name\n        extraPrice\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n": types.LoadMenuOptionByMenuItemDocument,
+    "\n  mutation CreateMenuOption($input: CreateMenuOptionDto!) {\n    createMenuOption(input: $input) {\n      menuOption {\n        _id\n        menuItemId\n        name\n        extraPrice\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n": types.CreateMenuOptionDocument,
+    "\n  mutation UpdateMenuOption($input: UpdateMenuOptionDto!) {\n    updateMenuOption(input: $input) {\n      menuOption {\n        _id\n        menuItemId\n        name\n        extraPrice\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n": types.UpdateMenuOptionDocument,
+    "\n  mutation DeleteMenuOption($input: DeleteMenuOptionDto!) {\n    deleteMenuOption(input: $input) {\n      _id\n    }\n  }\n": types.DeleteMenuOptionDocument,
     "\n  query LoadOrder($input: LoadOrderDto) {\n    loadOrder(input: $input) {\n      order {\n        _id\n        orderNumber\n        tableId\n        staffId\n        status\n        note\n        subTotal\n        discount\n        total\n        items {\n          _id\n          orderId\n          menuItemId\n          menuItemName\n          quantity\n          unitPrice\n          totalPrice\n          note\n        }\n        createdAt\n        updatedAt\n      }\n    }\n  }\n": types.LoadOrderDocument,
     "\n  query LoadOrderByTable($input: LoadOrderByTableDto!) {\n    loadOrderByTable(input: $input) {\n      order {\n        _id\n        orderNumber\n        tableId\n        staffId\n        status\n        note\n        subTotal\n        discount\n        total\n        items {\n          _id\n          orderId\n          menuItemId\n          menuItemName\n          quantity\n          unitPrice\n          totalPrice\n          note\n        }\n        createdAt\n        updatedAt\n      }\n    }\n  }\n": types.LoadOrderByTableDocument,
     "\n  query LoadOrderById($input: LoadOrderByIdDto!) {\n    loadOrderById(input: $input) {\n      order {\n        _id\n        orderNumber\n        tableId\n        staffId\n        status\n        note\n        subTotal\n        discount\n        total\n        items {\n          _id\n          orderId\n          menuItemId\n          menuItemName\n          quantity\n          unitPrice\n          totalPrice\n          note\n        }\n        createdAt\n        updatedAt\n      }\n    }\n  }\n": types.LoadOrderByIdDocument,
@@ -177,6 +181,22 @@ export function gql(source: "\n  mutation DeleteMenuItem($input: DeleteMenuItemD
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function gql(source: "\n  mutation RestoreMenuItem($input: RestoreMenuItemDto!) {\n    restoreMenuItem(input: $input) {\n      menuItem {\n        _id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation RestoreMenuItem($input: RestoreMenuItemDto!) {\n    restoreMenuItem(input: $input) {\n      menuItem {\n        _id\n      }\n    }\n  }\n"];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(source: "\n  query LoadMenuOptionByMenuItem($input: LoadMenuOptionByMenuItemDto!) {\n    loadMenuOptionByMenuItem(input: $input) {\n      menuOption {\n        _id\n        menuItemId\n        name\n        extraPrice\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n"): (typeof documents)["\n  query LoadMenuOptionByMenuItem($input: LoadMenuOptionByMenuItemDto!) {\n    loadMenuOptionByMenuItem(input: $input) {\n      menuOption {\n        _id\n        menuItemId\n        name\n        extraPrice\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n"];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(source: "\n  mutation CreateMenuOption($input: CreateMenuOptionDto!) {\n    createMenuOption(input: $input) {\n      menuOption {\n        _id\n        menuItemId\n        name\n        extraPrice\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation CreateMenuOption($input: CreateMenuOptionDto!) {\n    createMenuOption(input: $input) {\n      menuOption {\n        _id\n        menuItemId\n        name\n        extraPrice\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n"];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(source: "\n  mutation UpdateMenuOption($input: UpdateMenuOptionDto!) {\n    updateMenuOption(input: $input) {\n      menuOption {\n        _id\n        menuItemId\n        name\n        extraPrice\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateMenuOption($input: UpdateMenuOptionDto!) {\n    updateMenuOption(input: $input) {\n      menuOption {\n        _id\n        menuItemId\n        name\n        extraPrice\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  }\n"];
+/**
+ * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function gql(source: "\n  mutation DeleteMenuOption($input: DeleteMenuOptionDto!) {\n    deleteMenuOption(input: $input) {\n      _id\n    }\n  }\n"): (typeof documents)["\n  mutation DeleteMenuOption($input: DeleteMenuOptionDto!) {\n    deleteMenuOption(input: $input) {\n      _id\n    }\n  }\n"];
 /**
  * The gql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

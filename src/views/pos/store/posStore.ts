@@ -108,7 +108,10 @@ interface POSState {
   closeReceiptModal: () => void;
 
   // Cart operations
-  addToCart: (item: any) => void;
+  addToCart: (
+    item: any,
+    customOptions?: { note?: string; extraPrice?: number; quantity?: number }
+  ) => void;
   updateCartItemQuantity: (menuItemId: string, delta: number) => void;
   updateCartItemNote: (menuItemId: string, note: string) => void;
   removeFromCart: (menuItemId: string) => void;
@@ -226,14 +229,21 @@ export const usePOSStore = create<POSState>((set, get) => ({
     });
   },
 
-  addToCart: (item) => {
+  addToCart: (item, customOptions) => {
     const { cart } = get();
-    const existingIndex = cart.findIndex((c) => c.menuItemId === item._id);
+    const qtyToAdd = customOptions?.quantity || 1;
+    const extraPrice = customOptions?.extraPrice || 0;
+    const note = customOptions?.note || "";
+    const unitPrice = Number(item.price) + extraPrice;
+
+    const existingIndex = cart.findIndex(
+      (c) => c.menuItemId === item._id && (c.note || "") === note && c.unitPrice === unitPrice
+    );
 
     if (existingIndex > -1) {
       const updatedCart = [...cart];
       const existing = updatedCart[existingIndex];
-      const newQty = existing.quantity + 1;
+      const newQty = existing.quantity + qtyToAdd;
       updatedCart[existingIndex] = {
         ...existing,
         quantity: newQty,
@@ -244,12 +254,12 @@ export const usePOSStore = create<POSState>((set, get) => ({
       const newItem: CartItemType = {
         menuItemId: item._id,
         menuItemName: item.name,
-        unitPrice: Number(item.price),
-        quantity: 1,
-        totalPrice: Number(item.price),
+        unitPrice: unitPrice,
+        quantity: qtyToAdd,
+        totalPrice: unitPrice * qtyToAdd,
         photo: item.photo,
         categoryId: item.categoryId,
-        note: "",
+        note: note,
       };
       set({ cart: [...cart, newItem] });
     }

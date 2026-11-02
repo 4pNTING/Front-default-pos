@@ -9,3 +9,4 @@ export * from './attachment';
 export * from './menuItem';
 export * from './table';
 export * from './order';
+export * from './menuOption';

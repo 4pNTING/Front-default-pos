@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePOSStore } from "../../store/posStore";
 import { POSListProps, IEntityStatus } from "../../type/posType";
 import { resolveImageUrl } from "@/utils/imageUrl";
+import { PosOptionModal } from "./posOptionModal.component";
 
 interface MenuItemImageProps {
   photo?: string | null;
@@ -57,6 +58,8 @@ const MenuComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
     cart,
     loading,
   } = usePOSStore();
+
+  const [selectedOptionItem, setSelectedOptionItem] = useState<any | null>(null);
 
   const [layoutMode, setLayoutMode] = useState<"grid" | "list">(() => {
     if (typeof window !== "undefined") {
@@ -317,43 +320,51 @@ const MenuComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
                         {price.toLocaleString()} ₭
                       </span>
 
-                      {qtyInCart > 0 ? (
-                        <div
-                          className="flex items-center gap-1 bg-blue-50 dark:bg-blue-950/50 p-0.5 rounded-lg border border-blue-200 dark:border-blue-900/60"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => updateCartItemQuantity(item._id, -1)}
-                            className="w-6 h-6 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 transition-colors shadow-xs"
-                            title="Decrease"
-                          >
-                            <i className="tabler-minus text-xs" />
-                          </button>
-                          <span className="w-5 text-center text-xs font-bold text-[#2F57AB] dark:text-blue-300">
-                            {qtyInCart}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => updateCartItemQuantity(item._id, 1)}
-                            className="w-6 h-6 rounded-md bg-[#2F57AB] text-white flex items-center justify-center hover:bg-[#25468a] transition-colors shadow-xs"
-                            title="Increase"
-                          >
-                            <i className="tabler-plus text-xs" />
-                          </button>
-                        </div>
-                      ) : (
+                      <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        {/* Option Button */}
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addToCart(item);
-                          }}
-                          className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-[#2F57AB] dark:text-blue-300 flex items-center justify-center hover:bg-[#2F57AB] hover:text-white transition-all shadow-sm"
+                          onClick={() => setSelectedOptionItem(item)}
+                          className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-blue-50 text-gray-500 hover:text-[#2F57AB] dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-650 flex items-center justify-center transition-all shadow-2xs"
+                          title="Custom Options / Toppings"
                         >
-                          <i className="tabler-plus text-sm" />
+                          <i className="tabler-adjustments-alt text-xs" />
                         </button>
-                      )}
+
+                        {qtyInCart > 0 ? (
+                          <div
+                            className="flex items-center gap-1 bg-blue-50 dark:bg-blue-950/50 p-0.5 rounded-lg border border-blue-200 dark:border-blue-900/60"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => updateCartItemQuantity(item._id, -1)}
+                              className="w-6 h-6 rounded-md bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 transition-colors shadow-xs"
+                              title="Decrease"
+                            >
+                              <i className="tabler-minus text-xs" />
+                            </button>
+                            <span className="w-5 text-center text-xs font-bold text-[#2F57AB] dark:text-blue-300">
+                              {qtyInCart}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => updateCartItemQuantity(item._id, 1)}
+                              className="w-6 h-6 rounded-md bg-[#2F57AB] text-white flex items-center justify-center hover:bg-[#25468a] transition-colors shadow-xs"
+                              title="Increase"
+                            >
+                              <i className="tabler-plus text-xs" />
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => addToCart(item)}
+                            className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-[#2F57AB] dark:text-blue-300 flex items-center justify-center hover:bg-[#2F57AB] hover:text-white transition-all shadow-sm"
+                          >
+                            <i className="tabler-plus text-sm" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -412,12 +423,22 @@ const MenuComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
 
                   {/* Right: Price & Stepper / Add Button */}
                   <div
-                    className="flex items-center gap-3 shrink-0"
+                    className="flex items-center gap-2 sm:gap-3 shrink-0"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <span className="text-sm sm:text-base font-bold text-gray-900 dark:text-white hidden sm:block">
                       {price.toLocaleString()} ₭
                     </span>
+
+                    {/* Option Button */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedOptionItem(item)}
+                      className="w-7 h-7 rounded-lg bg-gray-100 hover:bg-blue-50 text-gray-500 hover:text-[#2F57AB] dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-650 flex items-center justify-center transition-all shadow-2xs"
+                      title="Custom Options / Toppings"
+                    >
+                      <i className="tabler-adjustments-alt text-xs" />
+                    </button>
 
                     {qtyInCart > 0 ? (
                       <div className="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/50 p-1 rounded-lg border border-blue-200 dark:border-blue-900/60">
@@ -458,6 +479,14 @@ const MenuComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
           </div>
         )}
       </div>
+
+      {/* Menu Option Customization Modal */}
+      <PosOptionModal
+        props={props}
+        item={selectedOptionItem}
+        open={Boolean(selectedOptionItem)}
+        onClose={() => setSelectedOptionItem(null)}
+      />
     </div>
   );
 };
