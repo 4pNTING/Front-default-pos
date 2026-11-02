@@ -234,10 +234,12 @@ export const useCategoryStore = create<IState>((set, get) => ({
         variables: {
           input: {
             name: props.name,
+            ...(props.description ? { description: props.description } : {}),
+            ...(props.photo ? { photo: props.photo } : {}),
+            ...(props.isActive ? { isActive: props.isActive } : {}),
           },
         },
       });
-
 
       if (result.data?.createCategory?.category) {
         set(() => ({
@@ -258,13 +260,16 @@ export const useCategoryStore = create<IState>((set, get) => ({
 
       const { categoryList } = get();
 
-      const input: CategoryInput = {
-        _id: props._id,
-        name: props.name,
-      };
-
       const result = await props.mutation({
-        variables: { input },
+        variables: {
+          input: {
+            _id: props._id,
+            name: props.name,
+            ...(props.description ? { description: props.description } : {}),
+            ...(props.photo ? { photo: props.photo } : {}),
+            ...(props.isActive ? { isActive: props.isActive } : {}),
+          },
+        },
       });
 
       if (result.data?.updateCategory?.category) {
@@ -285,7 +290,7 @@ export const useCategoryStore = create<IState>((set, get) => ({
     try {
       set({ loading: true });
 
-      const { categoryList, count } = get();
+      const { categoryList, count, isActive } = get();
 
       const result = await props.mutation({
         variables: {
@@ -296,10 +301,18 @@ export const useCategoryStore = create<IState>((set, get) => ({
       });
 
       if (result.data?.deleteCategory?.category) {
-        set(() => ({
-          categoryList: categoryList.filter((item) => item._id !== props._id),
-          count: count - 1,
-        }));
+        if (isActive === IEntityStatus.all) {
+          set(() => ({
+            categoryList: categoryList.map((item) =>
+              item._id === props._id ? { ...item, isActive: IEntityStatus.inactive } : item
+            ),
+          }));
+        } else {
+          set(() => ({
+            categoryList: categoryList.filter((item) => item._id !== props._id),
+            count: Math.max(0, count - 1),
+          }));
+        }
       }
     } catch (error: any) {
       throw error;
@@ -326,7 +339,7 @@ export const useCategoryStore = create<IState>((set, get) => ({
         if (isActive === IEntityStatus.inactive) {
           set(() => ({
             categoryList: categoryList.filter((item) => item._id !== props._id),
-            count: count - 1,
+            count: Math.max(0, count - 1),
           }));
         } else if (isActive === IEntityStatus.all) {
           set(() => ({
