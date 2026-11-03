@@ -105,7 +105,7 @@ const VerticalMenu = ({ dictionary, scrollMenu, lang }: Props) => {
   // Note: We cast 'role' to 'any' here if the useRoleStore hook doesn't use our TempRoleMenu
   const { queryRoleById, role, loading } = useRoleStore() as {
     queryRoleById: any;
-    role: { menus: RoleMenu[] } | null;
+    role: { menus: RoleMenu[]; laName?: string | null; enName?: string | null } | null;
     loading: boolean;
   };
 
@@ -513,7 +513,7 @@ const VerticalMenu = ({ dictionary, scrollMenu, lang }: Props) => {
                     className="font-bold uppercase text-[10px] leading-tight"
                     color="primary"
                   >
-                    {session?.data?.user?.level || ""}
+                    {(lang.startsWith("la") ? role?.laName : role?.enName) || session?.data?.user?.level || "Admin"}
                   </Typography>
                 </div>
               </div>
