@@ -22,6 +22,7 @@ const HeaderComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
     setAutoRefreshEnabled,
     currentShift,
     setShiftModalOpen,
+    activeOrders,
   } = usePOSStore();
 
   const activeTable = selectedTable
@@ -88,6 +89,23 @@ const HeaderComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
           >
             <i className="tabler-receipt text-base" />
             <span>{dic.posPage?.historyTab ?? (lang === "la" ? "ປະຫວັດບິນ & ຍອດຂາຍ" : "History & Sales")}</span>
+          </button>
+
+          <button
+            onClick={() => setViewMode(IPosViewMode.kds)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+              viewMode === IPosViewMode.kds
+                ? "bg-[#2F57AB] text-white shadow-sm"
+                : "text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            <i className="tabler-tools-kitchen-2 text-base" />
+            <span>{lang === "la" ? "ຈໍສະແດງຜົນໃນຄົວ" : "Kitchen (KDS)"}</span>
+            {activeOrders.length > 0 && (
+              <span className="ml-1 bg-amber-500 text-white text-[11px] font-bold px-1.5 py-0.2 rounded-full">
+                {activeOrders.length}
+              </span>
+            )}
           </button>
         </div>
 

@@ -72,7 +72,7 @@ export interface CurrencyType {
   isActive?: string;
 }
 
-export type POSViewMode = IPosViewMode | 'table' | 'order' | 'orders_list' | 'history';
+export type POSViewMode = IPosViewMode | 'table' | 'order' | 'orders_list' | 'history' | 'kds';
 
 export interface SetMasterDataPayload {
   rawTables: POSTableType[];

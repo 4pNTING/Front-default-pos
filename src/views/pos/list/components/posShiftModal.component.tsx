@@ -904,3 +904,4 @@ export const PosShiftModalComponent: React.FC<{ props: POSListProps }> = ({ prop
 };
 
 export default PosShiftModalComponent;
+

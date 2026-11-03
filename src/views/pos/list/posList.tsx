@@ -22,6 +22,7 @@ import ReceiptModalComponent from "./components/receiptModal.component";
 import MoveTableModalComponent from "./components/moveTableModal.component";
 import PosCustomerModalComponent from "./components/posCustomerModal.component";
 import PosShiftModalComponent from "./components/posShiftModal.component";
+import KdsComponent from "./components/kds.component";
 
 export const POSList: React.FC<{ props: POSListProps }> = ({ props }) => {
   // Var
@@ -172,6 +173,7 @@ export const POSList: React.FC<{ props: POSListProps }> = ({ props }) => {
           {viewMode === IPosViewMode.order && <MenuComponent props={props} />}
           {viewMode === IPosViewMode.orders_list && <OrderQueueComponent props={props} />}
           {viewMode === IPosViewMode.history && <OrderHistoryComponent props={props} />}
+          {viewMode === IPosViewMode.kds && <KdsComponent props={props} />}
         </div>
 
         {/* Right Order Cart Panel (Shown in Order Mode or whenever a table is actively selected) */}

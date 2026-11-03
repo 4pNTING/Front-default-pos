@@ -126,6 +126,7 @@ export enum IPosViewMode {
   order = "order",
   orders_list = "orders_list",
   history = "history",
+  kds = "kds",
 }
 
 export function delay(ms: number) {
