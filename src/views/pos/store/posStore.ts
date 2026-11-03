@@ -19,6 +19,12 @@ import {
   ReceiptDataType,
   TransferTableParams,
   CustomerType,
+  ShiftType,
+  CashTransactionType,
+  ShiftSalesSummaryType,
+  OpenShiftParams,
+  CashInOutParams,
+  CloseShiftParams,
 } from "../type/posType";
 import {
   CREATE_ORDER,
@@ -100,6 +106,17 @@ interface POSState {
   silentRefresh: (() => Promise<void>) | null;
   setSilentRefresh: (fn: (() => Promise<void>) | null) => void;
 
+  // Shift & Cash Drawer State
+  currentShift: ShiftType | null;
+  lastClosedShift: ShiftType | null;
+  shiftModalOpen: boolean;
+  shiftModalMode: 'open' | 'manage' | 'cash_in_out' | 'close' | 'z_report';
+  setShiftModalOpen: (open: boolean, mode?: 'open' | 'manage' | 'cash_in_out' | 'close' | 'z_report') => void;
+  openShift: (params: OpenShiftParams) => void;
+  addCashTransaction: (params: CashInOutParams) => void;
+  closeShift: (params: CloseShiftParams) => ShiftType | null;
+  loadStoredShift: () => void;
+
   // Basic Setters
   setMasterData: (data: SetMasterDataPayload) => void;
   setCustomers: (customers: CustomerType[]) => void;
@@ -165,8 +182,12 @@ export const usePOSStore = create<POSState>((set, get) => ({
   paymentModalOpen: false,
   moveTableModalOpen: false,
   customerModalOpen: false,
+  shiftModalOpen: false,
+  shiftModalMode: 'open',
   receiptModalOpen: false,
   receiptData: null,
+  currentShift: null,
+  lastClosedShift: null,
   autoRefreshEnabled: true,
   setAutoRefreshEnabled: (enabled) => set({ autoRefreshEnabled: enabled }),
   refreshMasterData: null,
@@ -184,11 +205,163 @@ export const usePOSStore = create<POSState>((set, get) => ({
   setPaymentModalOpen: (open) => set({ paymentModalOpen: open }),
   setMoveTableModalOpen: (open) => set({ moveTableModalOpen: open }),
   setCustomerModalOpen: (open) => set({ customerModalOpen: open }),
+  setShiftModalOpen: (open, mode) => {
+    let targetMode = mode;
+    if (!targetMode) {
+      if (get().currentShift) {
+        targetMode = "manage";
+      } else {
+        targetMode = "open";
+      }
+    }
+    set({ shiftModalOpen: open, shiftModalMode: targetMode });
+  },
   setSelectedCustomer: (customer) => set({ selectedCustomer: customer }),
   setCustomers: (customers) => set({ customers }),
   setSelectedTable: (table) => set({ selectedTable: table }),
   openReceiptModal: (data) => set({ receiptModalOpen: true, receiptData: data }),
   closeReceiptModal: () => set({ receiptModalOpen: false, receiptData: null }),
+
+  loadStoredShift: () => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = localStorage.getItem("pos_current_shift");
+      if (stored) {
+        const parsed = JSON.parse(stored) as ShiftType;
+        if (parsed && parsed.status === "open") {
+          set({ currentShift: parsed });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load stored shift", e);
+    }
+  },
+
+  openShift: ({ startingFloat, staffId, staffName }) => {
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
+    const randomSuffix = String(Math.floor(Math.random() * 900) + 100);
+    const shiftNumber = `SH-${dateStr}-${randomSuffix}`;
+
+    const newShift: ShiftType = {
+      _id: `shift_${Date.now()}`,
+      shiftNumber,
+      staffId: staffId || "staff",
+      staffName: staffName || "Staff",
+      openedAt: now.toISOString(),
+      closedAt: null,
+      status: "open",
+      startingFloat: Number(startingFloat) || 0,
+      cashTransactions: [],
+      salesSummary: {
+        totalSales: 0,
+        cashSales: 0,
+        qrSales: 0,
+        cardSales: 0,
+        totalOrders: 0,
+      },
+    };
+
+    set({
+      currentShift: newShift,
+      shiftModalOpen: false,
+    });
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pos_current_shift", JSON.stringify(newShift));
+    }
+
+    ToastService.success(`Shift ${shiftNumber} opened successfully!`);
+  },
+
+  addCashTransaction: ({ type, amount, reason }) => {
+    const { currentShift } = get();
+    if (!currentShift) {
+      ToastService.error("No active shift open");
+      return;
+    }
+
+    const tx: CashTransactionType = {
+      _id: `tx_${Date.now()}`,
+      type,
+      amount: Number(amount) || 0,
+      reason: reason.trim(),
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedTransactions = [...currentShift.cashTransactions, tx];
+    const updatedShift: ShiftType = {
+      ...currentShift,
+      cashTransactions: updatedTransactions,
+    };
+
+    set({ currentShift: updatedShift });
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("pos_current_shift", JSON.stringify(updatedShift));
+    }
+
+    if (type === "cash_in") {
+      ToastService.success(`Added +${tx.amount.toLocaleString()} ₭ into drawer`);
+    } else {
+      ToastService.success(`Paid out -${tx.amount.toLocaleString()} ₭ from drawer`);
+    }
+  },
+
+  closeShift: ({ actualCash, closingNotes }) => {
+    const { currentShift } = get();
+    if (!currentShift) {
+      ToastService.error("No active shift open");
+      return null;
+    }
+
+    const startingFloat = Number(currentShift.startingFloat) || 0;
+    const cashSales = Number(currentShift.salesSummary?.cashSales) || 0;
+
+    let totalCashIn = 0;
+    let totalCashOut = 0;
+    for (const tx of currentShift.cashTransactions) {
+      if (tx.type === "cash_in") {
+        totalCashIn += tx.amount;
+      } else {
+        totalCashOut += tx.amount;
+      }
+    }
+
+    const expectedCash = startingFloat + cashSales + totalCashIn - totalCashOut;
+    const difference = actualCash - expectedCash;
+
+    const closedShift: ShiftType = {
+      ...currentShift,
+      closedAt: new Date().toISOString(),
+      status: "closed",
+      actualCash,
+      expectedCash,
+      difference,
+      closingNotes: closingNotes?.trim() || "",
+    };
+
+    if (typeof window !== "undefined") {
+      try {
+        const historyJson = localStorage.getItem("pos_shift_history");
+        const history: ShiftType[] = historyJson ? JSON.parse(historyJson) : [];
+        history.unshift(closedShift);
+        localStorage.setItem("pos_shift_history", JSON.stringify(history.slice(0, 50)));
+        localStorage.removeItem("pos_current_shift");
+      } catch (e) {
+        console.error("Failed to save shift history", e);
+      }
+    }
+
+    set({
+      currentShift: null,
+      lastClosedShift: closedShift,
+      shiftModalOpen: false,
+    });
+
+    ToastService.success(`Shift ${closedShift.shiftNumber} closed successfully!`);
+    return closedShift;
+  },
 
   setMasterData: (data) => {
     const { rawTables, zones, categories, menuItems, allOrders, currencies } = data;
@@ -355,28 +528,10 @@ export const usePOSStore = create<POSState>((set, get) => ({
 
       // 1. Create order if table doesn't have an active order
       if (!orderId) {
-        let customerTag = "";
-        if (selectedCustomer) {
-          const firstName = selectedCustomer.firstName || "";
-          const lastName = selectedCustomer.lastName || "";
-          const fullName = `${firstName} ${lastName}`.trim();
-          const phone = selectedCustomer.phoneNumber || "";
-
-          if (phone) {
-            customerTag = `[Customer: ${fullName} • ${phone}]`;
-          } else {
-            customerTag = `[Customer: ${fullName}]`;
-          }
-        }
-
-        let finalNote = orderNote;
-        if (customerTag) {
-          if (orderNote) {
-            finalNote = `${customerTag} | ${orderNote}`;
-          } else {
-            finalNote = customerTag;
-          }
-        }
+        const customerTag = selectedCustomer
+          ? `[Customer: ${selectedCustomer.firstName || ""} ${selectedCustomer.lastName || ""}${selectedCustomer.phoneNumber ? ` • ${selectedCustomer.phoneNumber}` : ""}]`.trim()
+          : "";
+        const finalNote = customerTag ? (orderNote ? `${customerTag} | ${orderNote}` : customerTag) : orderNote;
 
         const createRes = await mutations.createOrderMutation({
           variables: {
@@ -576,6 +731,49 @@ export const usePOSStore = create<POSState>((set, get) => ({
             },
           },
         });
+      }
+
+      // Update active shift sales if shift is open
+      const { currentShift } = get();
+      if (currentShift && currentShift.status === "open") {
+        const orderTotal = selectedTable?.activeOrder ? Number(selectedTable.activeOrder.total) || 0 : input.amount;
+        const currentSales = currentShift.salesSummary || {
+          totalSales: 0,
+          cashSales: 0,
+          qrSales: 0,
+          cardSales: 0,
+          totalOrders: 0,
+        };
+
+        let newCashSales = currentSales.cashSales;
+        let newQrSales = currentSales.qrSales;
+        let newCardSales = currentSales.cardSales;
+
+        if (input.method === "cash") {
+          newCashSales += orderTotal;
+        } else if (input.method === "card") {
+          newCardSales += orderTotal;
+        } else {
+          newQrSales += orderTotal;
+        }
+
+        const updatedSales: ShiftSalesSummaryType = {
+          totalSales: currentSales.totalSales + orderTotal,
+          cashSales: newCashSales,
+          qrSales: newQrSales,
+          cardSales: newCardSales,
+          totalOrders: currentSales.totalOrders + 1,
+        };
+
+        const updatedShift: ShiftType = {
+          ...currentShift,
+          salesSummary: updatedSales,
+        };
+
+        set({ currentShift: updatedShift });
+        if (typeof window !== "undefined") {
+          localStorage.setItem("pos_current_shift", JSON.stringify(updatedShift));
+        }
       }
 
       ToastService.success(

@@ -20,6 +20,8 @@ const HeaderComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
     currentOrder,
     autoRefreshEnabled,
     setAutoRefreshEnabled,
+    currentShift,
+    setShiftModalOpen,
   } = usePOSStore();
 
   const activeTable = selectedTable
@@ -139,6 +141,31 @@ const HeaderComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
               </button>
             )}
           </div>
+        )}
+
+        {/* Shift / Cash Drawer Status Button */}
+        {currentShift ? (
+          <button
+            type="button"
+            onClick={() => setShiftModalOpen(true, "manage")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 transition-all shadow-xs"
+            title="Shift active - Click to manage or close"
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <i className="tabler-coin text-sm text-emerald-600 dark:text-emerald-400" />
+            <span>{currentShift.shiftNumber}</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setShiftModalOpen(true, "open")}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/60 transition-all shadow-xs"
+            title="Click to open shift"
+          >
+            <span className="w-2 h-2 rounded-full bg-amber-500" />
+            <i className="tabler-door-enter text-sm text-amber-600" />
+            <span>{lang === "la" ? "ເປີດກະ (Open Shift)" : "Open Shift"}</span>
+          </button>
         )}
 
         {/* Auto Refresh Live Status / Toggle */}

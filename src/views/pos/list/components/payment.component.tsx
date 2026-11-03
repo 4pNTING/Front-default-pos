@@ -47,12 +47,12 @@ const PaymentComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
 
   const handlePay = async () => {
     if (!currentCurrencyId) {
-      ToastService.warning(dic.posPage?.selectCurrencyAlert ?? "Please select a currency");
+      ToastService.warning(dic.posPage?.selectCurrencyAlert);
       return;
     }
 
     if (tenderNumber < totalAmount && method === IPosPaymentMethod.cash) {
-      ToastService.warning(dic.posPage?.insufficientTenderAlert ?? "Received amount is less than total bill!");
+      ToastService.warning(dic.posPage?.insufficientTenderAlert);
       return;
     }
 
@@ -83,23 +83,16 @@ const PaymentComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
         note: i.note,
       }));
 
-      let customerName: string | undefined = undefined;
-      let customerPhone: string | undefined = undefined;
-      if (selectedCustomer) {
-        const fn = selectedCustomer.firstName || "";
-        const ln = selectedCustomer.lastName || "";
-        customerName = `${fn} ${ln}`.trim() || undefined;
-        customerPhone = selectedCustomer.phoneNumber || undefined;
-      }
-
       openReceiptModal({
         type: "receipt",
         orderNumber: receiptOrder.orderNumber,
         tableNumber: receiptTable.number,
         zoneName: receiptTable.zoneName,
-        staffName: (session?.user as any)?.username || (session?.user as any)?.name || "admin",
-        customerName,
-        customerPhone,
+        staffName: (session?.user as any)?.username || (session?.user as any)?.name,
+        customerName: selectedCustomer
+          ? `${selectedCustomer.firstName || ""} ${selectedCustomer.lastName || ""}`.trim()
+          : undefined,
+        customerPhone: selectedCustomer?.phoneNumber || undefined,
         date: new Date().toLocaleString(),
         items: receiptItems,
         subTotal: receiptOrder.subTotal || 0,
@@ -150,9 +143,9 @@ const PaymentComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
               </div>
             </div>
             <div className="text-right text-xs text-gray-500">
-              <div>{dic.posPage?.subtotal ?? "Subtotal"}: {(currentOrder.subTotal || 0).toLocaleString()} ₭</div>
-              <div>{dic.posPage?.discount ?? "Discount"}: {(currentOrder.discount || 0).toLocaleString()} ₭</div>
-              <div>{dic.posPage?.items ?? "Items"}: {currentOrder.items?.length || 0} {dic.posPage?.items ?? "items"}</div>
+              <div>{dic.posPage?.subtotal }: {(currentOrder.subTotal || 0).toLocaleString()} ₭</div>
+              <div>{dic.posPage?.discount }: {(currentOrder.discount || 0).toLocaleString()} ₭</div>
+              <div>{dic.posPage?.items }: {currentOrder.items?.length || 0} {dic.posPage?.items }</div>
             </div>
           </div>
 
@@ -163,9 +156,9 @@ const PaymentComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
             </label>
             <div className="grid grid-cols-3 gap-2.5">
               {[
-                { id: IPosPaymentMethod.cash, label: dic.posPage?.cash ?? "Cash", icon: "tabler-cash" },
-                { id: IPosPaymentMethod.qr, label: dic.posPage?.qrTransfer ?? "QR / Transfer", icon: "tabler-qrcode" },
-                { id: IPosPaymentMethod.card, label: dic.posPage?.creditCard ?? "Credit Card", icon: "tabler-credit-card" },
+                { id: IPosPaymentMethod.cash, label: dic.posPage?.cash, icon: "tabler-cash" },
+                { id: IPosPaymentMethod.qr, label: dic.posPage?.qrTransfer, icon: "tabler-qrcode" },
+                { id: IPosPaymentMethod.card, label: dic.posPage?.creditCard, icon: "tabler-credit-card" },
               ].map((m) => (
                 <button
                   key={m.id}
@@ -270,7 +263,7 @@ const PaymentComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
             className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all disabled:opacity-50 flex items-center gap-1.5"
           >
             <i className="tabler-check text-sm" />
-            <span>{actionLoading ? dic.posPage?.processing ?? "Processing..." : dic.posPage?.completePayment ?? "Complete Payment"}</span>
+            <span>{actionLoading ? dic.posPage?.processing : dic.posPage?.completePayment}</span>
           </button>
         </div>
       </div>

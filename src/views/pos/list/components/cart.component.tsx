@@ -86,23 +86,16 @@ const CartComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
       note: i.note,
     }));
 
-    let customerName: string | undefined = undefined;
-    let customerPhone: string | undefined = undefined;
-    if (selectedCustomer) {
-      const fn = selectedCustomer.firstName || "";
-      const ln = selectedCustomer.lastName || "";
-      customerName = `${fn} ${ln}`.trim() || undefined;
-      customerPhone = selectedCustomer.phoneNumber || undefined;
-    }
-
     openReceiptModal({
       type: "bill",
       orderNumber: currentOrder.orderNumber,
       tableNumber: selectedTable.number,
       zoneName: selectedTable.zoneName,
       staffName: (session?.user as any)?.username || "admin",
-      customerName,
-      customerPhone,
+      customerName: selectedCustomer
+        ? `${selectedCustomer.firstName || ""} ${selectedCustomer.lastName || ""}`.trim()
+        : undefined,
+      customerPhone: selectedCustomer?.phoneNumber || undefined,
       date: new Date().toLocaleString(),
       items: receiptItems,
       subTotal: currentOrder.subTotal || 0,

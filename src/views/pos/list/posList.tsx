@@ -21,11 +21,12 @@ import OrderHistoryComponent from "./components/orderHistory.component";
 import ReceiptModalComponent from "./components/receiptModal.component";
 import MoveTableModalComponent from "./components/moveTableModal.component";
 import PosCustomerModalComponent from "./components/posCustomerModal.component";
+import PosShiftModalComponent from "./components/posShiftModal.component";
 
 export const POSList: React.FC<{ props: POSListProps }> = ({ props }) => {
   // Var
   const { lang, dictionary: dic } = props;
-  const { viewMode, setMasterData, setLoading, setRefreshMasterData, setSilentRefresh } = usePOSStore();
+  const { viewMode, setMasterData, setLoading, setRefreshMasterData, setSilentRefresh, loadStoredShift } = usePOSStore();
 
   const isRefreshingRef = useRef(false);
 
@@ -114,8 +115,9 @@ export const POSList: React.FC<{ props: POSListProps }> = ({ props }) => {
   useEffect(() => {
     setRefreshMasterData(loadMasterDataCall);
     setSilentRefresh(silentRefreshCall);
+    loadStoredShift();
     loadMasterDataCall();
-  }, [loadMasterDataCall, silentRefreshCall, setRefreshMasterData, setSilentRefresh]);
+  }, [loadMasterDataCall, silentRefreshCall, setRefreshMasterData, setSilentRefresh, loadStoredShift]);
 
   // Background Auto-Refresh (Polling every 15 seconds)
   useEffect(() => {
@@ -189,6 +191,9 @@ export const POSList: React.FC<{ props: POSListProps }> = ({ props }) => {
 
       {/* Customer / Member Selection & Quick Registration Modal */}
       <PosCustomerModalComponent props={props} />
+
+      {/* Shift & Cash Drawer Management Modal */}
+      <PosShiftModalComponent props={props} />
     </div>
   );
 };

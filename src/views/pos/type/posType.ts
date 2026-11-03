@@ -164,3 +164,54 @@ export interface TransferTableParams {
   };
 }
 
+export interface CashTransactionType {
+  _id: string;
+  type: 'cash_in' | 'cash_out';
+  amount: number;
+  reason: string;
+  createdAt: string;
+}
+
+export interface ShiftSalesSummaryType {
+  totalSales: number;
+  cashSales: number;
+  qrSales: number;
+  cardSales: number;
+  totalOrders: number;
+}
+
+export interface ShiftType {
+  _id: string;
+  shiftNumber: string;
+  staffId: string;
+  staffName: string;
+  openedAt: string;
+  closedAt: string | null;
+  status: 'open' | 'closed';
+  startingFloat: number;
+  cashTransactions: CashTransactionType[];
+  actualCash?: number;
+  expectedCash?: number;
+  difference?: number;
+  closingNotes?: string;
+  salesSummary?: ShiftSalesSummaryType;
+}
+
+export interface OpenShiftParams {
+  startingFloat: number;
+  staffId?: string;
+  staffName?: string;
+}
+
+export interface CashInOutParams {
+  type: 'cash_in' | 'cash_out';
+  amount: number;
+  reason: string;
+}
+
+export interface CloseShiftParams {
+  actualCash: number;
+  closingNotes?: string;
+}
+
+
