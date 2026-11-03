@@ -18,6 +18,7 @@ import {
   ProcessPaymentParams,
   ReceiptDataType,
   TransferTableParams,
+  CustomerType,
 } from "../type/posType";
 import {
   CREATE_ORDER,
@@ -29,6 +30,7 @@ import {
   TRANSFER_TABLE,
 } from "@/gql/queries/order";
 import { UPDATE_TABLE } from "@/gql/queries/table";
+import { CREATE_CUSTOMER } from "@/gql/queries/customer";
 import { ToastService } from "@/utils/toastService";
 
 // Mutations Hook matching zone/customer/table pattern
@@ -41,6 +43,7 @@ export const usePOSMutations = () => {
   const [processPaymentMutation] = useMutation(PROCESS_PAYMENT);
   const [updateTableMutation] = useMutation(UPDATE_TABLE);
   const [transferTableMutation] = useMutation(TRANSFER_TABLE);
+  const [createCustomerMutation] = useMutation(CREATE_CUSTOMER);
 
   return {
     createOrderMutation,
@@ -51,6 +54,7 @@ export const usePOSMutations = () => {
     processPaymentMutation,
     updateTableMutation,
     transferTableMutation,
+    createCustomerMutation,
   };
 };
 
@@ -63,9 +67,11 @@ interface POSState {
   allOrders: OrderType[];
   activeOrders: OrderType[];
   currencies: CurrencyType[];
+  customers: CustomerType[];
 
   // Selection & Filters
   selectedTable: POSTableType | null;
+  selectedCustomer: CustomerType | null;
   selectedZoneId: string;
   selectedCategoryId: string;
   menuSearchKeyword: string;
@@ -82,6 +88,7 @@ interface POSState {
   actionLoading: boolean;
   paymentModalOpen: boolean;
   moveTableModalOpen: boolean;
+  customerModalOpen: boolean;
   receiptModalOpen: boolean;
   receiptData: ReceiptDataType | null;
   autoRefreshEnabled: boolean;
@@ -95,6 +102,9 @@ interface POSState {
 
   // Basic Setters
   setMasterData: (data: SetMasterDataPayload) => void;
+  setCustomers: (customers: CustomerType[]) => void;
+  setSelectedCustomer: (customer: CustomerType | null) => void;
+  setCustomerModalOpen: (open: boolean) => void;
   setLoading: (loading: boolean) => void;
   setViewMode: (mode: POSViewMode) => void;
   setSelectedZoneId: (zoneId: string) => void;
@@ -136,8 +146,10 @@ export const usePOSStore = create<POSState>((set, get) => ({
   allOrders: [],
   activeOrders: [],
   currencies: [],
+  customers: [],
 
   selectedTable: null,
+  selectedCustomer: null,
   selectedZoneId: IEntityStatus.all,
   selectedCategoryId: IEntityStatus.all,
   menuSearchKeyword: "",
@@ -152,6 +164,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
   actionLoading: false,
   paymentModalOpen: false,
   moveTableModalOpen: false,
+  customerModalOpen: false,
   receiptModalOpen: false,
   receiptData: null,
   autoRefreshEnabled: true,
@@ -170,6 +183,9 @@ export const usePOSStore = create<POSState>((set, get) => ({
   setOrderNote: (note) => set({ orderNote: note }),
   setPaymentModalOpen: (open) => set({ paymentModalOpen: open }),
   setMoveTableModalOpen: (open) => set({ moveTableModalOpen: open }),
+  setCustomerModalOpen: (open) => set({ customerModalOpen: open }),
+  setSelectedCustomer: (customer) => set({ selectedCustomer: customer }),
+  setCustomers: (customers) => set({ customers }),
   setSelectedTable: (table) => set({ selectedTable: table }),
   openReceiptModal: (data) => set({ receiptModalOpen: true, receiptData: data }),
   closeReceiptModal: () => set({ receiptModalOpen: false, receiptData: null }),
@@ -228,6 +244,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
       allOrders,
       activeOrders,
       currencies,
+      customers: data.customers ?? get().customers,
       currentOrder: updatedCurrentOrder,
     });
   },
@@ -320,7 +337,7 @@ export const usePOSStore = create<POSState>((set, get) => ({
   },
 
   submitOrder: async ({ mutations, staffId }) => {
-    const { selectedTable, currentOrder, cart, discount, orderNote, silentRefresh } = get();
+    const { selectedTable, currentOrder, cart, discount, orderNote, selectedCustomer, silentRefresh } = get();
 
     if (!selectedTable) {
       ToastService.error("Please select a table first");
@@ -338,12 +355,17 @@ export const usePOSStore = create<POSState>((set, get) => ({
 
       // 1. Create order if table doesn't have an active order
       if (!orderId) {
+        const customerTag = selectedCustomer
+          ? `[Customer: ${selectedCustomer.firstName || ""} ${selectedCustomer.lastName || ""}${selectedCustomer.phoneNumber ? ` • ${selectedCustomer.phoneNumber}` : ""}]`.trim()
+          : "";
+        const finalNote = customerTag ? (orderNote ? `${customerTag} | ${orderNote}` : customerTag) : orderNote;
+
         const createRes = await mutations.createOrderMutation({
           variables: {
             input: {
               tableId: selectedTable._id,
               staffId: staffId || "",
-              note: orderNote,
+              note: finalNote,
               discount: Number(discount) || 0,
             },
           },

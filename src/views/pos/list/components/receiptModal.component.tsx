@@ -155,6 +155,14 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
                 </div>`
               : ""
           }
+          ${
+            receiptData.customerName
+              ? `<div class="row">
+                  <span class="label">Customer:</span>
+                  <span style="font-weight: 600;">${receiptData.customerName}${receiptData.customerPhone ? ` (${receiptData.customerPhone})` : ""}</span>
+                </div>`
+              : ""
+          }
 
           <div class="divider"></div>
 
@@ -293,6 +301,17 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
                     {dic.posPage?.cashier ?? "Cashier"}:
                   </span>
                   <span>{receiptData.staffName}</span>
+                </div>
+              )}
+              {receiptData.customerName && (
+                <div className="flex justify-between text-[#0A3981] dark:text-blue-400 font-semibold">
+                  <span className="text-gray-500 font-normal">
+                    {dic.customer ?? "Customer"}:
+                  </span>
+                  <span>
+                    {receiptData.customerName}
+                    {receiptData.customerPhone ? ` (${receiptData.customerPhone})` : ""}
+                  </span>
                 </div>
               )}
             </div>

@@ -19,6 +19,7 @@ const PaymentComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
   const {
     currentOrder,
     selectedTable,
+    selectedCustomer,
     currencies,
     paymentModalOpen,
     setPaymentModalOpen,
@@ -88,6 +89,10 @@ const PaymentComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
         tableNumber: receiptTable.number,
         zoneName: receiptTable.zoneName,
         staffName: (session?.user as any)?.username || (session?.user as any)?.name || "admin",
+        customerName: selectedCustomer
+          ? `${selectedCustomer.firstName || ""} ${selectedCustomer.lastName || ""}`.trim()
+          : undefined,
+        customerPhone: selectedCustomer?.phoneNumber || undefined,
         date: new Date().toLocaleString(),
         items: receiptItems,
         subTotal: receiptOrder.subTotal || 0,

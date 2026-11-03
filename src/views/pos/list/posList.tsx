@@ -9,6 +9,7 @@ import { LOAD_ZONE } from "@/gql/queries/zone";
 import { LOAD_CATEGORY } from "@/gql/queries/category";
 import { LOAD_MENU_ITEM } from "@/gql/queries/menuItem";
 import { LOAD_ORDER, LOAD_CURRENCIES } from "@/gql/queries/order";
+import { LOAD_CUSTOMER } from "@/gql/queries/customer";
 import { ToastService } from "@/utils/toastService";
 import HeaderComponent from "./components/header.component";
 import TableComponent from "./components/table.component";
@@ -19,6 +20,7 @@ import OrderQueueComponent from "./components/orderQueue.component";
 import OrderHistoryComponent from "./components/orderHistory.component";
 import ReceiptModalComponent from "./components/receiptModal.component";
 import MoveTableModalComponent from "./components/moveTableModal.component";
+import PosCustomerModalComponent from "./components/posCustomerModal.component";
 
 export const POSList: React.FC<{ props: POSListProps }> = ({ props }) => {
   // Var
@@ -34,13 +36,14 @@ export const POSList: React.FC<{ props: POSListProps }> = ({ props }) => {
   const [loadMenuItemCall] = useLazyQuery(LOAD_MENU_ITEM, { fetchPolicy: "network-only" });
   const [loadOrderCall] = useLazyQuery(LOAD_ORDER, { fetchPolicy: "network-only" });
   const [loadCurrenciesCall] = useLazyQuery(LOAD_CURRENCIES, { fetchPolicy: "network-only" });
+  const [loadCustomerCall] = useLazyQuery(LOAD_CUSTOMER, { fetchPolicy: "network-only" });
 
   // Full load — initial page open only (shows Loading spinner)
   const loadMasterDataCall = useCallback(async () => {
     try {
       setLoading(true);
 
-      const [tablesRes, zonesRes, categoriesRes, menuItemsRes, ordersRes, currenciesRes] =
+      const [tablesRes, zonesRes, categoriesRes, menuItemsRes, ordersRes, currenciesRes, customersRes] =
         await Promise.all([
           loadTableCall({ variables: { input: { limit: 100, isActive: "active" } } }),
           loadZoneCall({ variables: { input: { limit: 100, isActive: "active" } } }),
@@ -48,6 +51,7 @@ export const POSList: React.FC<{ props: POSListProps }> = ({ props }) => {
           loadMenuItemCall({ variables: { input: { limit: 200, isActive: "active" } } }),
           loadOrderCall({ variables: { input: { limit: 100 } } }),
           loadCurrenciesCall({ variables: { input: { limit: 20, isActive: "active" } } }),
+          loadCustomerCall({ variables: { input: { limit: 200, isActive: "active" } } }),
         ]);
 
       setMasterData({
@@ -57,6 +61,7 @@ export const POSList: React.FC<{ props: POSListProps }> = ({ props }) => {
         menuItems: menuItemsRes.data?.loadMenuItem?.menuItem ?? [],
         allOrders: ordersRes.data?.loadOrder?.order ?? [],
         currencies: currenciesRes.data?.loadCurrencies?.currency ?? [],
+        customers: customersRes.data?.loadCustomer?.customer ?? [],
       });
     } catch (err: any) {
       ToastService.error(err.message ?? "Failed to load POS data");
@@ -70,6 +75,7 @@ export const POSList: React.FC<{ props: POSListProps }> = ({ props }) => {
     loadMenuItemCall,
     loadOrderCall,
     loadCurrenciesCall,
+    loadCustomerCall,
     setMasterData,
     setLoading,
   ]);
@@ -95,6 +101,7 @@ export const POSList: React.FC<{ props: POSListProps }> = ({ props }) => {
         menuItems: currentState.menuItems,
         allOrders: ordersRes.data?.loadOrder?.order ?? [],
         currencies: currentState.currencies,
+        customers: currentState.customers,
       });
     } catch (err: any) {
       console.error("Silent refresh failed:", err);
@@ -179,6 +186,9 @@ export const POSList: React.FC<{ props: POSListProps }> = ({ props }) => {
 
       {/* Move / Transfer Table Modal */}
       <MoveTableModalComponent props={props} />
+
+      {/* Customer / Member Selection & Quick Registration Modal */}
+      <PosCustomerModalComponent props={props} />
     </div>
   );
 };

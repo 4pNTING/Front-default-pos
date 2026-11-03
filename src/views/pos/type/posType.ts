@@ -7,7 +7,10 @@ import {
   IPosViewMode,
 } from "@/utils/base";
 
+import { CustomerType } from "@/views/customer/type/customerType";
+
 export { IEntityStatus, IPosOrderStatus, IPosTableStatus, IPosPaymentMethod, IPosViewMode };
+export type { CustomerType };
 
 export type POSListProps = {
   dictionary: Awaited<ReturnType<typeof getDictionary>>;
@@ -78,6 +81,7 @@ export interface SetMasterDataPayload {
   menuItems: any[];
   allOrders: OrderType[];
   currencies: CurrencyType[];
+  customers?: CustomerType[];
 }
 
 
@@ -138,6 +142,8 @@ export interface ReceiptDataType {
   tableNumber: string;
   zoneName?: string;
   staffName?: string;
+  customerName?: string;
+  customerPhone?: string;
   date: string;
   items: ReceiptItemType[];
   subTotal: number;

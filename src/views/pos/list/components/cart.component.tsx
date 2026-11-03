@@ -21,6 +21,10 @@ const CartComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
 
   const {
     selectedTable,
+    selectedCustomer,
+    setSelectedCustomer,
+    customerModalOpen,
+    setCustomerModalOpen,
     currentOrder,
     cart,
     discount,
@@ -88,6 +92,10 @@ const CartComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
       tableNumber: selectedTable.number,
       zoneName: selectedTable.zoneName,
       staffName: (session?.user as any)?.username || "admin",
+      customerName: selectedCustomer
+        ? `${selectedCustomer.firstName || ""} ${selectedCustomer.lastName || ""}`.trim()
+        : undefined,
+      customerPhone: selectedCustomer?.phoneNumber || undefined,
       date: new Date().toLocaleString(),
       items: receiptItems,
       subTotal: currentOrder.subTotal || 0,
@@ -190,6 +198,59 @@ const CartComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
               {dic.posPage?.switchTable ?? "Switch Table"}
             </button>
           </div>
+        </div>
+
+        {/* Customer / Member Selection Banner */}
+        <div className="mt-2.5 pt-2 border-t border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-between gap-2">
+          {selectedCustomer ? (
+            <div className="flex items-center justify-between w-full bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg p-1.5 px-2">
+              <div
+                className="flex items-center gap-1.5 cursor-pointer flex-1 overflow-hidden"
+                onClick={() => setCustomerModalOpen(true)}
+              >
+                <div className="w-6 h-6 rounded-full bg-[#0A3981] text-white flex items-center justify-center text-[10px] font-bold">
+                  {(selectedCustomer.firstName || "C")[0].toUpperCase()}
+                </div>
+                <div className="truncate">
+                  <div className="text-xs font-bold text-gray-900 dark:text-gray-100 truncate">
+                    {selectedCustomer.firstName} {selectedCustomer.lastName || ""}
+                  </div>
+                  {selectedCustomer.phoneNumber && (
+                    <div className="text-[10px] text-gray-500 dark:text-gray-400 leading-none">
+                      {selectedCustomer.phoneNumber}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setCustomerModalOpen(true)}
+                  className="text-[11px] text-[#0A3981] dark:text-blue-400 font-semibold hover:underline px-1"
+                >
+                  {lang === "la" ? "ປ່ຽນ" : "Change"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedCustomer(null)}
+                  className="text-gray-400 hover:text-rose-500 p-0.5 rounded"
+                  title="Remove customer"
+                >
+                  <i className="tabler-x text-sm" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setCustomerModalOpen(true)}
+              className="w-full py-1.5 px-2.5 rounded-lg border border-dashed border-blue-300 dark:border-blue-700 bg-blue-50/50 dark:bg-blue-950/20 hover:bg-blue-50 dark:hover:bg-blue-900/40 text-[#0A3981] dark:text-blue-300 flex items-center justify-center gap-1.5 text-xs font-semibold transition-all"
+            >
+              <i className="tabler-user-plus text-sm" />
+              <span>{lang === "la" ? "+ ເລືອກລູກຄ້າ / ສະມາຊິກ (Member)" : "+ Select Customer / Member"}</span>
+            </button>
+          )}
         </div>
 
         {/* Current Order Status Bar */}
