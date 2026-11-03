@@ -476,3 +476,4 @@ export const PosCustomerModalComponent: React.FC<{ props: POSListProps }> = ({ p
 };
 
 export default PosCustomerModalComponent;
+

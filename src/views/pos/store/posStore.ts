@@ -355,10 +355,28 @@ export const usePOSStore = create<POSState>((set, get) => ({
 
       // 1. Create order if table doesn't have an active order
       if (!orderId) {
-        const customerTag = selectedCustomer
-          ? `[Customer: ${selectedCustomer.firstName || ""} ${selectedCustomer.lastName || ""}${selectedCustomer.phoneNumber ? ` • ${selectedCustomer.phoneNumber}` : ""}]`.trim()
-          : "";
-        const finalNote = customerTag ? (orderNote ? `${customerTag} | ${orderNote}` : customerTag) : orderNote;
+        let customerTag = "";
+        if (selectedCustomer) {
+          const firstName = selectedCustomer.firstName || "";
+          const lastName = selectedCustomer.lastName || "";
+          const fullName = `${firstName} ${lastName}`.trim();
+          const phone = selectedCustomer.phoneNumber || "";
+
+          if (phone) {
+            customerTag = `[Customer: ${fullName} • ${phone}]`;
+          } else {
+            customerTag = `[Customer: ${fullName}]`;
+          }
+        }
+
+        let finalNote = orderNote;
+        if (customerTag) {
+          if (orderNote) {
+            finalNote = `${customerTag} | ${orderNote}`;
+          } else {
+            finalNote = customerTag;
+          }
+        }
 
         const createRes = await mutations.createOrderMutation({
           variables: {

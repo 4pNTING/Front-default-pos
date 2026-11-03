@@ -83,16 +83,23 @@ const PaymentComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
         note: i.note,
       }));
 
+      let customerName: string | undefined = undefined;
+      let customerPhone: string | undefined = undefined;
+      if (selectedCustomer) {
+        const fn = selectedCustomer.firstName || "";
+        const ln = selectedCustomer.lastName || "";
+        customerName = `${fn} ${ln}`.trim() || undefined;
+        customerPhone = selectedCustomer.phoneNumber || undefined;
+      }
+
       openReceiptModal({
         type: "receipt",
         orderNumber: receiptOrder.orderNumber,
         tableNumber: receiptTable.number,
         zoneName: receiptTable.zoneName,
         staffName: (session?.user as any)?.username || (session?.user as any)?.name || "admin",
-        customerName: selectedCustomer
-          ? `${selectedCustomer.firstName || ""} ${selectedCustomer.lastName || ""}`.trim()
-          : undefined,
-        customerPhone: selectedCustomer?.phoneNumber || undefined,
+        customerName,
+        customerPhone,
         date: new Date().toLocaleString(),
         items: receiptItems,
         subTotal: receiptOrder.subTotal || 0,
