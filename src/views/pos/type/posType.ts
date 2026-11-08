@@ -33,7 +33,7 @@ export interface OrderType {
   orderNumber: string;
   tableId: string;
   staffId: string;
-  status: IPosOrderStatus | 'pending' | 'confirmed' | 'preparing' | 'cooking' | 'served' | 'paid' | 'cancelled' | string;
+  status: IPosOrderStatus ;
   note?: string;
   subTotal: number;
   discount: number;
@@ -60,7 +60,7 @@ export interface POSTableType {
   zoneId: string;
   zoneName?: string;
   capacity: number;
-  status: IPosTableStatus | 'available' | 'occupied' | 'reserved' | string;
+  status: IPosTableStatus;
   isActive: string;
   activeOrder?: OrderType;
 }
@@ -72,7 +72,7 @@ export interface CurrencyType {
   isActive?: string;
 }
 
-export type POSViewMode = IPosViewMode | 'table' | 'order' | 'orders_list' | 'history' | 'kds';
+export type POSViewMode = IPosViewMode;
 
 export interface SetMasterDataPayload {
   rawTables: POSTableType[];

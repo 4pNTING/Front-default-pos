@@ -103,8 +103,10 @@ export enum IPosOrderStatus {
   pending = "pending",
   confirmed = "confirmed",
   preparing = "preparing",
+  cooking = "cooking",
   served = "served",
   paid = "paid",
+  completed = "completed",
   cancelled = "cancelled",
 }
 
