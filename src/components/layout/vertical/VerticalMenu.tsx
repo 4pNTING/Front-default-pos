@@ -149,18 +149,9 @@ const VerticalMenu = ({ dictionary, scrollMenu, lang }: Props) => {
 
   const handleUserLogout = async () => {
     try {
-      await signOut({ redirect: false });
+      // Sign out from the app
 
-      let currentLang = "la";
-      if (lang) {
-        currentLang = lang;
-      }
-
-      const targetUrl = `/${currentLang}/login`;
-
-      if (typeof window !== "undefined") {
-        window.location.href = targetUrl;
-      }
+      await signOut({ callbackUrl: "/login" });
       toast.success("Logout success!");
     } catch (error) {
       toast.error("Logout failed!");

@@ -83,23 +83,20 @@ const UserDropdown = ({ props }: { props: PageDefaultProps }) => {
 
   const handleUserLogout = async () => {
     try {
+      // Sign out from the app
       setLoading(true);
-      const targetLocale: Locale = (locale as Locale) || "la";
-      const targetUrl = getLocalizedUrl("/login", targetLocale);
 
-      await signOut({ redirect: false });
+      // ใช้ window.location.origin เพื่อ redirect กลับไปยัง port ที่กำลังใช้งานจริง
+      // ป้องกันปัญหา dev server (port 9882) redirect ไป production port (9064)
+      const logoutCallbackUrl = window.location.origin + '/login';
 
-      if (typeof window !== "undefined") {
-        window.location.href = targetUrl;
-      } else {
-        router.push(targetUrl);
-      }
-      toast.success("Logout success!");
+      await signOut({ callbackUrl: logoutCallbackUrl })
+      toast.success("Logout success!")
     } catch (error) {
       setLoading(false);
-      toast.error("Logout failed!");
+      toast.error("Logout failed!")
     }
-  };
+  }
 
   return (
     <>
