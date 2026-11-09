@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: frontend-pos:v1.0.1
+    image: 4pnz/frontend-pos:latest
     container_name: frontend-pos
     restart: always
     networks:
@@ -18,7 +18,7 @@ services:
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
       - NEXTAUTH_DEBUG=true
       - NODE_ENV=production
-      - API_URL=${API_URL}
+      - API_URL=${AAPI_URL:-http://pos_backend:3000/api-gateway}
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
 
