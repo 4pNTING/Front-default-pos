@@ -1,18 +1,25 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { usePOSStore } from "../../store/posStore";
+import { usePrinterStore } from "../../store/printerStore";
 import { POSListProps } from "../../type/posType";
+import { ToastService } from "@/utils/toastService";
 
 const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
-  const { dictionary: dic } = props;
+  const { lang, dictionary: dic } = props;
+  const isLao = lang === "la";
   const { receiptModalOpen, receiptData, closeReceiptModal } = usePOSStore();
+  const { cashierPrinter, printReceiptDirect, setSettingsOpen } = usePrinterStore();
+
+  const [isDirectPrinting, setIsDirectPrinting] = useState(false);
 
   if (!receiptModalOpen || !receiptData) return null;
 
   const isReceipt = receiptData.type === "receipt";
 
-  const handlePrint = () => {
+  // Browser Print (Iframe fallback)
+  const handleBrowserPrint = () => {
     if (!receiptData) return;
 
     // Use an isolated iframe for reliable thermal receipt printing without CSS clipping
@@ -230,6 +237,38 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
     }, 250);
   };
 
+  // Smart Print Handler (Direct ESC/POS first if in network mode, with fallback to browser print)
+  const handlePrint = async () => {
+    if (!receiptData) return;
+
+    if (cashierPrinter.mode === "network" && cashierPrinter.enabled) {
+      setIsDirectPrinting(true);
+      try {
+        const res = await printReceiptDirect(receiptData);
+        if (res.success) {
+          ToastService.success(isLao ? "ພິມໃບເສร็จກົງເຂົ້າເຄື່ອງພິມສຳເລັດ!" : "พิมพ์ใบเสร็จตรงเข้าเครื่องพิมพ์สำเร็จ!");
+          closeReceiptModal();
+          return;
+        } else {
+          // Direct print failed: notify and prompt fallback
+          ToastService.warning(
+            isLao
+              ? `ບໍ່ສາມາດເຊື່ອມຕໍ່ ${cashierPrinter.ip}:9100 ໄດ້, ກຳລັງເປີດໜ້າຈໍພິມ Browser...`
+              : `ไม่สามารถเชื่อมต่อ ${cashierPrinter.ip}:9100 ได้ กำลังเปิดหน้าจอพิมพ์ Browser...`
+          );
+          handleBrowserPrint();
+        }
+      } catch (err: any) {
+        ToastService.warning(isLao ? "ການເຊື່ອມຕໍ່ຂັດຂ້ອງ ກຳລັງພິມຜ່ານ Browser..." : "การเชื่อมต่อขัดข้อง กำลังพิมพ์ผ่าน Browser...");
+        handleBrowserPrint();
+      } finally {
+        setIsDirectPrinting(false);
+      }
+    } else {
+      handleBrowserPrint();
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-gray-100 dark:border-gray-700 flex flex-col max-h-[92vh]">
@@ -405,22 +444,63 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
         </div>
 
         {/* Modal Actions */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700 flex items-center justify-end gap-2.5">
+        <div className="p-3.5 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between gap-2">
+          {/* Printer Mode Indicator & Setting shortcut */}
           <button
             type="button"
-            onClick={closeReceiptModal}
-            className="px-4 py-2 text-xs font-semibold rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+            onClick={() => setSettingsOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-[11px] font-medium text-gray-600 dark:text-gray-300 hover:border-blue-400 transition-all"
+            title="Configure thermal printer"
           >
-            {dic.posPage?.close ?? "Close"}
+            <i className="tabler-settings text-xs text-gray-400" />
+            <span className="hidden sm:inline">
+              {cashierPrinter.mode === "network" ? `ESC/POS: ${cashierPrinter.ip}` : "Browser Print"}
+            </span>
+            <span className={`w-1.5 h-1.5 rounded-full ${cashierPrinter.mode === "network" ? "bg-emerald-500" : "bg-blue-500"}`} />
           </button>
-          <button
-            type="button"
-            onClick={handlePrint}
-            className="px-5 py-2 bg-[#2F57AB] hover:bg-[#25468a] text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5"
-          >
-            <i className="tabler-printer text-base" />
-            <span>{dic.posPage?.print ?? "Print"}</span>
-          </button>
+
+          <div className="flex items-center gap-2">
+            {/* Fallback to Browser Print if in Network Mode */}
+            {cashierPrinter.mode === "network" && (
+              <button
+                type="button"
+                onClick={handleBrowserPrint}
+                className="px-3 py-2 text-xs font-semibold rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all flex items-center gap-1"
+                title="Print via Browser dialog"
+              >
+                <i className="tabler-browser text-sm" />
+                <span className="hidden sm:inline">Browser</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={closeReceiptModal}
+              className="px-3.5 py-2 text-xs font-semibold rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all"
+            >
+              {dic.posPage?.close ?? "Close"}
+            </button>
+
+            <button
+              type="button"
+              onClick={handlePrint}
+              disabled={isDirectPrinting}
+              className="px-5 py-2 bg-[#2F57AB] hover:bg-[#25468a] text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
+            >
+              {isDirectPrinting ? (
+                <i className="tabler-loader animate-spin text-base" />
+              ) : (
+                <i className="tabler-printer text-base" />
+              )}
+              <span>
+                {cashierPrinter.mode === "network"
+                  ? isLao
+                    ? "ພິມກົງ (ESC/POS)"
+                    : "พิมพ์ตรง (ESC/POS)"
+                  : dic.posPage?.print ?? "Print"}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

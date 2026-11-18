@@ -2,9 +2,11 @@
 
 import React, { useState } from "react";
 import { usePOSStore, usePOSMutations } from "../../store/posStore";
+import { usePrinterStore } from "../../store/printerStore";
 import { useSession } from "next-auth/react";
 import Swal from "sweetalert2";
 import { POSListProps, IPosOrderStatus, IPosViewMode } from "../../type/posType";
+import { ToastService } from "@/utils/toastService";
 
 const CartComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
   // Var
@@ -125,6 +127,12 @@ const CartComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
   };
 
   const handleSubmitOrder = async () => {
+    // Keep snapshot of items to print to kitchen
+    const itemsSnapshot = [...cart];
+    const targetTableNumber = selectedTable?.number || "";
+    const targetZoneName = selectedTable?.zoneName;
+    const currentOrderNum = currentOrder?.orderNumber || "NEW";
+
     const success = await submitOrder({
       mutations: {
         createOrderMutation,
@@ -135,6 +143,28 @@ const CartComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
     });
     if (success) {
       setActiveTab("active");
+
+      // Auto-print kitchen order ticket if kitchen printer is enabled
+      const { kitchenPrinter, printKitchenTicketDirect } = usePrinterStore.getState();
+      if (kitchenPrinter.enabled && kitchenPrinter.autoPrintOnOrder && itemsSnapshot.length > 0) {
+        printKitchenTicketDirect({
+          orderNumber: currentOrderNum,
+          tableNumber: targetTableNumber,
+          zoneName: targetZoneName,
+          date: new Date().toLocaleTimeString(),
+          staffName: session?.user?.username || "",
+          note: orderNote,
+          items: itemsSnapshot.map((item) => ({
+            name: item.menuItemName,
+            quantity: item.quantity,
+            note: item.note,
+          })),
+        }).then((res) => {
+          if (res.success) {
+            ToastService.success(lang === "la" ? "ສົ່ງລາຍການເຂົ້າເຄື່ອງພິມຄົວແລ້ວ" : "ส่งรายการเข้าเครื่องพิมพ์ครัวแล้ว");
+          }
+        });
+      }
     }
   };
 

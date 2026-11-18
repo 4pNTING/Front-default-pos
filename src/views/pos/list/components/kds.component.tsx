@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { usePOSStore, usePOSMutations } from "../../store/posStore";
+import { usePrinterStore } from "../../store/printerStore";
 import { OrderType, POSListProps, IPosOrderStatus } from "../../type/posType";
 import { Button, Chip, Tooltip } from "@mui/material";
+import { ToastService } from "@/utils/toastService";
 
 export const KdsComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
   const { lang, dictionary: dic } = props;
@@ -15,6 +17,8 @@ export const KdsComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
     updateOrderStatusAPI,
     silentRefresh,
   } = usePOSStore();
+
+  const { printKitchenTicketDirect } = usePrinterStore();
 
   const [statusFilter, setStatusFilter] = useState<string>("cooking_active");
   const [stationFilter, setStationFilter] = useState<string>("all");
@@ -161,6 +165,37 @@ export const KdsComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
     });
     if (silentRefresh) {
       await silentRefresh();
+    }
+  };
+
+  // Reprint Kitchen Ticket to ESC/POS Thermal Printer
+  const handlePrintKitchenSlip = async (order: OrderType) => {
+    const table = getTableInfo(order.tableId);
+    const items = order.items || [];
+    let formattedDate = "";
+    if (order.createdAt) {
+      formattedDate = new Date(order.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    } else {
+      formattedDate = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+
+    const res = await printKitchenTicketDirect({
+      orderNumber: order.orderNumber,
+      tableNumber: table?.number || "-",
+      zoneName: table?.zoneName,
+      date: formattedDate,
+      note: order.note,
+      items: items.map((i) => ({
+        name: i.menuItemName,
+        quantity: i.quantity,
+        note: i.note,
+      })),
+    });
+
+    if (res.success) {
+      ToastService.success(lang === "la" ? "ພິມໃບສັ່ງຄົວສຳເລັດ!" : "พิมพ์ใบสั่งครัวสำเร็จ!");
+    } else {
+      ToastService.error(res.error || (lang === "la" ? "ການພິມລົ້ມເຫຼວ" : "การพิมพ์ล้มเหลว"));
     }
   };
 
@@ -325,15 +360,26 @@ export const KdsComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
                       </span>
                     </div>
 
-                    {/* Timer Badge */}
-                    <div className="flex flex-col items-end">
-                      <div className={`px-2.5 py-1 rounded-lg border text-xs flex items-center gap-1 ${timerBadgeColor}`}>
-                        <i className="tabler-clock text-xs" />
-                        <span className="font-mono">{elapsed.text}</span>
+                    {/* Timer Badge & Quick Actions */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handlePrintKitchenSlip(order)}
+                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-all border border-slate-700 shadow-xs"
+                        title={lang === "la" ? "ພິມໃບສັ່ງຄົວ (Print Ticket)" : "พิมพ์ใบสั่งครัว (Print Ticket)"}
+                      >
+                        <i className="tabler-printer text-sm" />
+                      </button>
+
+                      <div className="flex flex-col items-end">
+                        <div className={`px-2.5 py-1 rounded-lg border text-xs flex items-center gap-1 ${timerBadgeColor}`}>
+                          <i className="tabler-clock text-xs" />
+                          <span className="font-mono">{elapsed.text}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-500 mt-0.5">
+                          {order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
+                        </span>
                       </div>
-                      <span className="text-[10px] text-slate-500 mt-0.5">
-                        {order.createdAt ? new Date(order.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}
-                      </span>
                     </div>
                   </div>
 

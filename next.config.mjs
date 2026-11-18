@@ -32,10 +32,6 @@
 const nextConfig = {
   reactStrictMode: false,
   basePath: process.env.BASEPATH,
-  env: {
-    API_URL: process.env.API_URL,
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-  },
   redirects: async () => {
     return [
       {
@@ -65,10 +61,14 @@ const nextConfig = {
     ];
   },
   rewrites: async () => {
+    const backendUrl = process.env.API_URL
+      ? process.env.API_URL.replace(/\/api-gateway\/?$/, "")
+      : "http://localhost:3000";
+
     return [
       {
         source: "/uploads/:path*",
-        destination: "http://localhost:3000/uploads/:path*",
+        destination: `${backendUrl}/uploads/:path*`,
       },
     ];
   },

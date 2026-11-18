@@ -2,6 +2,7 @@
 
 import React from "react";
 import { usePOSStore } from "../../store/posStore";
+import { usePrinterStore } from "../../store/printerStore";
 import { POSListProps, IPosViewMode, IPosTableStatus } from "../../type/posType";
 
 const HeaderComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
@@ -24,6 +25,8 @@ const HeaderComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
     setShiftModalOpen,
     activeOrders,
   } = usePOSStore();
+
+  const { cashierPrinter, setSettingsOpen } = usePrinterStore();
 
   const activeTable = selectedTable
     ? tables.find((t) => t._id === selectedTable._id) ?? selectedTable
@@ -185,6 +188,22 @@ const HeaderComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
             <span>{lang === "la" ? "ເປີດກະ (Open Shift)" : "Open Shift"}</span>
           </button>
         )}
+
+        {/* Thermal Printer Settings Shortcut */}
+        <button
+          type="button"
+          onClick={() => setSettingsOpen(true)}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all shadow-xs"
+          title={lang === "la" ? "ຕັ້ງຄ່າເຄື່ອງພິມ (Thermal Printer)" : "ตั้งค่าเครื่องพิมพ์ (Thermal Printer)"}
+        >
+          <i className="tabler-printer text-sm text-blue-600 dark:text-blue-400" />
+          <span className="hidden lg:inline">{lang === "la" ? "ເຄື່ອງພິມ" : "เครื่องพิมพ์"}</span>
+          <span
+            className={`w-2 h-2 rounded-full ${
+              cashierPrinter.mode === "network" ? "bg-emerald-500" : "bg-blue-400"
+            }`}
+          />
+        </button>
 
         {/* Auto Refresh Live Status / Toggle */}
         <button

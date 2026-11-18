@@ -23,6 +23,7 @@ import MoveTableModalComponent from "./components/moveTableModal.component";
 import PosCustomerModalComponent from "./components/posCustomerModal.component";
 import PosShiftModalComponent from "./components/posShiftModal.component";
 import KdsComponent from "./components/kds.component";
+import PrinterSettingsModalComponent from "./components/printerSettingsModal.component";
 
 export const POSList: React.FC<{ props: POSListProps }> = ({ props }) => {
   // Var
@@ -196,6 +197,9 @@ export const POSList: React.FC<{ props: POSListProps }> = ({ props }) => {
 
       {/* Shift & Cash Drawer Management Modal */}
       <PosShiftModalComponent props={props} />
+
+      {/* Thermal ESC/POS Network Printer Settings Modal */}
+      <PrinterSettingsModalComponent props={props} />
     </div>
   );
 };
