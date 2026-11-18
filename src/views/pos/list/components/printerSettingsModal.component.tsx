@@ -22,7 +22,7 @@ export const PrinterSettingsModalComponent: React.FC<{ props: POSListProps }> = 
     openDrawerDirect,
   } = usePrinterStore();
 
-  const [activeTab, setActiveTab] = useState<"cashier" | "kitchen">("cashier");
+  const [activeTab, setActiveTab] = useState<"cashier" | "kitchen" | "branding">("cashier");
   const [testingCashier, setTestingCashier] = useState(false);
   const [cashierStatus, setCashierStatus] = useState<{ connected?: boolean; latencyMs?: number; error?: string } | null>(null);
 
@@ -42,10 +42,18 @@ export const PrinterSettingsModalComponent: React.FC<{ props: POSListProps }> = 
       const res = await testPrinter(cashierPrinter.ip, cashierPrinter.port);
       if (res.success) {
         setCashierStatus({ connected: true, latencyMs: res.latencyMs });
-        ToastService.success(isLao ? `ເຊື່ອມຕໍ່ສຳເລັດ (${res.latencyMs}ms)` : `เชื่อมต่อสำเร็จ (${res.latencyMs}ms)`);
+        let successMsg = `เชื่อมต่อสำเร็จ (${res.latencyMs}ms)`;
+        if (isLao) {
+          successMsg = `ເຊື່ອມຕໍ່ສຳເລັດ (${res.latencyMs}ms)`;
+        }
+        ToastService.success(successMsg);
       } else {
         setCashierStatus({ connected: false, error: res.error });
-        ToastService.error(res.error || (isLao ? "ບໍ່ສາມາດເຊື່ອມຕໍ່ໄດ້" : "เชื่อมต่อไม่สำเร็จ"));
+        let failMsg = res.error;
+        if (!failMsg) {
+          failMsg = isLao ? "ບໍ່ສາມາດເຊື່ອມຕໍ່ໄດ້" : "เชื่อมต่อไม่สำเร็จ";
+        }
+        ToastService.error(failMsg);
       }
     } finally {
       setTestingCashier(false);
@@ -60,10 +68,18 @@ export const PrinterSettingsModalComponent: React.FC<{ props: POSListProps }> = 
       const res = await testPrinter(kitchenPrinter.ip, kitchenPrinter.port);
       if (res.success) {
         setKitchenStatus({ connected: true, latencyMs: res.latencyMs });
-        ToastService.success(isLao ? `ເຊື່ອມຕໍ່ສຳເລັດ (${res.latencyMs}ms)` : `เชื่อมต่อสำเร็จ (${res.latencyMs}ms)`);
+        let successMsg = `เชื่อมต่อสำเร็จ (${res.latencyMs}ms)`;
+        if (isLao) {
+          successMsg = `ເຊື່ອມຕໍ່ສຳເລັດ (${res.latencyMs}ms)`;
+        }
+        ToastService.success(successMsg);
       } else {
         setKitchenStatus({ connected: false, error: res.error });
-        ToastService.error(res.error || (isLao ? "ບໍ່ສາມາດເຊື່ອມຕໍ່ໄດ້" : "เชื่อมต่อไม่สำเร็จ"));
+        let failMsg = res.error;
+        if (!failMsg) {
+          failMsg = isLao ? "ບໍ່ສາມາດເຊື່ອມຕໍ່ໄດ້" : "เชื่อมต่อไม่สำเร็จ";
+        }
+        ToastService.error(failMsg);
       }
     } finally {
       setTestingKitchen(false);
@@ -73,13 +89,29 @@ export const PrinterSettingsModalComponent: React.FC<{ props: POSListProps }> = 
   // Handler for Test Print Slip
   const handlePrintTestSlip = async (target: "cashier" | "kitchen") => {
     setPrintingTest(true);
-    const targetConfig = target === "cashier" ? cashierPrinter : kitchenPrinter;
+    let targetConfig = cashierPrinter;
+    let targetTitle = "Cashier Receipt Printer";
+    if (target === "kitchen") {
+      targetConfig = kitchenPrinter as any;
+      targetTitle = "Kitchen Order Printer";
+    }
+
     try {
-      const res = await printTestSlip(targetConfig.ip, targetConfig.port, targetConfig.paperWidth);
+      const res = await printTestSlip(
+        targetConfig.ip,
+        targetConfig.port,
+        targetConfig.paperWidth,
+        targetTitle
+      );
       if (res.success) {
-        ToastService.success(isLao ? "ສົ່ງຄຳສັ່ງພິມໃບທົດສອບສຳເລັດ!" : "ส่งคำสั่งพิมพ์ใบเสร็จทดสอบสำเร็จ!");
+        let msg = isLao ? "ສົ່ງຄຳສັ່ງພິມໃບທົດສອບສຳເລັດ!" : "ส่งคำสั่งพิมพ์ใบเสร็จทดสอบสำเร็จ!";
+        ToastService.success(msg);
       } else {
-        ToastService.error(res.error || (isLao ? "ການພິມລົ້ມເຫຼວ" : "การพิมพ์ล้มเหลว"));
+        let msg = res.error;
+        if (!msg) {
+          msg = isLao ? "ການພິມລົ້ມເຫຼວ" : "การพิมพ์ล้มเหลว";
+        }
+        ToastService.error(msg);
       }
     } finally {
       setPrintingTest(false);
@@ -92,9 +124,14 @@ export const PrinterSettingsModalComponent: React.FC<{ props: POSListProps }> = 
     try {
       const res = await openDrawerDirect(cashierPrinter.ip, cashierPrinter.port);
       if (res.success) {
-        ToastService.success(isLao ? "ສົ່ງສັນຍານເປີດລີ້ນຊັກເງິນແລ້ວ!" : "ส่งสัญญาณเปิดลิ้นชักเก็บเงินแล้ว!");
+        let msg = isLao ? "ສົ່ງສັນຍານເປີດລີ້ນຊັກເງິນແລ້ວ!" : "ส่งสัญญาณเปิดลิ้นชักเก็บเงินแล้ว!";
+        ToastService.success(msg);
       } else {
-        ToastService.error(res.error || (isLao ? "ເປີດລີ້ນຊັກບໍ່ສຳເລັດ" : "เปิดลิ้นชักไม่สำเร็จ"));
+        let msg = res.error;
+        if (!msg) {
+          msg = isLao ? "ເປີດລີ້ນຊັກບໍ່ສຳເລັດ" : "เปิดลิ้นชักไม่สำเร็จ";
+        }
+        ToastService.error(msg);
       }
     } finally {
       setOpeningDrawer(false);
@@ -102,295 +139,290 @@ export const PrinterSettingsModalComponent: React.FC<{ props: POSListProps }> = 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border border-gray-100 dark:border-gray-700 flex flex-col max-h-[92vh]">
-        {/* Modal Header */}
-        <div className="px-5 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-              <i className="tabler-printer text-xl" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-gray-100 dark:border-gray-700 flex flex-col max-h-[92vh]">
+        {/* Header */}
+        <div className="px-6 py-4 bg-gradient-to-r from-blue-700 to-indigo-800 text-white flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl">
+              <i className="tabler-printer" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-gray-800 dark:text-gray-100">
-                {isLao ? "ຕັ້ງຄ່າເຄື່ອງພິມຄວາມຮ້ອນ (Thermal Printers)" : "ตั้งค่าเครื่องพิมพ์ความร้อน (Thermal Printers)"}
+              <h3 className="font-bold text-base leading-tight">
+                {isLao ? "ຕັ້ງຄ່າເຄື່ອງພິມໃບບິນ (Thermal POS)" : "ตั้งค่าเครื่องพิมพ์ใบเสร็จ (Thermal POS)"}
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                {isLao ? "ຮອງຮັບລະບົບເຄືອຂ່າຍ TCP Port 9100 (ESC/POS)" : "รองรับระบบเครือข่าย TCP Port 9100 (ESC/POS)"}
+              <p className="text-xs text-blue-100 mt-0.5">
+                {isLao
+                  ? "ຮອງຮັບ Direct ESC/POS Port 9100 ແລະ ລະບົບພິມ Browser"
+                  : "รองรับ Direct ESC/POS Port 9100 และระบบพิมพ์ Browser"}
               </p>
             </div>
           </div>
           <button
             onClick={() => setSettingsOpen(false)}
-            className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 flex items-center justify-center text-sm transition-all"
+            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm transition-all"
           >
             ✕
           </button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30 px-5 pt-2">
+        {/* Navigation Tabs */}
+        <div className="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 px-6 pt-2 gap-2">
           <button
-            type="button"
             onClick={() => setActiveTab("cashier")}
-            className={`flex items-center gap-2 px-4 py-2.5 font-semibold text-xs border-b-2 transition-all ${
+            className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-2 ${
               activeTab === "cashier"
-                ? "border-[#2F57AB] text-[#2F57AB] dark:text-blue-400 dark:border-blue-400 bg-white dark:bg-gray-800 rounded-t-lg shadow-xs"
-                : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
             }`}
           >
-            <i className="tabler-receipt text-base" />
-            <span>{isLao ? "ເຄື່ອງພິມແຄຊເຊຍ (ໃບເສร็จ)" : "เครื่องพิมพ์แคชเชียร์ (ใบเสร็จ)"}</span>
+            <i className="tabler-receipt text-sm" />
+            <span>{isLao ? "ເຄື່ອງພິມແຄຊເຊຍ (Cashier)" : "เครื่องพิมพ์แคชเชียร์"}</span>
           </button>
 
           <button
-            type="button"
             onClick={() => setActiveTab("kitchen")}
-            className={`flex items-center gap-2 px-4 py-2.5 font-semibold text-xs border-b-2 transition-all relative ${
+            className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-2 ${
               activeTab === "kitchen"
-                ? "border-[#2F57AB] text-[#2F57AB] dark:text-blue-400 dark:border-blue-400 bg-white dark:bg-gray-800 rounded-t-lg shadow-xs"
-                : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
             }`}
           >
-            <i className="tabler-tools-kitchen-2 text-base" />
-            <span>{isLao ? "ເຄື່ອງພິມໃນຄົວ (ໃບສັ່ງອາຫານ)" : "เครื่องพิมพ์ในครัว (ใบสั่งอาหาร)"}</span>
-            {kitchenPrinter.enabled && (
-              <span className="w-2 h-2 rounded-full bg-emerald-500 ml-1" />
-            )}
+            <i className="tabler-soup text-sm" />
+            <span>{isLao ? "ເຄື່ອງພິມຫ້ອງຄົວ (Kitchen)" : "เครื่องพิมพ์ห้องครัว"}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("branding")}
+            className={`pb-2.5 px-3 text-xs font-bold border-b-2 transition-all flex items-center gap-2 ${
+              activeTab === "branding"
+                ? "border-blue-600 text-blue-600 dark:text-blue-400"
+                : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+            }`}
+          >
+            <i className="tabler-building-store text-sm" />
+            <span>{isLao ? "ຂໍ້ມູນຮ້ານ & ຫົວບິນ" : "ข้อมูลร้าน & หัวบิล"}</span>
           </button>
         </div>
 
-        {/* Content Body */}
-        <div className="overflow-y-auto p-5 flex-1 space-y-4">
-          {activeTab === "cashier" ? (
-            /* ================= CASHIER PRINTER TAB ================= */
+        {/* Tab Contents */}
+        <div className="p-6 overflow-y-auto space-y-5 flex-1">
+          {/* TAB 1: Cashier Printer */}
+          {activeTab === "cashier" && (
             <div className="space-y-4">
-              {/* Printing Mode Switcher */}
-              <div className="p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 space-y-2">
-                <label className="text-xs font-bold text-gray-700 dark:text-gray-300 flex items-center justify-between">
-                  <span>{isLao ? "ຮູບແບບການພິມໃບເສร็จ" : "รูปแบบการพิมพ์ใบเสร็จ"}</span>
-                  <span className="text-[11px] font-normal text-gray-500">
-                    {cashierPrinter.mode === "network" ? "ESC/POS Port 9100" : "OS Print Preview"}
-                  </span>
-                </label>
+              {/* Enable Toggle & Mode */}
+              <div className="bg-gray-50 dark:bg-gray-900/40 p-4 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-sm font-bold text-gray-800 dark:text-gray-200 block">
+                      {isLao ? "ເປີດໃຊ້ງານເຄື່ອງພິມແຄຊເຊຍ" : "เปิดใช้งานเครื่องพิมพ์แคชเชียร์"}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {isLao ? "ພິມໃບຮັບເງິນ / ໃບແຈ້ງລາຄາ" : "พิมพ์ใบเสร็จรับเงิน / ใบแจ้งยอด"}
+                    </span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={cashierPrinter.enabled}
+                      onChange={(e) => updateCashierPrinter({ enabled: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+                  </label>
+                </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => updateCashierPrinter({ mode: "network" })}
-                    className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs font-semibold transition-all ${
-                      cashierPrinter.mode === "network"
-                        ? "bg-[#2F57AB] text-white border-[#2F57AB] shadow-xs"
-                        : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    <i className="tabler-network text-base" />
-                    <div className="text-left">
-                      <div>{isLao ? "ຍິງກົງຜ່ານ IP Network" : "ยิงตรงผ่าน IP Network"}</div>
-                      <div className="text-[10px] opacity-80">{isLao ? "ບໍ່ມີ Dialog ກົດພິມທັນທີ" : "ไม่มี Dialog กดพิมพ์ทันที"}</div>
-                    </div>
-                  </button>
+                {/* Print Mode Selector */}
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1.5">
+                    {isLao ? "ຮູບແບບການພິມ (Print Mode)" : "โหมดการพิมพ์"}
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => updateCashierPrinter({ mode: "network" })}
+                      className={`p-2.5 rounded-lg border text-left transition-all ${
+                        cashierPrinter.mode === "network"
+                          ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 font-bold"
+                          : "border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <i className="tabler-network text-base" />
+                        <span className="text-xs font-bold">Direct Network ESC/POS</span>
+                      </div>
+                      <p className="text-[10px] text-gray-500 mt-1">
+                        {isLao
+                          ? "ຍິງກົງໄປທີ່ IP:Port 9100 ບໍ່ຜ່ານ Browser"
+                          : "ส่งคำสั่งตรงไปที่ IP:9100 ทันที ไม่ผ่าน Dialog"}
+                      </p>
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => updateCashierPrinter({ mode: "browser" })}
-                    className={`flex items-center gap-2 p-2.5 rounded-lg border text-xs font-semibold transition-all ${
-                      cashierPrinter.mode === "browser"
-                        ? "bg-[#2F57AB] text-white border-[#2F57AB] shadow-xs"
-                        : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    <i className="tabler-browser text-base" />
-                    <div className="text-left">
-                      <div>{isLao ? "ຜ່ານ Browser Print" : "ผ่าน Browser Print"}</div>
-                      <div className="text-[10px] opacity-80">{isLao ? "ເປີດໜ້າຈໍພິມຂອງລະບົບ" : "เปิดหน้าต่างพิมพ์ของระบบ"}</div>
-                    </div>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => updateCashierPrinter({ mode: "browser" })}
+                      className={`p-2.5 rounded-lg border text-left transition-all ${
+                        cashierPrinter.mode === "browser"
+                          ? "border-blue-600 bg-blue-50/50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 font-bold"
+                          : "border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <i className="tabler-browser text-base" />
+                        <span className="text-xs font-bold">Browser Print Dialog</span>
+                      </div>
+                      <p className="text-[10px] text-gray-500 mt-1">
+                        {isLao
+                          ? "ພິມຜ່ານໜ້າຕ່າງຂອງບຣາວເຊີ (USB / Bluetooth)"
+                          : "พิมพ์ผ่านหน้าต่างเบราว์เซอร์ (รองรับ USB/ไดรเวอร์)"}
+                      </p>
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              {/* Network IP & Port Configuration */}
-              {cashierPrinter.mode === "network" && (
-                <div className="space-y-3 p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/20">
-                  <div className="grid grid-cols-12 gap-3">
-                    <div className="col-span-8 space-y-1">
-                      <label className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                        {isLao ? "IP Address ຂອງເຄື່ອງພິມ" : "IP Address ของเครื่องพิมพ์"}
-                      </label>
-                      <input
-                        type="text"
-                        value={cashierPrinter.ip}
-                        onChange={(e) => updateCashierPrinter({ ip: e.target.value })}
-                        placeholder="192.168.1.200"
-                        className="w-full px-3 py-2 text-xs font-mono bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-[#2F57AB]"
-                      />
-                    </div>
-
-                    <div className="col-span-4 space-y-1">
-                      <label className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                        Port
-                      </label>
-                      <input
-                        type="number"
-                        value={cashierPrinter.port}
-                        onChange={(e) => updateCashierPrinter({ port: Number(e.target.value) || 9100 })}
-                        placeholder="9100"
-                        className="w-full px-3 py-2 text-xs font-mono bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-[#2F57AB]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Quick Preset Buttons */}
-                  <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                    <span className="text-[10px] text-gray-400">{isLao ? "IP ທົ່ວໄປ:" : "IP แนะนำ:"}</span>
-                    {["192.168.1.200", "192.168.0.200", "192.168.1.100", "127.0.0.1"].map((preset) => (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() => updateCashierPrinter({ ip: preset })}
-                        className="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-600 dark:text-gray-300 transition-all"
-                      >
-                        {preset}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Connection Test & Status */}
-                  <div className="pt-2 flex items-center justify-between border-t border-gray-100 dark:border-gray-800">
-                    <button
-                      type="button"
-                      onClick={handleTestCashier}
-                      disabled={testingCashier}
-                      className="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-1.5 transition-all disabled:opacity-50"
-                    >
-                      {testingCashier ? (
-                        <i className="tabler-loader animate-spin text-sm" />
-                      ) : (
-                        <i className="tabler-antenna-bars-5 text-sm text-blue-500" />
-                      )}
-                      <span>{isLao ? "ທົດສອບເຊື່ອມຕໍ່ (Ping)" : "ทดสอบเชื่อมต่อ (Ping)"}</span>
-                    </button>
-
-                    {cashierStatus && (
-                      <div className="text-xs font-medium">
-                        {cashierStatus.connected ? (
-                          <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                            <i className="tabler-circle-check text-sm" />
-                            {isLao ? `ເຊື່ອມຕໍ່ໄດ້ (${cashierStatus.latencyMs}ms)` : `เชื่อมต่อได้ (${cashierStatus.latencyMs}ms)`}
-                          </span>
-                        ) : (
-                          <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1" title={cashierStatus.error}>
-                            <i className="tabler-circle-x text-sm" />
-                            {isLao ? "ເຊື່ອມຕໍ່ບໍ່ໄດ້" : "เชื่อมต่อไม่สำเร็จ"}
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
+              {/* Network Parameters */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">
+                    {isLao ? "IP Address ຂອງເຄື່ອງພິມ" : "IP Address เครื่องพิมพ์"}
+                  </label>
+                  <input
+                    type="text"
+                    value={cashierPrinter.ip}
+                    onChange={(e) => updateCashierPrinter({ ip: e.target.value.trim() })}
+                    placeholder="192.168.1.200"
+                    className="w-full text-xs font-mono px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-blue-600"
+                  />
                 </div>
-              )}
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">
+                    Port (TCP)
+                  </label>
+                  <input
+                    type="number"
+                    value={cashierPrinter.port}
+                    onChange={(e) => updateCashierPrinter({ port: Number(e.target.value) || 9100 })}
+                    placeholder="9100"
+                    className="w-full text-xs font-mono px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-blue-600"
+                  />
+                </div>
+              </div>
 
-              {/* Paper Width & Automation Options */}
-              <div className="space-y-3 p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/20">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                    {isLao ? "ຂະໜາດເຈ້ຍຄວາມຮ້ອນ" : "ขนาดกระดาษความร้อน"}
-                  </span>
-                  <div className="inline-flex rounded-lg p-0.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs">
-                    <button
-                      type="button"
-                      onClick={() => updateCashierPrinter({ paperWidth: "80mm" })}
-                      className={`px-3 py-1 rounded-md font-semibold transition-all ${
-                        cashierPrinter.paperWidth === "80mm"
-                          ? "bg-white dark:bg-gray-700 text-[#2F57AB] dark:text-blue-400 shadow-xs"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      80mm (ມາດຕະຖານ)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => updateCashierPrinter({ paperWidth: "58mm" })}
-                      className={`px-3 py-1 rounded-md font-semibold transition-all ${
-                        cashierPrinter.paperWidth === "58mm"
-                          ? "bg-white dark:bg-gray-700 text-[#2F57AB] dark:text-blue-400 shadow-xs"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      58mm (ຂະໜາດນ້ອຍ)
-                    </button>
-                  </div>
+              {/* Paper Width & Automation Settings */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">
+                    {isLao ? "ຂະໜາດເຈ້ຍ (Paper Width)" : "ขนาดกระดาษความร้อน"}
+                  </label>
+                  <select
+                    value={cashierPrinter.paperWidth}
+                    onChange={(e) => updateCashierPrinter({ paperWidth: e.target.value as any })}
+                    className="w-full text-xs px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-blue-600"
+                  >
+                    <option value="80mm">80mm (Standard POS - 48 cols)</option>
+                    <option value="58mm">58mm (Compact Mini - 32 cols)</option>
+                  </select>
                 </div>
 
-                <div className="pt-2 border-t border-gray-100 dark:border-gray-800 space-y-2">
-                  <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-xs text-gray-700 dark:text-gray-300">
-                      {isLao ? "ເປີດລີ້ນຊັກເງິນສົດອັດຕະໂນມັດ (Cash Drawer Kick)" : "เปิดลิ้นชักเก็บเงินสดอัตโนมัติ (Cash Drawer Kick)"}
-                    </span>
+                <div className="space-y-2 pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-700 dark:text-gray-300">
                     <input
                       type="checkbox"
                       checked={cashierPrinter.autoOpenDrawer}
                       onChange={(e) => updateCashierPrinter({ autoOpenDrawer: e.target.checked })}
-                      className="w-4 h-4 rounded text-blue-600 focus:ring-0"
+                      className="rounded text-blue-600 focus:ring-0"
                     />
+                    <span>{isLao ? "ເປີດລີ້ນຊັກເງິນອັດຕະໂນມັດ" : "เด้งลิ้นชักเก็บเงินอัตโนมัติ"}</span>
                   </label>
 
-                  <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-xs text-gray-700 dark:text-gray-300">
-                      {isLao ? "ພິມໃບເສร็จອັດຕະໂນມັດເມື່ອຊຳລະເງິນສຳເລັດ" : "พิมพ์ใบเสร็จอัตโนมัติเมื่อชำระเงินสำเร็จ"}
-                    </span>
+                  <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-700 dark:text-gray-300">
                     <input
                       type="checkbox"
                       checked={cashierPrinter.autoPrintOnPayment}
                       onChange={(e) => updateCashierPrinter({ autoPrintOnPayment: e.target.checked })}
-                      className="w-4 h-4 rounded text-blue-600 focus:ring-0"
+                      className="rounded text-blue-600 focus:ring-0"
                     />
+                    <span>{isLao ? "ພິມໃບຮັບເງິນທັນທີຫຼັງຊຳລະ" : "พิมพ์ใบเสร็จอัตโนมัติหลังรับชำระ"}</span>
                   </label>
                 </div>
               </div>
 
-              {/* Hardware Actions */}
-              <div className="flex items-center gap-2 pt-1">
+              {/* Connection Status Indicator */}
+              {cashierStatus && (
+                <div
+                  className={`p-3 rounded-lg text-xs flex items-center justify-between border ${
+                    cashierStatus.connected
+                      ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200"
+                      : "bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        cashierStatus.connected ? "bg-emerald-500 animate-pulse" : "bg-rose-500"
+                      }`}
+                    />
+                    <span className="font-semibold">
+                      {cashierStatus.connected
+                        ? `Connected to ${cashierPrinter.ip}:${cashierPrinter.port} (${cashierStatus.latencyMs}ms)`
+                        : `Connection Failed: ${cashierStatus.error}`}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Diagnostic Action Buttons */}
+              <div className="pt-2 flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleTestCashier}
+                  disabled={testingCashier}
+                  className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all disabled:opacity-50"
+                >
+                  <i className={`tabler-antenna ${testingCashier ? "animate-spin" : ""}`} />
+                  <span>
+                    {testingCashier
+                      ? isLao ? "ກຳລັງທົດສອບ..." : "กำลังทดสอบ..."
+                      : isLao ? "ທົດສອບການເຊື່ອມຕໍ່ (Ping)" : "ทดสอบการเชื่อมต่อ (Ping)"}
+                  </span>
+                </button>
+
                 <button
                   type="button"
                   onClick={() => handlePrintTestSlip("cashier")}
                   disabled={printingTest}
-                  className="flex-1 py-2 px-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all disabled:opacity-50 border border-blue-200 dark:border-blue-800"
                 >
-                  {printingTest ? (
-                    <i className="tabler-loader animate-spin text-sm" />
-                  ) : (
-                    <i className="tabler-printer text-sm" />
-                  )}
-                  <span>{isLao ? "ທົດສອບພິມໃບເສร็จ" : "ทดสอบพิมพ์ใบเสร็จ"}</span>
+                  <i className="tabler-printer text-sm" />
+                  <span>{isLao ? "ພິມໃບທົດສອບ (Test Slip)" : "พิมพ์ใบเสร็จทดสอบ (Test Slip)"}</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleKickDrawer}
                   disabled={openingDrawer}
-                  className="flex-1 py-2 px-3 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 text-amber-700 dark:text-amber-300 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all disabled:opacity-50 border border-amber-200 dark:border-amber-800"
                 >
-                  {openingDrawer ? (
-                    <i className="tabler-loader animate-spin text-sm" />
-                  ) : (
-                    <i className="tabler-coin text-sm" />
-                  )}
-                  <span>{isLao ? "ທົດສອບເປີດລີ້ນຊັກ" : "ทดสอบเปิดลิ้นชัก"}</span>
+                  <i className="tabler-cash text-sm" />
+                  <span>{isLao ? "ທົດສອບເປີດລີ້ນຊັກ (Open Drawer)" : "ทดสอบเด้งลิ้นชัก (Open Drawer)"}</span>
                 </button>
               </div>
             </div>
-          ) : (
-            /* ================= KITCHEN PRINTER TAB ================= */
+          )}
+
+          {/* TAB 2: Kitchen Printer */}
+          {activeTab === "kitchen" && (
             <div className="space-y-4">
-              {/* Kitchen Printer Enable Toggle */}
-              <div className="p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex items-center justify-between">
+              {/* Enable Toggle */}
+              <div className="bg-gray-50 dark:bg-gray-900/40 p-4 rounded-xl border border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <div>
-                  <h4 className="text-xs font-bold text-gray-800 dark:text-gray-100">
-                    {isLao ? "ເປີດໃຊ້ງານເຄື່ອງພິມໃນຄົວ" : "เปิดใช้งานเครื่องพิมพ์ในครัว"}
-                  </h4>
-                  <p className="text-[11px] text-gray-500">
-                    {isLao ? "ພິມໃບສັ່ງອາຫານເຂົ້າຄົວອັດຕະໂນມັດເມື່ອກົດສັ່ງ" : "พิมพ์ใบสั่งอาหารเข้าครัวอัตโนมัติเมื่อกดสั่ง"}
-                  </p>
+                  <span className="text-sm font-bold text-gray-800 dark:text-gray-200 block">
+                    {isLao ? "ເປີດໃຊ້ງານເຄື່ອງພິມຫ້ອງຄົວ" : "เปิดใช้งานเครื่องพิมพ์ห้องครัว"}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {isLao ? "ພິມໃບສັ່ງອາຫານໃຫ້ພໍ່ຄົວເມື່ອກົດສັ່ງ" : "พิมพ์ใบสั่งอาหารเข้าครัวอัตโนมัติเมื่อส่งออเดอร์"}
+                  </span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -399,198 +431,242 @@ export const PrinterSettingsModalComponent: React.FC<{ props: POSListProps }> = 
                     onChange={(e) => updateKitchenPrinter({ enabled: e.target.checked })}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#2F57AB]"></div>
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
                 </label>
               </div>
 
-              {kitchenPrinter.enabled ? (
-                <div className="space-y-4">
-                  {/* Network IP & Port */}
-                  <div className="space-y-3 p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/20">
-                    <div className="grid grid-cols-12 gap-3">
-                      <div className="col-span-8 space-y-1">
-                        <label className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                          {isLao ? "IP Address ຂອງເຄື່ອງພິມຄົວ" : "IP Address ของเครื่องพิมพ์ครัว"}
-                        </label>
-                        <input
-                          type="text"
-                          value={kitchenPrinter.ip}
-                          onChange={(e) => updateKitchenPrinter({ ip: e.target.value })}
-                          placeholder="192.168.1.201"
-                          className="w-full px-3 py-2 text-xs font-mono bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-[#2F57AB]"
-                        />
-                      </div>
-
-                      <div className="col-span-4 space-y-1">
-                        <label className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                          Port
-                        </label>
-                        <input
-                          type="number"
-                          value={kitchenPrinter.port}
-                          onChange={(e) => updateKitchenPrinter({ port: Number(e.target.value) || 9100 })}
-                          placeholder="9100"
-                          className="w-full px-3 py-2 text-xs font-mono bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-[#2F57AB]"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Quick IP Presets */}
-                    <div className="flex items-center gap-1.5 flex-wrap pt-1">
-                      <span className="text-[10px] text-gray-400">{isLao ? "IP ທົ່ວໄປ:" : "IP แนะนำ:"}</span>
-                      {["192.168.1.201", "192.168.0.201", "192.168.1.101"].map((preset) => (
-                        <button
-                          key={preset}
-                          type="button"
-                          onClick={() => updateKitchenPrinter({ ip: preset })}
-                          className="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 text-gray-600 dark:text-gray-300 transition-all"
-                        >
-                          {preset}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* Connection Test */}
-                    <div className="pt-2 flex items-center justify-between border-t border-gray-100 dark:border-gray-800">
-                      <button
-                        type="button"
-                        onClick={handleTestKitchen}
-                        disabled={testingKitchen}
-                        className="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-600 text-xs font-semibold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-1.5 transition-all disabled:opacity-50"
-                      >
-                        {testingKitchen ? (
-                          <i className="tabler-loader animate-spin text-sm" />
-                        ) : (
-                          <i className="tabler-antenna-bars-5 text-sm text-blue-500" />
-                        )}
-                        <span>{isLao ? "ທົດສອບເຊື່ອມຕໍ່ (Ping)" : "ทดสอบเชื่อมต่อ (Ping)"}</span>
-                      </button>
-
-                      {kitchenStatus && (
-                        <div className="text-xs font-medium">
-                          {kitchenStatus.connected ? (
-                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                              <i className="tabler-circle-check text-sm" />
-                              {isLao ? `ເຊື່ອມຕໍ່ໄດ້ (${kitchenStatus.latencyMs}ms)` : `เชื่อมต่อได้ (${kitchenStatus.latencyMs}ms)`}
-                            </span>
-                          ) : (
-                            <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1" title={kitchenStatus.error}>
-                              <i className="tabler-circle-x text-sm" />
-                              {isLao ? "ເຊື່ອມຕໍ່ບໍ່ໄດ້" : "เชื่อมต่อไม่สำเร็จ"}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Kitchen Options */}
-                  <div className="space-y-3 p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/20">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-gray-700 dark:text-gray-300">
-                        {isLao ? "ຂະໜາດເຈ້ຍຄົວ" : "ขนาดกระดาษครัว"}
-                      </span>
-                      <div className="inline-flex rounded-lg p-0.5 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-xs">
-                        <button
-                          type="button"
-                          onClick={() => updateKitchenPrinter({ paperWidth: "80mm" })}
-                          className={`px-3 py-1 rounded-md font-semibold transition-all ${
-                            kitchenPrinter.paperWidth === "80mm"
-                              ? "bg-white dark:bg-gray-700 text-[#2F57AB] dark:text-blue-400 shadow-xs"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          80mm
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => updateKitchenPrinter({ paperWidth: "58mm" })}
-                          className={`px-3 py-1 rounded-md font-semibold transition-all ${
-                            kitchenPrinter.paperWidth === "58mm"
-                              ? "bg-white dark:bg-gray-700 text-[#2F57AB] dark:text-blue-400 shadow-xs"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          58mm
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-gray-100 dark:border-gray-800 space-y-2">
-                      <label className="flex items-center justify-between cursor-pointer">
-                        <span className="text-xs text-gray-700 dark:text-gray-300">
-                          {isLao ? "ພິມໃບສັ່ງຄົວອັດຕະໂນມັດເມື່ອກົດ 'ສົ່ງອໍເດີ'" : "พิมพ์ใบสั่งครัวอัตโนมัติเมื่อกด 'ส่งออเดอร์'"}
-                        </span>
-                        <input
-                          type="checkbox"
-                          checked={kitchenPrinter.autoPrintOnOrder}
-                          onChange={(e) => updateKitchenPrinter({ autoPrintOnOrder: e.target.checked })}
-                          className="w-4 h-4 rounded text-blue-600 focus:ring-0"
-                        />
-                      </label>
-
-                      <label className="flex items-center justify-between cursor-pointer">
-                        <span className="text-xs text-gray-700 dark:text-gray-300">
-                          {isLao ? "ສົ່ງສຽງປີ໊ບ/ກຣິ່ງເຕືອນພໍ່ຄົວ (Beeper alert)" : "ส่งเสียงปี๊บ/กริ่งเตือนพ่อครัว (Beeper alert)"}
-                        </span>
-                        <input
-                          type="checkbox"
-                          checked={kitchenPrinter.beep}
-                          onChange={(e) => updateKitchenPrinter({ beep: e.target.checked })}
-                          className="w-4 h-4 rounded text-blue-600 focus:ring-0"
-                        />
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Kitchen Test Print Button */}
-                  <button
-                    type="button"
-                    onClick={() => handlePrintTestSlip("kitchen")}
-                    disabled={printingTest}
-                    className="w-full py-2 px-3 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
-                  >
-                    {printingTest ? (
-                      <i className="tabler-loader animate-spin text-sm" />
-                    ) : (
-                      <i className="tabler-tools-kitchen-2 text-sm" />
-                    )}
-                    <span>{isLao ? "ທົດສອບພິມໃບສັ່ງຄົວ" : "ทดสอบพิมพ์ใบสั่งครัว"}</span>
-                  </button>
+              {/* Network Parameters */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">
+                    {isLao ? "IP Address ຂອງເຄື່ອງພິມຫ້ອງຄົວ" : "IP Address เครื่องพิมพ์ครัว"}
+                  </label>
+                  <input
+                    type="text"
+                    value={kitchenPrinter.ip}
+                    onChange={(e) => updateKitchenPrinter({ ip: e.target.value.trim() })}
+                    placeholder="192.168.1.201"
+                    className="w-full text-xs font-mono px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-blue-600"
+                  />
                 </div>
-              ) : (
-                <div className="p-6 text-center text-gray-400 text-xs border border-dashed rounded-xl space-y-1">
-                  <i className="tabler-printer-off text-2xl text-gray-300 dark:text-gray-600" />
-                  <p>{isLao ? "ເຄື່ອງພິມໃນຄົວຖືກປິດໃຊ້ງານຢູ່" : "เครื่องพิมพ์ในครัวถูกปิดใช้งานอยู่"}</p>
-                  <p className="text-[10px] text-gray-400">
-                    {isLao ? "ເປີດສະວິດດ້ານເທິງເພື່ອຕັ້ງຄ່າການພິມບິນເຂົ້າຄົວ" : "เปิดสวิตช์ด้านบนเพื่อตั้งค่าการพิมพ์บิลเข้าห้องครัว"}
-                  </p>
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">
+                    Port (TCP)
+                  </label>
+                  <input
+                    type="number"
+                    value={kitchenPrinter.port}
+                    onChange={(e) => updateKitchenPrinter({ port: Number(e.target.value) || 9100 })}
+                    placeholder="9100"
+                    className="w-full text-xs font-mono px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-blue-600"
+                  />
+                </div>
+              </div>
+
+              {/* Kitchen Features */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">
+                    {isLao ? "ຂະໜາດເຈ້ຍ (Paper Width)" : "ขนาดกระดาษ"}
+                  </label>
+                  <select
+                    value={kitchenPrinter.paperWidth}
+                    onChange={(e) => updateKitchenPrinter({ paperWidth: e.target.value as any })}
+                    className="w-full text-xs px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-blue-600"
+                  >
+                    <option value="80mm">80mm (Standard POS - 48 cols)</option>
+                    <option value="58mm">58mm (Compact Mini - 32 cols)</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2 pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-700 dark:text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={kitchenPrinter.autoPrintOnOrder}
+                      onChange={(e) => updateKitchenPrinter({ autoPrintOnOrder: e.target.checked })}
+                      className="rounded text-blue-600 focus:ring-0"
+                    />
+                    <span>{isLao ? "ພິມອັດຕະໂນມັດເມື່ອກົດສັ່ງ" : "พิมพ์ใบเข้าครัวอัตโนมัติเมื่อกดสั่ง"}</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer text-xs text-gray-700 dark:text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={kitchenPrinter.beep}
+                      onChange={(e) => updateKitchenPrinter({ beep: e.target.checked })}
+                      className="rounded text-blue-600 focus:ring-0"
+                    />
+                    <span>{isLao ? "ສົ່ງສຽງເຕືອນ (Buzzer Beep)" : "ส่งเสียงเตือน Buzzer ในครัว"}</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Connection Status Indicator */}
+              {kitchenStatus && (
+                <div
+                  className={`p-3 rounded-lg text-xs flex items-center justify-between border ${
+                    kitchenStatus.connected
+                      ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200"
+                      : "bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200"
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        kitchenStatus.connected ? "bg-emerald-500 animate-pulse" : "bg-rose-500"
+                      }`}
+                    />
+                    <span className="font-semibold">
+                      {kitchenStatus.connected
+                        ? `Connected to ${kitchenPrinter.ip}:${kitchenPrinter.port} (${kitchenStatus.latencyMs}ms)`
+                        : `Connection Failed: ${kitchenStatus.error}`}
+                    </span>
+                  </div>
                 </div>
               )}
+
+              {/* Kitchen Action Buttons */}
+              <div className="pt-2 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleTestKitchen}
+                  disabled={testingKitchen}
+                  className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all disabled:opacity-50"
+                >
+                  <i className={`tabler-antenna ${testingKitchen ? "animate-spin" : ""}`} />
+                  <span>
+                    {testingKitchen
+                      ? isLao ? "ກຳລັງທົດສອບ..." : "กำลังทดสอบ..."
+                      : isLao ? "ທົດສອບການເຊື່ອມຕໍ່ (Ping)" : "ทดสอบการเชื่อมต่อ (Ping)"}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handlePrintTestSlip("kitchen")}
+                  disabled={printingTest}
+                  className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/50 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all disabled:opacity-50 border border-blue-200 dark:border-blue-800"
+                >
+                  <i className="tabler-soup text-sm" />
+                  <span>{isLao ? "ພິມໃບທົດສອບຫ້ອງຄົວ" : "พิมพ์ใบสั่งครัวทดสอบ"}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: Store & Receipt Branding */}
+          {activeTab === "branding" && (
+            <div className="space-y-3.5">
+              <div>
+                <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">
+                  {isLao ? "ຊື່ຮ້ານ / ຫົວບິນ" : "ชื่อร้านบนหัวบิล"}
+                </label>
+                <input
+                  type="text"
+                  value={cashierPrinter.shopName}
+                  onChange={(e) => updateCashierPrinter({ shopName: e.target.value })}
+                  placeholder="LAO WORLD RESTAURANT"
+                  className="w-full text-xs px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-blue-600 font-bold"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">
+                    {isLao ? "ທີ່ຢູ່ຮ້ານ" : "ที่อยู่ร้านค้า"}
+                  </label>
+                  <input
+                    type="text"
+                    value={cashierPrinter.shopAddress}
+                    onChange={(e) => updateCashierPrinter({ shopAddress: e.target.value })}
+                    placeholder="Vientiane, Lao PDR"
+                    className="w-full text-xs px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">
+                    {isLao ? "ເບີໂທລະສັບ" : "เบอร์โทรศัพท์ร้าน"}
+                  </label>
+                  <input
+                    type="text"
+                    value={cashierPrinter.shopPhone}
+                    onChange={(e) => updateCashierPrinter({ shopPhone: e.target.value })}
+                    placeholder="+856 20 5555 9999"
+                    className="w-full text-xs px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-blue-600"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">
+                  {isLao ? "ຂໍ້ຄວາມຕ້ອນຮັບ (Header Slogan)" : "ข้อความต้อนรับหัวบิล (Header Note)"}
+                </label>
+                <input
+                  type="text"
+                  value={cashierPrinter.headerText}
+                  onChange={(e) => updateCashierPrinter({ headerText: e.target.value })}
+                  placeholder="ยินดีต้อนรับ / ຍິນດີຕ້ອນຮັບ"
+                  className="w-full text-xs px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-blue-600"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1 block">
+                  {isLao ? "ຂໍ້ຄວາມຂອບໃຈ (Footer Message)" : "ข้อความขอบคุณท้ายบิล (Footer Message)"}
+                </label>
+                <input
+                  type="text"
+                  value={cashierPrinter.footerText}
+                  onChange={(e) => updateCashierPrinter({ footerText: e.target.value })}
+                  placeholder="THANK YOU / ຂໍຂອບໃຈທີ່ມາໃຊບໍລິການ"
+                  className="w-full text-xs px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg outline-none focus:border-blue-600"
+                />
+              </div>
+
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-semibold text-gray-700 dark:text-gray-300 block">
+                    {isLao ? "ພິມ QR Code ທ້າຍບິນ (e-Receipt / Website)" : "พิมพ์ QR Code ท้ายบิล (e-Receipt / รีวิว)"}
+                  </span>
+                  <span className="text-[11px] text-gray-500">
+                    {cashierPrinter.qrCodeUrl || "None"}
+                  </span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={cashierPrinter.showQrCode}
+                    onChange={(e) => updateCashierPrinter({ showQrCode: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+                </label>
+              </div>
             </div>
           )}
         </div>
 
         {/* Modal Footer */}
-        <div className="px-5 py-3.5 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <div className="p-4 bg-gray-50 dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
           <button
             type="button"
             onClick={resetDefaults}
-            className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 underline"
+            className="text-xs text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1"
           >
-            {isLao ? "ຄືນຄ່າເລີ່ມຕົ້ນ" : "คืนค่าเริ่มต้น"}
+            <i className="tabler-rotate-dot text-sm" />
+            <span>{isLao ? "ຣີເຊັດຄ່າເລີ່ມຕົ້ນ" : "รีเซ็ตค่าเริ่มต้น"}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setSettingsOpen(false);
-              ToastService.success(isLao ? "ບັນທຶກການຕັ້ງຄ່າເຄື່ອງພິມແລ້ວ" : "บันทึกการตั้งค่าเครื่องพิมพ์แล้ว");
-            }}
-            className="px-5 py-2 bg-[#2F57AB] hover:bg-[#25468a] text-white text-xs font-bold rounded-lg shadow-sm transition-all"
-          >
-            {isLao ? "ປິດ ແລະ ບັນທຶກ" : "ปิดและบันทึก"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(false)}
+              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-all"
+            >
+              {isLao ? "ສຳເລັດ" : "บันทึก & เสร็จสิ้น"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

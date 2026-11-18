@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { usePOSStore, usePOSMutations } from "../../store/posStore";
 import { POSListProps, IPosPaymentMethod } from "../../type/posType";
 import { ToastService } from "@/utils/toastService";
+import { usePrinterStore } from "../../store/printerStore";
 
 const PaymentComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
   // Var
@@ -83,8 +84,8 @@ const PaymentComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
         note: i.note,
       }));
 
-      openReceiptModal({
-        type: "receipt",
+      const receiptPayload = {
+        type: "receipt" as const,
         orderNumber: receiptOrder.orderNumber,
         tableNumber: receiptTable.number,
         zoneName: receiptTable.zoneName,
@@ -101,7 +102,20 @@ const PaymentComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
         paymentMethod: method,
         amountReceived: tenderNumber,
         change: changeAmount,
-      });
+      };
+
+      openReceiptModal(receiptPayload);
+
+      // Auto-kick cash drawer if cash payment
+      const { cashierPrinter, openDrawerDirect, printReceiptDirect } = usePrinterStore.getState();
+      if (cashierPrinter.enabled && cashierPrinter.autoOpenDrawer && method === IPosPaymentMethod.cash) {
+        openDrawerDirect();
+      }
+
+      // Auto-print receipt if enabled and in network mode
+      if (cashierPrinter.enabled && cashierPrinter.autoPrintOnPayment && cashierPrinter.mode === "network") {
+        printReceiptDirect(receiptPayload);
+      }
     }
   };
 

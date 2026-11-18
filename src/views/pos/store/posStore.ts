@@ -531,7 +531,12 @@ export const usePOSStore = create<POSState>((set, get) => ({
         const customerTag = selectedCustomer
           ? `[Customer: ${selectedCustomer.firstName || ""} ${selectedCustomer.lastName || ""}${selectedCustomer.phoneNumber ? ` • ${selectedCustomer.phoneNumber}` : ""}]`.trim()
           : "";
-        const finalNote = customerTag ? (orderNote ? `${customerTag} | ${orderNote}` : customerTag) : orderNote;
+        let finalNote = orderNote;
+        if (customerTag && orderNote) {
+          finalNote = `${customerTag} | ${orderNote}`;
+        } else if (customerTag) {
+          finalNote = customerTag;
+        }
 
         const createRes = await mutations.createOrderMutation({
           variables: {

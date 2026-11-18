@@ -4,7 +4,7 @@ import {
   buildReceiptESC,
   buildKitchenTicketESC,
   buildTestPrintESC,
-  COMMANDS,
+  buildCashDrawerESC,
   PrintableReceiptData,
   PrintableKitchenData,
   ESCPOSOptions,
@@ -12,159 +12,110 @@ import {
 
 export const runtime = "nodejs";
 
+interface SendResult {
+  success: boolean;
+  latencyMs: number;
+  error?: string;
+}
+
 /**
- * Helper to send buffer or string over TCP socket
+ * Socket Helper: Open TCP connection to thermal printer on Port 9100,
+ * write byte payload, and close cleanly.
  */
-function sendToPrinter(
+function transmitSocketData(
   ip: string,
   port: number,
-  data: string | Buffer,
-  timeoutMs: number = 5000
-): Promise<{ success: boolean; latencyMs: number; error?: string }> {
+  payload: string | Buffer,
+  timeoutMs: number = 4000
+): Promise<SendResult> {
   return new Promise((resolve) => {
     const startTime = Date.now();
     const client = new net.Socket();
+    let isFinished = false;
 
-    let isResolved = false;
-
-    const cleanup = () => {
-      client.removeAllListeners();
-      client.destroy();
+    const finalize = (result: SendResult) => {
+      if (isFinished) return;
+      isFinished = true;
+      try {
+        client.removeAllListeners();
+        client.destroy();
+      } catch (e) {
+        // ignore socket destroy error
+      }
+      resolve(result);
     };
 
     client.setTimeout(timeoutMs);
 
     client.on("connect", () => {
-      const buffer = typeof data === "string" ? Buffer.from(data, "latin1") : data;
+      // If payload is empty (e.g. ping/test connection only), resolve immediately
+      if (!payload || payload.length === 0) {
+        const latencyMs = Date.now() - startTime;
+        finalize({ success: true, latencyMs });
+        return;
+      }
+
+      // Convert string payload into Buffer with binary/latin1 encoding
+      let buffer: Buffer;
+      if (Buffer.isBuffer(payload)) {
+        buffer = payload;
+      } else {
+        buffer = Buffer.from(payload, "binary");
+      }
 
       client.write(buffer, (err) => {
         const latencyMs = Date.now() - startTime;
         if (err) {
-          cleanup();
-          if (!isResolved) {
-            isResolved = true;
-            resolve({ success: false, latencyMs, error: err.message });
-          }
+          finalize({
+            success: false,
+            latencyMs,
+            error: `Failed to write data to printer: ${err.message}`,
+          });
           return;
         }
 
-        // Give a short delay for printer buffer
+        // Allow 100ms for hardware buffer to flush before closing socket
         setTimeout(() => {
-          cleanup();
-          if (!isResolved) {
-            isResolved = true;
-            resolve({ success: true, latencyMs });
-          }
-        }, 150);
+          finalize({ success: true, latencyMs });
+        }, 120);
       });
     });
 
     client.on("timeout", () => {
-      cleanup();
-      if (!isResolved) {
-        isResolved = true;
-        resolve({
-          success: false,
-          latencyMs: Date.now() - startTime,
-          error: `Connection to printer at ${ip}:${port} timed out after ${timeoutMs}ms`,
-        });
-      }
+      finalize({
+        success: false,
+        latencyMs: Date.now() - startTime,
+        error: `Printer connection timed out after ${timeoutMs}ms (${ip}:${port}). Verify that the printer is powered on and connected to the local network.`,
+      });
     });
 
-    client.on("error", (err) => {
-      cleanup();
-      if (!isResolved) {
-        isResolved = true;
-        resolve({
-          success: false,
-          latencyMs: Date.now() - startTime,
-          error: `Network printer error (${ip}:${port}): ${err.message}`,
-        });
-      }
-    });
-
-    try {
-      client.connect(port, ip);
-    } catch (err: any) {
-      cleanup();
-      if (!isResolved) {
-        isResolved = true;
-        resolve({
-          success: false,
-          latencyMs: Date.now() - startTime,
-          error: err.message || "Failed to initiate printer connection",
-        });
-      }
-    }
-  });
-}
-
-/**
- * Helper to test connection (ping TCP port)
- */
-function testConnection(
-  ip: string,
-  port: number,
-  timeoutMs: number = 3000
-): Promise<{ success: boolean; latencyMs: number; error?: string }> {
-  return new Promise((resolve) => {
-    const startTime = Date.now();
-    const client = new net.Socket();
-
-    let isResolved = false;
-
-    const cleanup = () => {
-      client.removeAllListeners();
-      client.destroy();
-    };
-
-    client.setTimeout(timeoutMs);
-
-    client.on("connect", () => {
+    client.on("error", (err: any) => {
       const latencyMs = Date.now() - startTime;
-      cleanup();
-      if (!isResolved) {
-        isResolved = true;
-        resolve({ success: true, latencyMs });
-      }
-    });
+      let errorMsg = `Socket error (${ip}:${port}): ${err.message}`;
 
-    client.on("timeout", () => {
-      cleanup();
-      if (!isResolved) {
-        isResolved = true;
-        resolve({
-          success: false,
-          latencyMs: Date.now() - startTime,
-          error: `Host ${ip}:${port} unreachable (timeout)`,
-        });
+      if (err.code === "ECONNREFUSED") {
+        errorMsg = `Connection refused at ${ip}:${port}. The printer was reached, but port ${port} is closed or currently busy.`;
+      } else if (err.code === "EHOSTUNREACH" || err.code === "ENETUNREACH") {
+        errorMsg = `Host unreachable (${ip}:${port}). Make sure your computer is on the same Wi-Fi / LAN subnet as the printer.`;
+      } else if (err.code === "ETIMEDOUT") {
+        errorMsg = `Connection timed out (${ip}:${port}). Printer did not respond.`;
       }
-    });
 
-    client.on("error", (err) => {
-      cleanup();
-      if (!isResolved) {
-        isResolved = true;
-        resolve({
-          success: false,
-          latencyMs: Date.now() - startTime,
-          error: err.message,
-        });
-      }
+      finalize({
+        success: false,
+        latencyMs,
+        error: errorMsg,
+      });
     });
 
     try {
       client.connect(port, ip);
     } catch (err: any) {
-      cleanup();
-      if (!isResolved) {
-        isResolved = true;
-        resolve({
-          success: false,
-          latencyMs: Date.now() - startTime,
-          error: err.message,
-        });
-      }
+      finalize({
+        success: false,
+        latencyMs: Date.now() - startTime,
+        error: `Could not initiate socket connection: ${err?.message || "Unknown error"}`,
+      });
     }
   });
 }
@@ -174,79 +125,91 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { action, ip, port = 9100, data, options = {} } = body;
 
-    if (!ip) {
+    // Validate IP address
+    if (!ip || typeof ip !== "string") {
       return NextResponse.json(
-        { success: false, error: "Printer IP address is required" },
+        { success: false, error: "Printer IP address is required." },
         { status: 400 }
       );
     }
 
-    const printerPort = Number(port) || 9100;
+    const targetPort = Number(port) || 9100;
 
-    // 1. Test Connection
-    if (action === "test") {
-      const result = await testConnection(ip, printerPort, 3000);
+    // Action 1: Ping / Test Connection (no paper feed)
+    if (action === "ping" || action === "test") {
+      const result = await transmitSocketData(ip, targetPort, "", 3000);
       return NextResponse.json(result);
     }
 
-    // 2. Open Cash Drawer Kick
-    if (action === "open-drawer") {
-      const result = await sendToPrinter(ip, printerPort, COMMANDS.OPEN_DRAWER, 4000);
-      return NextResponse.json(result);
-    }
-
-    // 3. Print Test Slip
+    // Action 2: Diagnostic Test Print Slip
     if (action === "print-test") {
-      const esc = buildTestPrintESC(options);
-      const result = await sendToPrinter(ip, printerPort, esc, 6000);
+      const commands = buildTestPrintESC({
+        paperWidth: options.paperWidth || "80mm",
+        beep: options.beep !== false,
+        targetName: options.targetName || "Thermal Receipt Printer",
+        ip,
+        port: targetPort,
+      });
+      const result = await transmitSocketData(ip, targetPort, commands, 5000);
       return NextResponse.json(result);
     }
 
-    // 4. Print Receipt / Bill
+    // Action 3: Print Receipt / Bill
     if (action === "print-receipt") {
       if (!data) {
         return NextResponse.json(
-          { success: false, error: "Receipt data is required" },
+          { success: false, error: "Receipt data is missing." },
           { status: 400 }
         );
       }
-      const esc = buildReceiptESC(data as PrintableReceiptData, options as ESCPOSOptions);
-      const result = await sendToPrinter(ip, printerPort, esc, 7000);
+      const commands = buildReceiptESC(data as PrintableReceiptData, options as ESCPOSOptions);
+      const result = await transmitSocketData(ip, targetPort, commands, 6000);
       return NextResponse.json(result);
     }
 
-    // 5. Print Kitchen Order Ticket
+    // Action 4: Print Kitchen Order Ticket
     if (action === "print-kitchen") {
       if (!data) {
         return NextResponse.json(
-          { success: false, error: "Kitchen ticket data is required" },
+          { success: false, error: "Kitchen ticket data is missing." },
           { status: 400 }
         );
       }
-      const esc = buildKitchenTicketESC(data as PrintableKitchenData, options as ESCPOSOptions);
-      const result = await sendToPrinter(ip, printerPort, esc, 7000);
+      const commands = buildKitchenTicketESC(data as PrintableKitchenData, options as ESCPOSOptions);
+      const result = await transmitSocketData(ip, targetPort, commands, 6000);
       return NextResponse.json(result);
     }
 
-    // 6. Raw ESC/POS Payload
+    // Action 5: Kick Cash Drawer Open
+    if (action === "open-drawer") {
+      const commands = buildCashDrawerESC();
+      const result = await transmitSocketData(ip, targetPort, commands, 3000);
+      return NextResponse.json(result);
+    }
+
+    // Action 6: Raw Commands
     if (action === "raw") {
       if (!data) {
         return NextResponse.json(
-          { success: false, error: "Raw print payload is required" },
+          { success: false, error: "Raw print payload is missing." },
           { status: 400 }
         );
       }
-      const result = await sendToPrinter(ip, printerPort, data, 6000);
+      const result = await transmitSocketData(ip, targetPort, data, 5000);
       return NextResponse.json(result);
     }
 
     return NextResponse.json(
-      { success: false, error: `Unknown print action: ${action}` },
+      { success: false, error: `Unsupported print action: '${action}'` },
       { status: 400 }
     );
-  } catch (err: any) {
+  } catch (error: any) {
+    console.error("API /api/print error:", error);
     return NextResponse.json(
-      { success: false, error: err.message || "Failed to process print request" },
+      {
+        success: false,
+        error: error?.message || "Internal server error occurred while printing.",
+      },
       { status: 500 }
     );
   }

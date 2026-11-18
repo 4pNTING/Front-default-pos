@@ -100,8 +100,12 @@ const MenuComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
   };
 
   const toggleAlphabeticalSort = () => {
-    const next: SortMode =
-      sortMode === "asc" ? "desc" : sortMode === "desc" ? "default" : "asc";
+    let next: SortMode = "asc";
+    if (sortMode === "asc") {
+      next = "desc";
+    } else if (sortMode === "desc") {
+      next = "default";
+    }
     handleSortChange(next);
   };
 

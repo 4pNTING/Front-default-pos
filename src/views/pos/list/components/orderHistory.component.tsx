@@ -117,7 +117,12 @@ export const OrderHistoryComponent: React.FC<{ props: POSListProps }> = ({ props
               {summary.totalRevenue.toLocaleString()} ₭
             </h3>
             <span className="text-[11px] text-blue-200/80 mt-0.5 block">
-              {dateFilter === "today" ? (lang === "la" ? "ສະເພາະມື້ນີ້" : "Today only") : (lang === "la" ? "ທຸກເວລາ" : "All time")}
+              {(() => {
+                if (dateFilter === "today") {
+                  return lang === "la" ? "ສະເພາະມື້ນີ້" : "Today only";
+                }
+                return lang === "la" ? "ທຸກເວລາ" : "All time";
+              })()}
             </span>
           </div>
           <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center shrink-0">

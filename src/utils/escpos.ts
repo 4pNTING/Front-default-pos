@@ -1,6 +1,9 @@
 /**
- * ESC/POS Command Generator for Thermal Printers (80mm / 58mm)
+ * ESC/POS Command Generator for Thermal Printers (80mm & 58mm)
  * Direct TCP Socket (Port 9100) compatible
+ * 
+ * Supports text styling, column formatting, line wrapping,
+ * native 2D QR codes, hardware buzzers, and cash drawer kick pulses.
  */
 
 export interface ESCPOSOptions {
@@ -34,6 +37,13 @@ export interface PrintableReceiptData {
   paymentMethod?: string;
   amountReceived?: number;
   change?: number;
+  currencySymbol?: string;
+  shopName?: string;
+  shopAddress?: string;
+  shopPhone?: string;
+  headerText?: string;
+  footerText?: string;
+  qrCodeUrl?: string;
 }
 
 export interface PrintableKitchenData {
@@ -52,54 +62,70 @@ export interface PrintableKitchenData {
   }[];
 }
 
-// ESC/POS Command Constants
+// ESC/POS Command Byte Constants
 const ESC = "\x1B";
 const GS = "\x1D";
 
 export const COMMANDS = {
-  // Initialize
+  // Initialize printer
   INIT: `${ESC}@`,
 
-  // Alignment
+  // Text Alignment
   ALIGN_LEFT: `${ESC}a\x00`,
   ALIGN_CENTER: `${ESC}a\x01`,
   ALIGN_RIGHT: `${ESC}a\x02`,
 
-  // Font style
+  // Font Styles
   BOLD_ON: `${ESC}E\x01`,
   BOLD_OFF: `${ESC}E\x00`,
   UNDERLINE_ON: `${ESC}-\x01`,
   UNDERLINE_OFF: `${ESC}-\x00`,
+  INVERT_ON: `${GS}B\x01`,
+  INVERT_OFF: `${GS}B\x00`,
 
   // Text Sizing (GS ! n)
-  // Normal: 0x00, Double Width: 0x20, Double Height: 0x10, Double Width & Height: 0x30
   SIZE_NORMAL: `${GS}!\x00`,
   SIZE_DOUBLE_HEIGHT: `${GS}!\x10`,
   SIZE_DOUBLE_WIDTH: `${GS}!\x20`,
   SIZE_DOUBLE: `${GS}!\x30`,
+  SIZE_QUAD: `${GS}!\x31`,
 
-  // Feed & Cut
+  // Paper Feeding and Cutting
   FEED_LINE: (lines: number = 1) => `${ESC}d${String.fromCharCode(lines)}`,
   CUT_FULL: `${GS}V\x00`,
   CUT_PARTIAL: `${GS}V\x01`,
-  CUT_FEED: `${GS}VA\x03`, // Feed 3 lines and cut
+  CUT_FEED: `${GS}V\x42\x03`, // Feed 3 lines and partial cut
 
-  // Hardware
-  OPEN_DRAWER: `${ESC}p\x00\x19\xFA`, // Pulse to pin 2 (standard RJ11 cash drawer)
+  // Cash Drawer Pulse (RJ11)
+  OPEN_DRAWER_PIN2: `${ESC}p\x00\x19\xFA`, // Pulse to pin 2 (t1=50ms, t2=500ms)
+  OPEN_DRAWER_PIN5: `${ESC}p\x01\x19\xFA`, // Pulse to pin 5
+
+  // Hardware Audio Buzzer
   BEEP: `${ESC}B\x02\x02`, // Beep 2 times, 200ms
+  BEEP_KITCHEN: `${ESC}B\x03\x03`, // Beep 3 times, 300ms for kitchen
 };
 
 /**
- * Pad a string to a specific width
+ * Text layout helper: Calculate printable column width based on paper size
  */
-function padRight(str: string, width: number): string {
+export function getLineWidth(paperWidth: "80mm" | "58mm" = "80mm"): number {
+  if (paperWidth === "58mm") {
+    return 32;
+  }
+  return 48;
+}
+
+/**
+ * Clean & truncate or pad text to an exact width
+ */
+export function padRight(str: string, width: number): string {
   if (str.length >= width) {
     return str.substring(0, width);
   }
   return str + " ".repeat(width - str.length);
 }
 
-function padLeft(str: string, width: number): string {
+export function padLeft(str: string, width: number): string {
   if (str.length >= width) {
     return str.substring(0, width);
   }
@@ -107,318 +133,532 @@ function padLeft(str: string, width: number): string {
 }
 
 /**
- * Format a two-column row (e.g. Label: Value)
+ * Create a 2-column row: Left aligned text and Right aligned text
+ * Example: "Subtotal: ................. 50,000"
  */
-function formatTwoColumns(left: string, right: string, maxChars: number): string {
-  const rightWidth = right.length;
-  const leftWidth = maxChars - rightWidth;
-  if (leftWidth <= 0) {
-    return left.substring(0, maxChars - rightWidth - 1) + " " + right;
+export function formatTwoColumns(
+  left: string,
+  right: string,
+  width: number = 48,
+  fillChar: string = " "
+): string {
+  const combinedLen = left.length + right.length;
+  if (combinedLen >= width) {
+    const spaceForLeft = Math.max(0, width - right.length - 1);
+    return left.substring(0, spaceForLeft) + " " + right;
   }
-  return padRight(left, leftWidth) + right;
+  const fillCount = width - combinedLen;
+  return left + fillChar.repeat(fillCount) + right;
 }
 
 /**
- * Generate ESC/POS commands for a Test Receipt
+ * Generate native ESC/POS QR Code commands (GS ( k)
  */
-export function buildTestPrintESC(options: ESCPOSOptions = {}): string {
-  const is58 = options.paperWidth === "58mm";
-  let maxChars = 48;
-  if (is58) {
-    maxChars = 32;
-  }
+export function buildQrCodeCommand(content: string): string {
+  if (!content) return "";
+  const len = content.length + 3;
+  const pL = String.fromCharCode(len % 256);
+  const pH = String.fromCharCode(Math.floor(len / 256));
 
-  let esc = "";
-  esc += COMMANDS.INIT;
+  let out = "";
+  // Model 2
+  out += `${GS}(k\x04\x00\x31\x41\x32\x00`;
+  // Module size (size 6)
+  out += `${GS}(k\x03\x00\x31\x43\x06`;
+  // Error correction level M (approx 15%)
+  out += `${GS}(k\x03\x00\x31\x45\x31`;
+  // Store the data in symbol storage area
+  out += `${GS}(k${pL}${pH}\x31\x50\x30${content}`;
+  // Print symbol data in symbol storage area
+  out += `${GS}(k\x03\x00\x31\x51\x30`;
 
-  // Header
-  esc += COMMANDS.ALIGN_CENTER;
-  esc += COMMANDS.SIZE_DOUBLE;
-  esc += COMMANDS.BOLD_ON;
-  esc += "POS PRINTER TEST\n";
-  esc += COMMANDS.SIZE_NORMAL;
-  esc += COMMANDS.BOLD_OFF;
-
-  esc += "Thermal ESC/POS Network Driver\n";
-  esc += "------------------------------------------------".substring(0, maxChars) + "\n";
-
-  // Body
-  esc += COMMANDS.ALIGN_LEFT;
-  esc += `Date: ${new Date().toLocaleString()}\n`;
-  esc += `Width: ${is58 ? "58mm (32 cols)" : "80mm (48 cols)"}\n`;
-  esc += `Port: 9100 Direct Socket\n`;
-  esc += `Status: Connected & Ready\n`;
-
-  esc += "------------------------------------------------".substring(0, maxChars) + "\n";
-  esc += COMMANDS.ALIGN_CENTER;
-  esc += COMMANDS.BOLD_ON;
-  esc += "TEST PRINT SUCCESSFUL!\n";
-  esc += COMMANDS.BOLD_OFF;
-  esc += "System ready for POS receipts & kitchen\n";
-
-  // Feed and cut
-  esc += COMMANDS.FEED_LINE(3);
-  esc += COMMANDS.CUT_FEED;
-
-  if (options.openDrawer) {
-    esc += COMMANDS.OPEN_DRAWER;
-  }
-
-  return esc;
+  return out;
 }
 
 /**
- * Generate ESC/POS commands for a Customer Bill or Receipt
+ * Builder class for creating ESC/POS command sequences fluently
+ */
+export class EscPosBuilder {
+  private buffer: string[] = [];
+  private width: number;
+
+  constructor(paperWidth: "80mm" | "58mm" = "80mm") {
+    this.width = getLineWidth(paperWidth);
+    this.init();
+  }
+
+  public init(): EscPosBuilder {
+    this.buffer.push(COMMANDS.INIT);
+    return this;
+  }
+
+  public alignLeft(): EscPosBuilder {
+    this.buffer.push(COMMANDS.ALIGN_LEFT);
+    return this;
+  }
+
+  public alignCenter(): EscPosBuilder {
+    this.buffer.push(COMMANDS.ALIGN_CENTER);
+    return this;
+  }
+
+  public alignRight(): EscPosBuilder {
+    this.buffer.push(COMMANDS.ALIGN_RIGHT);
+    return this;
+  }
+
+  public bold(enable: boolean = true): EscPosBuilder {
+    if (enable) {
+      this.buffer.push(COMMANDS.BOLD_ON);
+    } else {
+      this.buffer.push(COMMANDS.BOLD_OFF);
+    }
+    return this;
+  }
+
+  public underline(enable: boolean = true): EscPosBuilder {
+    if (enable) {
+      this.buffer.push(COMMANDS.UNDERLINE_ON);
+    } else {
+      this.buffer.push(COMMANDS.UNDERLINE_OFF);
+    }
+    return this;
+  }
+
+  public invert(enable: boolean = true): EscPosBuilder {
+    if (enable) {
+      this.buffer.push(COMMANDS.INVERT_ON);
+    } else {
+      this.buffer.push(COMMANDS.INVERT_OFF);
+    }
+    return this;
+  }
+
+  public sizeNormal(): EscPosBuilder {
+    this.buffer.push(COMMANDS.SIZE_NORMAL);
+    return this;
+  }
+
+  public sizeDoubleHeight(): EscPosBuilder {
+    this.buffer.push(COMMANDS.SIZE_DOUBLE_HEIGHT);
+    return this;
+  }
+
+  public sizeDoubleWidth(): EscPosBuilder {
+    this.buffer.push(COMMANDS.SIZE_DOUBLE_WIDTH);
+    return this;
+  }
+
+  public sizeDouble(): EscPosBuilder {
+    this.buffer.push(COMMANDS.SIZE_DOUBLE);
+    return this;
+  }
+
+  public line(text: string = ""): EscPosBuilder {
+    this.buffer.push(text + "\n");
+    return this;
+  }
+
+  public feed(lines: number = 1): EscPosBuilder {
+    this.buffer.push(COMMANDS.FEED_LINE(lines));
+    return this;
+  }
+
+  public divider(char: string = "-"): EscPosBuilder {
+    this.buffer.push(char.repeat(this.width) + "\n");
+    return this;
+  }
+
+  public doubleDivider(): EscPosBuilder {
+    this.buffer.push("=".repeat(this.width) + "\n");
+    return this;
+  }
+
+  public twoColumns(left: string, right: string, fillChar: string = " "): EscPosBuilder {
+    this.buffer.push(formatTwoColumns(left, right, this.width, fillChar) + "\n");
+    return this;
+  }
+
+  public qrCode(content: string): EscPosBuilder {
+    if (content) {
+      this.alignCenter();
+      this.buffer.push(buildQrCodeCommand(content));
+      this.feed(1);
+      this.alignLeft();
+    }
+    return this;
+  }
+
+  public cut(): EscPosBuilder {
+    this.buffer.push(COMMANDS.CUT_FEED);
+    return this;
+  }
+
+  public openDrawer(): EscPosBuilder {
+    this.buffer.push(COMMANDS.OPEN_DRAWER_PIN2);
+    this.buffer.push(COMMANDS.OPEN_DRAWER_PIN5);
+    return this;
+  }
+
+  public beep(kitchen: boolean = false): EscPosBuilder {
+    if (kitchen) {
+      this.buffer.push(COMMANDS.BEEP_KITCHEN);
+    } else {
+      this.buffer.push(COMMANDS.BEEP);
+    }
+    return this;
+  }
+
+  public build(): string {
+    return this.buffer.join("");
+  }
+}
+
+/**
+ * Format currency with thousands separators
+ */
+function formatMoney(amount: number, symbol: string = "₭"): string {
+  const formatted = Math.round(amount).toLocaleString();
+  return `${formatted} ${symbol}`;
+}
+
+/**
+ * Build ESC/POS command string for customer receipt or pre-settlement bill
  */
 export function buildReceiptESC(
   data: PrintableReceiptData,
   options: ESCPOSOptions = {}
 ): string {
-  const is58 = options.paperWidth === "58mm";
-  let maxChars = 48;
-  if (is58) {
-    maxChars = 32;
+  const paperWidth = options.paperWidth || "80mm";
+  const lineWidth = getLineWidth(paperWidth);
+  const is58mm = paperWidth === "58mm";
+  const builder = new EscPosBuilder(paperWidth);
+
+  // Kick drawer at start if requested
+  if (options.openDrawer) {
+    builder.openDrawer();
   }
 
-  let esc = "";
-  esc += COMMANDS.INIT;
+  // Header - Store Name
+  builder.alignCenter();
+  builder.bold(true);
+  builder.sizeDouble();
+  const shopName = data.shopName || "LAO WORLD RESTAURANT";
+  builder.line(shopName);
 
-  // Header
-  esc += COMMANDS.ALIGN_CENTER;
-  esc += COMMANDS.SIZE_DOUBLE_HEIGHT;
-  esc += COMMANDS.BOLD_ON;
-  esc += "LAO WORLD RESTAURANT\n";
-  esc += COMMANDS.SIZE_NORMAL;
-  esc += COMMANDS.BOLD_OFF;
-  esc += "Vientiane, Lao PDR • Tel: (+856) 20 5555 5555\n";
+  builder.sizeNormal();
+  builder.bold(false);
 
-  let titleBadge = "CHECK BILL";
-  if (data.type === "receipt") {
-    titleBadge = "OFFICIAL RECEIPT";
+  if (data.shopAddress) {
+    builder.line(data.shopAddress);
+  }
+  if (data.shopPhone) {
+    builder.line(`Tel: ${data.shopPhone}`);
+  }
+  if (data.headerText) {
+    builder.line(data.headerText);
   }
 
-  esc += COMMANDS.BOLD_ON;
-  esc += `[ ${titleBadge} ]\n`;
-  esc += COMMANDS.BOLD_OFF;
-  esc += "-".repeat(maxChars) + "\n";
+  builder.feed(1);
 
-  // Order Meta
-  esc += COMMANDS.ALIGN_LEFT;
-  let tableStr = data.tableNumber;
+  // Title Badge: RECEIPT or BILL
+  builder.bold(true);
+  const isReceipt = data.type === "receipt";
+  if (isReceipt) {
+    builder.invert(true);
+    builder.line(" *** RECEIPT / ໃບບິນຮັບເງິນ *** ");
+    builder.invert(false);
+  } else {
+    builder.line(" *** ORDER BILL / ໃບແຈ້ງລາຄາ *** ");
+  }
+  builder.bold(false);
+  builder.feed(1);
+
+  // Metadata block
+  builder.alignLeft();
+  builder.twoColumns("Order No:", data.orderNumber || "-");
+  
+  let tableInfo = data.tableNumber ? `Table ${data.tableNumber}` : "-";
   if (data.zoneName) {
-    tableStr += ` (${data.zoneName})`;
+    tableInfo += ` (${data.zoneName})`;
   }
-  esc += formatTwoColumns("Table:", tableStr, maxChars) + "\n";
-  esc += formatTwoColumns("Order #:", data.orderNumber, maxChars) + "\n";
-  esc += formatTwoColumns("Date:", data.date, maxChars) + "\n";
+  builder.twoColumns("Table / ໂຕະ:", tableInfo);
+
+  builder.twoColumns("Date / ເວລາ:", data.date || new Date().toLocaleString());
 
   if (data.staffName) {
-    esc += formatTwoColumns("Cashier:", data.staffName, maxChars) + "\n";
+    builder.twoColumns("Staff / ພະນັກງານ:", data.staffName);
   }
 
   if (data.customerName) {
-    let custInfo = data.customerName;
+    let customerInfo = data.customerName;
     if (data.customerPhone) {
-      custInfo += ` (${data.customerPhone})`;
+      customerInfo += ` (${data.customerPhone})`;
     }
-    esc += formatTwoColumns("Customer:", custInfo, maxChars) + "\n";
+    builder.twoColumns("Customer / ລູກຄ້າ:", customerInfo);
   }
 
-  esc += "-".repeat(maxChars) + "\n";
-
-  // Table Column Headers
-  // 80mm (48 chars): ITEM (24) | QTY (6) | PRICE (9) | TOTAL (9)
-  // 58mm (32 chars): ITEM (16) | QTY (4) | TOTAL (12)
-  if (is58) {
-    const itemH = padRight("ITEM", 16);
-    const qtyH = padLeft("QTY", 4);
-    const totalH = padLeft("TOTAL", 12);
-    esc += `${itemH}${qtyH}${totalH}\n`;
+  // Items Table Header
+  builder.divider("-");
+  builder.bold(true);
+  if (is58mm) {
+    // 32-column format: Qty Item [right] Total
+    builder.twoColumns("Qty Item", "Total");
   } else {
-    const itemH = padRight("ITEM", 24);
-    const qtyH = padLeft("QTY", 6);
-    const priceH = padLeft("PRICE", 9);
-    const totalH = padLeft("TOTAL", 9);
-    esc += `${itemH}${qtyH}${priceH}${totalH}\n`;
+    // 48-column format: Item [center] Qty [right] Amount
+    const colItem = padRight("Item", 24);
+    const colQty = padLeft("Qty", 6);
+    const colPrice = padLeft("Price", 8);
+    const colTotal = padLeft("Total", 10);
+    builder.line(`${colItem}${colQty}${colPrice}${colTotal}`);
   }
-  esc += "-".repeat(maxChars) + "\n";
+  builder.bold(false);
+  builder.divider("-");
 
-  // Items
-  for (const item of data.items) {
-    const totalFormatted = item.totalPrice.toLocaleString();
-    const qtyFormatted = `x${item.quantity}`;
+  // Items List
+  data.items.forEach((item) => {
+    const totalStr = Math.round(item.totalPrice).toLocaleString();
 
-    if (is58) {
-      const itemCol = padRight(item.name.substring(0, 15), 16);
-      const qtyCol = padLeft(qtyFormatted, 4);
-      const totalCol = padLeft(totalFormatted, 12);
-      esc += `${itemCol}${qtyCol}${totalCol}\n`;
+    if (is58mm) {
+      const itemTitle = `${item.quantity}x ${item.name}`;
+      builder.twoColumns(itemTitle, totalStr);
     } else {
-      const priceFormatted = item.unitPrice.toLocaleString();
-      const itemCol = padRight(item.name.substring(0, 23), 24);
-      const qtyCol = padLeft(qtyFormatted, 6);
-      const priceCol = padLeft(priceFormatted, 9);
-      const totalCol = padLeft(totalFormatted, 9);
-      esc += `${itemCol}${qtyCol}${priceCol}${totalCol}\n`;
+      const namePart = padRight(item.name.substring(0, 23), 24);
+      const qtyPart = padLeft(item.quantity.toString(), 6);
+      const pricePart = padLeft(Math.round(item.unitPrice).toLocaleString(), 8);
+      const totalPart = padLeft(totalStr, 10);
+      builder.line(`${namePart}${qtyPart}${pricePart}${totalPart}`);
     }
 
+    // Item note / modifiers
     if (item.note) {
-      esc += `  * ${item.note}\n`;
+      builder.line(`  * ${item.note}`);
     }
-  }
+  });
 
-  esc += "-".repeat(maxChars) + "\n";
-
-  // Totals
-  esc += formatTwoColumns("Subtotal:", `${data.subTotal.toLocaleString()} LAK`, maxChars) + "\n";
+  // Financial Summary
+  builder.divider("-");
+  builder.twoColumns("Subtotal / ລວມເງິນ:", formatMoney(data.subTotal, data.currencySymbol));
 
   if (data.discount > 0) {
-    esc += formatTwoColumns("Discount:", `-${data.discount.toLocaleString()} LAK`, maxChars) + "\n";
+    builder.twoColumns("Discount / ສ່ວນຫຼຸດ:", `-${formatMoney(data.discount, data.currencySymbol)}`);
   }
 
-  esc += COMMANDS.BOLD_ON;
-  esc += COMMANDS.SIZE_DOUBLE_HEIGHT;
-  esc += formatTwoColumns("TOTAL:", `${data.total.toLocaleString()} LAK`, maxChars) + "\n";
-  esc += COMMANDS.SIZE_NORMAL;
-  esc += COMMANDS.BOLD_OFF;
+  builder.doubleDivider();
+  builder.bold(true);
+  builder.sizeDouble();
+  builder.twoColumns("TOTAL:", formatMoney(data.total, data.currencySymbol));
+  builder.sizeNormal();
+  builder.bold(false);
+  builder.doubleDivider();
 
-  // Payment Details (if official receipt)
-  if (data.type === "receipt") {
-    esc += "-".repeat(maxChars) + "\n";
-    const methodStr = data.paymentMethod ? data.paymentMethod.toUpperCase() : "CASH";
-    esc += formatTwoColumns("Payment Method:", methodStr, maxChars) + "\n";
-
+  // Payment Breakdown for Receipts
+  if (isReceipt && data.paymentMethod) {
+    builder.twoColumns("Payment Method:", data.paymentMethod.toUpperCase());
     if (data.amountReceived !== undefined) {
-      esc += formatTwoColumns("Received:", `${data.amountReceived.toLocaleString()} LAK`, maxChars) + "\n";
+      builder.twoColumns("Received / ຮັບເງິນ:", formatMoney(data.amountReceived, data.currencySymbol));
     }
-
     if (data.change !== undefined) {
-      esc += COMMANDS.BOLD_ON;
-      esc += formatTwoColumns("Change:", `${data.change.toLocaleString()} LAK`, maxChars) + "\n";
-      esc += COMMANDS.BOLD_OFF;
+      builder.bold(true);
+      builder.twoColumns("Change / ເງິນທອນ:", formatMoney(data.change, data.currencySymbol));
+      builder.bold(false);
     }
+    builder.divider("-");
   }
 
-  esc += "-".repeat(maxChars) + "\n";
-
-  // Footer
-  esc += COMMANDS.ALIGN_CENTER;
-  esc += COMMANDS.BOLD_ON;
-  esc += "Thank you for your visit!\n";
-  esc += COMMANDS.BOLD_OFF;
-  esc += "Please keep this receipt for verification\n";
-
-  // Feed and cut
-  esc += COMMANDS.FEED_LINE(4);
-  esc += COMMANDS.CUT_FEED;
-
-  // Open Cash Drawer if option enabled and is official receipt
-  if (options.openDrawer && data.type === "receipt") {
-    esc += COMMANDS.OPEN_DRAWER;
+  // QR Code for e-receipt or payment verification if provided
+  if (data.qrCodeUrl) {
+    builder.feed(1);
+    builder.alignCenter();
+    builder.line("Scan QR Code to view e-Receipt:");
+    builder.qrCode(data.qrCodeUrl);
   }
 
-  return esc;
+  // Footer Message
+  builder.feed(1);
+  builder.alignCenter();
+  builder.bold(true);
+  const footerMessage = data.footerText || "THANK YOU / ຂໍຂອບໃຈທີ່ມາໃຊບໍລິການ";
+  builder.line(footerMessage);
+  builder.bold(false);
+  builder.line("Please come again!");
+  builder.line(`*** Powered by POS System ***`);
+
+  builder.feed(3);
+
+  // Cut Paper
+  if (options.cutPaper !== false) {
+    builder.cut();
+  }
+
+  return builder.build();
 }
 
 /**
- * Generate ESC/POS commands for a Kitchen Ticket (KDS / Order Slip)
+ * Build ESC/POS command string for Kitchen Order Ticket
  */
 export function buildKitchenTicketESC(
   data: PrintableKitchenData,
   options: ESCPOSOptions = {}
 ): string {
-  const is58 = options.paperWidth === "58mm";
-  let maxChars = 48;
-  if (is58) {
-    maxChars = 32;
+  const paperWidth = options.paperWidth || "80mm";
+  const builder = new EscPosBuilder(paperWidth);
+
+  // Beep kitchen buzzer to alert cooks
+  if (options.beep !== false) {
+    builder.beep(true);
   }
 
-  let esc = "";
-  esc += COMMANDS.INIT;
+  // Kitchen Ticket Banner
+  builder.alignCenter();
+  builder.bold(true);
+  builder.sizeDouble();
+  builder.invert(true);
+  builder.line(" *** KITCHEN ORDER *** ");
+  builder.invert(false);
 
-  // Optional Beeper to alert kitchen chef
-  if (options.beep) {
-    esc += COMMANDS.BEEP;
-  }
-
-  // Kitchen Header
-  esc += COMMANDS.ALIGN_CENTER;
-  esc += COMMANDS.SIZE_DOUBLE;
-  esc += COMMANDS.BOLD_ON;
-  esc += "== KITCHEN ORDER ==\n";
-  esc += COMMANDS.SIZE_NORMAL;
-  esc += COMMANDS.BOLD_OFF;
-
-  // Table number in large bold text
-  esc += COMMANDS.SIZE_DOUBLE_HEIGHT;
-  esc += COMMANDS.BOLD_ON;
-  let tableHeader = `TABLE: ${data.tableNumber}`;
+  // HUGE Table Number
+  builder.feed(1);
+  builder.sizeDouble();
+  let tableHeading = `TABLE ${data.tableNumber || "-"}`;
   if (data.zoneName) {
-    tableHeader += ` (${data.zoneName})`;
+    tableHeading += ` [${data.zoneName}]`;
   }
-  esc += `${tableHeader}\n`;
-  esc += COMMANDS.SIZE_NORMAL;
-  esc += COMMANDS.BOLD_OFF;
+  builder.line(tableHeading);
 
-  esc += "=".repeat(maxChars) + "\n";
-
-  // Order Info
-  esc += COMMANDS.ALIGN_LEFT;
-  esc += formatTwoColumns("Order #:", data.orderNumber, maxChars) + "\n";
-  esc += formatTwoColumns("Time:", data.date, maxChars) + "\n";
-
+  // Order Type (DINE-IN / TAKE-AWAY)
   if (data.orderType) {
-    esc += formatTwoColumns("Type:", data.orderType.toUpperCase(), maxChars) + "\n";
+    builder.sizeNormal();
+    builder.bold(true);
+    builder.line(`Type: ${data.orderType.toUpperCase()}`);
   }
 
+  builder.sizeNormal();
+  builder.bold(false);
+  builder.feed(1);
+
+  // Meta Information
+  builder.alignLeft();
+  builder.twoColumns("Ticket #:", data.orderNumber || "NEW");
+  builder.twoColumns("Time / ເວລາ:", data.date || new Date().toLocaleTimeString());
   if (data.staffName) {
-    esc += formatTwoColumns("Server:", data.staffName, maxChars) + "\n";
+    builder.twoColumns("Server / ພະນັກງານ:", data.staffName);
   }
 
   if (data.note) {
-    esc += COMMANDS.BOLD_ON;
-    esc += `Note: ${data.note}\n`;
-    esc += COMMANDS.BOLD_OFF;
+    builder.divider("-");
+    builder.bold(true);
+    builder.line(`ORDER NOTE: ${data.note}`);
+    builder.bold(false);
   }
 
-  esc += "=".repeat(maxChars) + "\n";
+  // Items List for Kitchen (Focus on QTY and Special Notes)
+  builder.doubleDivider();
+  builder.bold(true);
+  builder.twoColumns("QTY  ITEM DESCRIPTION", "CHECK");
+  builder.bold(false);
+  builder.doubleDivider();
 
-  // Kitchen Items List
-  esc += COMMANDS.BOLD_ON;
-  esc += padRight("QTY", 6) + padRight("ITEM DESCRIPTION", maxChars - 6) + "\n";
-  esc += COMMANDS.BOLD_OFF;
-  esc += "-".repeat(maxChars) + "\n";
+  data.items.forEach((item) => {
+    builder.bold(true);
+    builder.sizeDouble();
+    // E.g. "[ 2x ] Pad Thai"
+    builder.line(`[ ${item.quantity}x ] ${item.name}`);
+    builder.sizeNormal();
+    builder.bold(false);
 
-  for (const item of data.items) {
-    esc += COMMANDS.SIZE_DOUBLE_HEIGHT;
-    esc += COMMANDS.BOLD_ON;
-    const qtyCol = padRight(`[ ${item.quantity} ]`, 6);
-    esc += `${qtyCol}${item.name}\n`;
-    esc += COMMANDS.SIZE_NORMAL;
-    esc += COMMANDS.BOLD_OFF;
-
-    // Special options / toppings
+    // Modifier options
     if (item.options && item.options.length > 0) {
-      for (const opt of item.options) {
-        esc += `      + ${opt}\n`;
-      }
+      item.options.forEach((opt) => {
+        builder.line(`   + ${opt}`);
+      });
     }
 
-    // Item note
+    // Cooking instructions / notes
     if (item.note) {
-      esc += COMMANDS.BOLD_ON;
-      esc += `      ** NOTE: ${item.note} **\n`;
-      esc += COMMANDS.BOLD_OFF;
+      builder.bold(true);
+      builder.line(`   >> NOTE: ${item.note}`);
+      builder.bold(false);
     }
 
-    esc += "\n";
+    builder.divider("-");
+  });
+
+  builder.feed(3);
+
+  // Cut Paper
+  if (options.cutPaper !== false) {
+    builder.cut();
   }
 
-  esc += "=".repeat(maxChars) + "\n";
+  return builder.build();
+}
 
-  // Feed and cut
-  esc += COMMANDS.FEED_LINE(4);
-  esc += COMMANDS.CUT_FEED;
+/**
+ * Build ESC/POS Diagnostic Test Slip
+ */
+export function buildTestPrintESC(
+  options: ESCPOSOptions & { targetName?: string; ip?: string; port?: number } = {}
+): string {
+  const paperWidth = options.paperWidth || "80mm";
+  const builder = new EscPosBuilder(paperWidth);
 
-  return esc;
+  if (options.beep) {
+    builder.beep();
+  }
+
+  builder.alignCenter();
+  builder.bold(true);
+  builder.sizeDouble();
+  builder.line("PRINTER TEST SLIP");
+
+  builder.sizeNormal();
+  builder.bold(false);
+  builder.line("POS Hardware Diagnostic Tool");
+  builder.line(`Timestamp: ${new Date().toLocaleString()}`);
+  builder.feed(1);
+
+  builder.alignLeft();
+  builder.divider("=");
+  builder.twoColumns("Target:", options.targetName || "Thermal Receipt Printer");
+  if (options.ip) {
+    builder.twoColumns("IP Address:", options.ip);
+  }
+  if (options.port) {
+    builder.twoColumns("TCP Port:", options.port.toString());
+  }
+  builder.twoColumns("Paper Width:", paperWidth);
+  builder.twoColumns("Status:", "OK - Connected");
+  builder.divider("=");
+
+  builder.feed(1);
+  builder.line("Typography Verification:");
+  builder.line("Normal text: 0123456789 ABCDEFGHIJKLMNOP");
+  builder.bold(true);
+  builder.line("Bold text: 0123456789 ABCDEFGHIJKLMNOP");
+  builder.bold(false);
+  builder.underline(true);
+  builder.line("Underlined text verification");
+  builder.underline(false);
+
+  builder.feed(1);
+  builder.alignCenter();
+  builder.line("2D Barcode Test (QR Code):");
+  builder.qrCode("https://github.com/4pN/Front-default-pos");
+
+  builder.feed(1);
+  builder.line("If this slip printed cleanly,");
+  builder.line("your network printer is configured properly!");
+
+  builder.feed(3);
+  builder.cut();
+
+  return builder.build();
+}
+
+/**
+ * Pure cash drawer kick pulse command
+ */
+export function buildCashDrawerESC(): string {
+  return `${COMMANDS.INIT}${COMMANDS.OPEN_DRAWER_PIN2}${COMMANDS.OPEN_DRAWER_PIN5}`;
 }

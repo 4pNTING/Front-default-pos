@@ -15,6 +15,13 @@ export interface CashierPrinterConfig {
   paperWidth: "80mm" | "58mm";
   autoOpenDrawer: boolean;
   autoPrintOnPayment: boolean;
+  shopName: string;
+  shopAddress: string;
+  shopPhone: string;
+  headerText: string;
+  footerText: string;
+  showQrCode: boolean;
+  qrCodeUrl?: string;
 }
 
 export interface KitchenPrinterConfig {
@@ -26,7 +33,7 @@ export interface KitchenPrinterConfig {
   beep: boolean;
 }
 
-interface PrinterState {
+export interface PrinterState {
   cashierPrinter: CashierPrinterConfig;
   kitchenPrinter: KitchenPrinterConfig;
   isSettingsOpen: boolean;
@@ -43,13 +50,18 @@ interface PrinterState {
   updateKitchenPrinter: (cfg: Partial<KitchenPrinterConfig>) => void;
   resetDefaults: () => void;
   testPrinter: (ip: string, port?: number) => Promise<{ success: boolean; latencyMs?: number; error?: string }>;
-  printTestSlip: (ip: string, port?: number, paperWidth?: "80mm" | "58mm") => Promise<{ success: boolean; error?: string }>;
+  printTestSlip: (
+    ip: string,
+    port?: number,
+    paperWidth?: "80mm" | "58mm",
+    targetName?: string
+  ) => Promise<{ success: boolean; error?: string }>;
   openDrawerDirect: (ip?: string, port?: number) => Promise<{ success: boolean; error?: string }>;
   printReceiptDirect: (data: PrintableReceiptData) => Promise<{ success: boolean; error?: string }>;
   printKitchenTicketDirect: (data: PrintableKitchenData) => Promise<{ success: boolean; error?: string }>;
 }
 
-const STORAGE_KEY = "pos_printer_configuration_v1";
+const STORAGE_KEY = "pos_thermal_printer_config_v2";
 
 const defaultCashierPrinter: CashierPrinterConfig = {
   enabled: true,
@@ -59,10 +71,17 @@ const defaultCashierPrinter: CashierPrinterConfig = {
   paperWidth: "80mm",
   autoOpenDrawer: true,
   autoPrintOnPayment: true,
+  shopName: "LAO WORLD RESTAURANT",
+  shopAddress: "Khouvieng Road, Vientiane, Lao PDR",
+  shopPhone: "+856 20 5555 9999",
+  headerText: "ยินดีต้อนรับ / ຍິນດີຕ້ອນຮັບ",
+  footerText: "THANK YOU / ຂໍຂອບໃຈທີ່ມາໃຊບໍລິການ",
+  showQrCode: true,
+  qrCodeUrl: "https://laoworld.la",
 };
 
 const defaultKitchenPrinter: KitchenPrinterConfig = {
-  enabled: false,
+  enabled: true,
   ip: "192.168.1.201",
   port: 9100,
   paperWidth: "80mm",
@@ -99,7 +118,7 @@ function saveConfig(cashier: CashierPrinterConfig, kitchen: KitchenPrinterConfig
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ cashier, kitchen }));
   } catch (err) {
-    console.warn("Failed to save printer settings to localStorage:", err);
+    console.warn("Failed to persist printer settings:", err);
   }
 }
 
@@ -136,28 +155,37 @@ export const usePrinterStore = create<PrinterState>((set, get) => {
       set({
         cashierPrinter: defaultCashierPrinter,
         kitchenPrinter: defaultKitchenPrinter,
+        lastPrintStatus: null,
       });
     },
 
-    // Test connection / ping printer IP
+    // 1. Ping / Test connection over TCP socket
     testPrinter: async (ip: string, port: number = 9100) => {
       try {
         const res = await fetch("/api/print", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "test", ip, port }),
+          body: JSON.stringify({ action: "ping", ip, port }),
         });
-        const data = await res.json();
-        return data;
+        const json = await res.json();
+        return json;
       } catch (err: any) {
-        return { success: false, error: err.message || "Failed to reach print server" };
+        return {
+          success: false,
+          error: err.message || "Failed to reach server print route",
+        };
       }
     },
 
-    // Print sample test receipt
-    printTestSlip: async (ip: string, port: number = 9100, paperWidth: "80mm" | "58mm" = "80mm") => {
+    // 2. Print diagnostic test slip
+    printTestSlip: async (
+      ip: string,
+      port: number = 9100,
+      paperWidth: "80mm" | "58mm" = "80mm",
+      targetName: string = "Diagnostic Slip"
+    ) => {
+      set({ isPrinting: true });
       try {
-        set({ isPrinting: true });
         const res = await fetch("/api/print", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -165,163 +193,132 @@ export const usePrinterStore = create<PrinterState>((set, get) => {
             action: "print-test",
             ip,
             port,
-            options: { paperWidth, cutPaper: true },
+            options: { paperWidth, targetName, beep: true },
           }),
         });
-        const data = await res.json();
+        const json = await res.json();
         set({
           isPrinting: false,
           lastPrintStatus: {
-            success: data.success,
-            message: data.success ? "Test slip printed successfully" : data.error,
+            success: json.success,
+            message: json.success ? "Test slip printed successfully" : json.error,
             timestamp: Date.now(),
           },
         });
-        return data;
+        return json;
       } catch (err: any) {
-        set({
-          isPrinting: false,
-          lastPrintStatus: {
-            success: false,
-            message: err.message || "Network error while printing",
-            timestamp: Date.now(),
-          },
-        });
-        return { success: false, error: err.message || "Network error" };
+        set({ isPrinting: false });
+        return { success: false, error: err.message };
       }
     },
 
-    // Trigger RJ11 cash drawer kick
+    // 3. Open cash drawer pulse
     openDrawerDirect: async (ip?: string, port?: number) => {
-      const state = get();
-      const targetIp = ip || state.cashierPrinter.ip;
-      const targetPort = port || state.cashierPrinter.port;
-
-      if (!targetIp) {
-        return { success: false, error: "Cashier printer IP is not configured" };
-      }
+      const targetIp = ip || get().cashierPrinter.ip;
+      const targetPort = port || get().cashierPrinter.port;
 
       try {
         const res = await fetch("/api/print", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "open-drawer", ip: targetIp, port: targetPort }),
+          body: JSON.stringify({
+            action: "open-drawer",
+            ip: targetIp,
+            port: targetPort,
+          }),
         });
-        return await res.json();
+        const json = await res.json();
+        return json;
       } catch (err: any) {
-        return { success: false, error: err.message || "Failed to trigger drawer kick" };
+        return { success: false, error: err.message };
       }
     },
 
-    // Print Receipt or Bill directly
+    // 4. Print customer receipt / bill
     printReceiptDirect: async (data: PrintableReceiptData) => {
-      const state = get();
-      const cfg = state.cashierPrinter;
+      const { cashierPrinter } = get();
 
-      if (!cfg.enabled) {
-        return { success: false, error: "Cashier printer is disabled in settings" };
-      }
+      // Merge store header and footer configuration into receipt data
+      const enrichedData: PrintableReceiptData = {
+        ...data,
+        shopName: cashierPrinter.shopName || data.shopName,
+        shopAddress: cashierPrinter.shopAddress || data.shopAddress,
+        shopPhone: cashierPrinter.shopPhone || data.shopPhone,
+        headerText: cashierPrinter.headerText || data.headerText,
+        footerText: cashierPrinter.footerText || data.footerText,
+        qrCodeUrl: cashierPrinter.showQrCode ? cashierPrinter.qrCodeUrl : undefined,
+      };
 
-      if (!cfg.ip) {
-        return { success: false, error: "Cashier printer IP address is required" };
-      }
-
+      set({ isPrinting: true });
       try {
-        set({ isPrinting: true });
-        const options: ESCPOSOptions = {
-          paperWidth: cfg.paperWidth,
-          openDrawer: cfg.autoOpenDrawer && data.type === "receipt",
-          cutPaper: true,
-        };
-
         const res = await fetch("/api/print", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             action: "print-receipt",
-            ip: cfg.ip,
-            port: cfg.port,
-            data,
-            options,
+            ip: cashierPrinter.ip,
+            port: cashierPrinter.port,
+            data: enrichedData,
+            options: {
+              paperWidth: cashierPrinter.paperWidth,
+              openDrawer: cashierPrinter.autoOpenDrawer && data.type === "receipt",
+              cutPaper: true,
+            },
           }),
         });
-
-        const result = await res.json();
+        const json = await res.json();
         set({
           isPrinting: false,
           lastPrintStatus: {
-            success: result.success,
-            message: result.success ? "Receipt printed successfully" : result.error,
+            success: json.success,
+            message: json.success ? "Receipt printed successfully" : json.error,
             timestamp: Date.now(),
           },
         });
-        return result;
+        return json;
       } catch (err: any) {
-        set({
-          isPrinting: false,
-          lastPrintStatus: {
-            success: false,
-            message: err.message || "Failed to print receipt",
-            timestamp: Date.now(),
-          },
-        });
-        return { success: false, error: err.message || "Network error" };
+        set({ isPrinting: false });
+        return { success: false, error: err.message };
       }
     },
 
-    // Print Kitchen Order Ticket directly
+    // 5. Print kitchen order ticket
     printKitchenTicketDirect: async (data: PrintableKitchenData) => {
-      const state = get();
-      const cfg = state.kitchenPrinter;
-
-      if (!cfg.enabled) {
-        return { success: false, error: "Kitchen printer is disabled in settings" };
+      const { kitchenPrinter } = get();
+      if (!kitchenPrinter.enabled) {
+        return { success: false, error: "Kitchen printer is currently disabled." };
       }
 
-      if (!cfg.ip) {
-        return { success: false, error: "Kitchen printer IP address is required" };
-      }
-
+      set({ isPrinting: true });
       try {
-        set({ isPrinting: true });
-        const options: ESCPOSOptions = {
-          paperWidth: cfg.paperWidth,
-          beep: cfg.beep,
-          cutPaper: true,
-        };
-
         const res = await fetch("/api/print", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             action: "print-kitchen",
-            ip: cfg.ip,
-            port: cfg.port,
+            ip: kitchenPrinter.ip,
+            port: kitchenPrinter.port,
             data,
-            options,
+            options: {
+              paperWidth: kitchenPrinter.paperWidth,
+              beep: kitchenPrinter.beep,
+              cutPaper: true,
+            },
           }),
         });
-
-        const result = await res.json();
+        const json = await res.json();
         set({
           isPrinting: false,
           lastPrintStatus: {
-            success: result.success,
-            message: result.success ? "Kitchen order ticket printed" : result.error,
+            success: json.success,
+            message: json.success ? "Kitchen ticket printed successfully" : json.error,
             timestamp: Date.now(),
           },
         });
-        return result;
+        return json;
       } catch (err: any) {
-        set({
-          isPrinting: false,
-          lastPrintStatus: {
-            success: false,
-            message: err.message || "Failed to print kitchen ticket",
-            timestamp: Date.now(),
-          },
-        });
-        return { success: false, error: err.message || "Network error" };
+        set({ isPrinting: false });
+        return { success: false, error: err.message };
       }
     },
   };

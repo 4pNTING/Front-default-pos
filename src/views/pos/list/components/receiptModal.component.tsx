@@ -10,9 +10,10 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
   const { lang, dictionary: dic } = props;
   const isLao = lang === "la";
   const { receiptModalOpen, receiptData, closeReceiptModal } = usePOSStore();
-  const { cashierPrinter, printReceiptDirect, setSettingsOpen } = usePrinterStore();
+  const { cashierPrinter, printReceiptDirect, openDrawerDirect, setSettingsOpen } = usePrinterStore();
 
   const [isDirectPrinting, setIsDirectPrinting] = useState(false);
+  const [isKickingDrawer, setIsKickingDrawer] = useState(false);
 
   if (!receiptModalOpen || !receiptData) return null;
 
@@ -36,47 +37,89 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
     if (!doc) return;
 
     const itemsHtml = receiptData.items
-      .map(
-        (item) => `
+      .map((item) => {
+        let noteHtml = "";
+        if (item.note) {
+          noteHtml = `<div style="font-size: 10px; color: #555; font-style: italic;">* ${item.note}</div>`;
+        }
+        return `
         <tr>
           <td style="padding: 4px 0; text-align: left; vertical-align: top;">
             <div style="font-weight: 600; font-size: 11px;">${item.name}</div>
-            ${item.note ? `<div style="font-size: 10px; color: #555; font-style: italic;">* ${item.note}</div>` : ""}
+            ${noteHtml}
           </td>
           <td style="padding: 4px 0; text-align: center; vertical-align: top; font-size: 11px;">${item.quantity}</td>
           <td style="padding: 4px 0; text-align: right; vertical-align: top; font-size: 11px;">${item.unitPrice.toLocaleString()}</td>
           <td style="padding: 4px 0; text-align: right; font-weight: bold; vertical-align: top; font-size: 11px;">${item.totalPrice.toLocaleString()}</td>
         </tr>
-      `
-      )
+      `;
+      })
       .join("");
 
-    const paymentDetailsHtml = isReceipt
-      ? `
+    let paymentDetailsHtml = "";
+    if (isReceipt) {
+      let receivedHtml = "";
+      if (receiptData.amountReceived !== undefined) {
+        receivedHtml = `
+          <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+            <span style="color: #555;">${dic.posPage?.amountReceived ?? "Received"}:</span>
+            <span>${receiptData.amountReceived.toLocaleString()} ₭</span>
+          </div>`;
+      }
+
+      let changeHtml = "";
+      if (receiptData.change !== undefined) {
+        changeHtml = `
+          <div style="display: flex; justify-content: space-between; font-weight: bold; color: #000;">
+            <span>${dic.posPage?.change ?? "Change"}:</span>
+            <span>${receiptData.change.toLocaleString()} ₭</span>
+          </div>`;
+      }
+
+      paymentDetailsHtml = `
         <div style="border-top: 1px dashed #333; margin-top: 8px; padding-top: 6px; font-size: 11px;">
           <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
             <span style="color: #555;">${dic.posPage?.paymentMethod ?? "Method"}:</span>
             <span style="font-weight: bold; text-transform: uppercase;">${receiptData.paymentMethod ?? "Cash"}</span>
           </div>
-          ${
-            receiptData.amountReceived !== undefined
-              ? `<div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-                  <span style="color: #555;">${dic.posPage?.amountReceived ?? "Received"}:</span>
-                  <span>${receiptData.amountReceived.toLocaleString()} ₭</span>
-                </div>`
-              : ""
-          }
-          ${
-            receiptData.change !== undefined
-              ? `<div style="display: flex; justify-content: space-between; font-weight: bold; color: #000;">
-                  <span>${dic.posPage?.change ?? "Change"}:</span>
-                  <span>${receiptData.change.toLocaleString()} ₭</span>
-                </div>`
-              : ""
-          }
+          ${receivedHtml}
+          ${changeHtml}
         </div>
-      `
-      : "";
+      `;
+    }
+
+    let customerHtml = "";
+    if (receiptData.customerName) {
+      let custDetails = receiptData.customerName;
+      if (receiptData.customerPhone) {
+        custDetails += ` (${receiptData.customerPhone})`;
+      }
+      customerHtml = `
+        <div class="row">
+          <span class="label">Customer:</span>
+          <span>${custDetails}</span>
+        </div>
+      `;
+    }
+
+    let discountHtml = "";
+    if (receiptData.discount > 0) {
+      discountHtml = `
+        <div class="row" style="color: #c00;">
+          <span>${dic.posPage?.discount ?? "Discount"}:</span>
+          <span>-${receiptData.discount.toLocaleString()} ₭</span>
+        </div>
+      `;
+    }
+
+    let titleBadge = dic.posPage?.checkBill ?? "CHECK BILL";
+    if (isReceipt) {
+      titleBadge = dic.posPage?.receipt ?? "OFFICIAL RECEIPT";
+    }
+
+    let shopName = cashierPrinter.shopName || "LAO WORLD RESTAURANT";
+    let shopAddr = cashierPrinter.shopAddress || "Vientiane, Lao PDR";
+    let shopPhone = cashierPrinter.shopPhone || "+856 20 5555 9999";
 
     doc.open();
     doc.write(`
@@ -133,11 +176,9 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
         </head>
         <body>
           <div class="header">
-            <div class="brand">LAO WORLD RESTAURANT</div>
-            <div class="sub">Vientiane, Lao PDR • Tel: (+856) 20 5555 5555</div>
-            <div class="badge">
-              ${isReceipt ? (dic.posPage?.receipt ?? "OFFICIAL RECEIPT") : (dic.posPage?.checkBill ?? "CHECK BILL")}
-            </div>
+            <div class="brand">${shopName}</div>
+            <div class="sub">${shopAddr} • Tel: ${shopPhone}</div>
+            <div class="badge">${titleBadge}</div>
           </div>
 
           <div class="divider"></div>
@@ -162,24 +203,17 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
                 </div>`
               : ""
           }
-          ${
-            receiptData.customerName
-              ? `<div class="row">
-                  <span class="label">Customer:</span>
-                  <span style="font-weight: 600;">${receiptData.customerName}${receiptData.customerPhone ? ` (${receiptData.customerPhone})` : ""}</span>
-                </div>`
-              : ""
-          }
+          ${customerHtml}
 
           <div class="divider"></div>
 
           <table>
             <thead>
               <tr>
-                <th style="text-align: left; width: 48%;">ITEM</th>
-                <th style="text-align: center; width: 14%;">QTY</th>
-                <th style="text-align: right; width: 18%;">PRICE</th>
-                <th style="text-align: right; width: 20%;">TOTAL</th>
+                <th style="text-align: left;">Item</th>
+                <th style="text-align: center; width: 32px;">Qty</th>
+                <th style="text-align: right; width: 50px;">Price</th>
+                <th style="text-align: right; width: 55px;">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -190,17 +224,10 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
           <div class="divider"></div>
 
           <div class="row">
-            <span class="label">${dic.posPage?.subtotal ?? "Subtotal"}:</span>
+            <span>${dic.posPage?.subtotal ?? "Subtotal"}:</span>
             <span>${receiptData.subTotal.toLocaleString()} ₭</span>
           </div>
-          ${
-            receiptData.discount > 0
-              ? `<div class="row" style="color: #c00;">
-                  <span>${dic.posPage?.discount ?? "Discount"}:</span>
-                  <span>-${receiptData.discount.toLocaleString()} ₭</span>
-                </div>`
-              : ""
-          }
+          ${discountHtml}
           <div class="total-row">
             <span>${dic.posPage?.total ?? "TOTAL"}:</span>
             <span>${receiptData.total.toLocaleString()} ₭</span>
@@ -212,7 +239,7 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
 
           <div class="footer">
             <div style="font-weight: bold; font-size: 11px; color: #000; margin-bottom: 2px;">
-              ${dic.posPage?.thankYou ?? "Thank you for your visit!"}
+              ${cashierPrinter.footerText || dic.posPage?.thankYou || "Thank you for your visit!"}
             </div>
             <div>Please keep this receipt for verification</div>
           </div>
@@ -226,7 +253,6 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
       iframe.contentWindow?.focus();
       iframe.contentWindow?.print();
 
-      // Auto-close modal immediately upon triggering print
       closeReceiptModal();
 
       setTimeout(() => {
@@ -246,65 +272,99 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
       try {
         const res = await printReceiptDirect(receiptData);
         if (res.success) {
-          ToastService.success(isLao ? "ພິມໃບເສร็จກົງເຂົ້າເຄື່ອງພິມສຳເລັດ!" : "พิมพ์ใบเสร็จตรงเข้าเครื่องพิมพ์สำเร็จ!");
+          let successText = "พิมพ์ใบเสร็จตรงเข้าเครื่องพิมพ์สำเร็จ!";
+          if (isLao) {
+            successText = "ພິມໃບເສร็จກົງເຂົ້າເຄື່ອງພິມສຳເລັດ!";
+          }
+          ToastService.success(successText);
           closeReceiptModal();
           return;
         } else {
           // Direct print failed: notify and prompt fallback
-          ToastService.warning(
-            isLao
-              ? `ບໍ່ສາມາດເຊື່ອມຕໍ່ ${cashierPrinter.ip}:9100 ໄດ້, ກຳລັງເປີດໜ້າຈໍພິມ Browser...`
-              : `ไม่สามารถเชื่อมต่อ ${cashierPrinter.ip}:9100 ได้ กำลังเปิดหน้าจอพิมพ์ Browser...`
-          );
+          let warningText = `ไม่สามารถเชื่อมต่อ ${cashierPrinter.ip}:${cashierPrinter.port} ได้ กำลังเปิดหน้าจอพิมพ์ Browser...`;
+          if (isLao) {
+            warningText = `ບໍ່ສາມາດເຊື່ອມຕໍ່ ${cashierPrinter.ip}:${cashierPrinter.port} ໄດ້, ກຳລັງເປີດໜ້າຈໍພິມ Browser...`;
+          }
+          ToastService.warning(warningText);
           handleBrowserPrint();
         }
       } catch (err: any) {
-        ToastService.warning(isLao ? "ການເຊື່ອມຕໍ່ຂັດຂ້ອງ ກຳລັງພິມຜ່ານ Browser..." : "การเชื่อมต่อขัดข้อง กำลังพิมพ์ผ่าน Browser...");
+        ToastService.error(err.message || "Print error");
         handleBrowserPrint();
       } finally {
         setIsDirectPrinting(false);
       }
     } else {
+      // Standard Browser Print
       handleBrowserPrint();
     }
   };
 
+  const handleKickDrawer = async () => {
+    setIsKickingDrawer(true);
+    try {
+      const res = await openDrawerDirect();
+      if (res.success) {
+        let msg = isLao ? "ເປີດລີ້ນຊັກສຳເລັດ!" : "เปิดลิ้นชักสำเร็จ!";
+        ToastService.success(msg);
+      } else {
+        let msg = res.error;
+        if (!msg) {
+          msg = isLao ? "ເປີດລີ້ນຊັກບໍ່ສຳເລັດ" : "เปิดลิ้นชักไม่สำเร็จ";
+        }
+        ToastService.error(msg);
+      }
+    } finally {
+      setIsKickingDrawer(false);
+    }
+  };
+
+  // Calculate print button label without nested ternary
+  let printButtonLabel = dic.posPage?.print ?? "Print";
+  if (cashierPrinter.mode === "network") {
+    if (isLao) {
+      printButtonLabel = "ພິມກົງ (ESC/POS)";
+    } else {
+      printButtonLabel = "พิมพ์ตรง (ESC/POS)";
+    }
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden border border-gray-100 dark:border-gray-700 flex flex-col max-h-[92vh]">
         {/* Modal Header */}
-        <div className="px-5 py-3.5 bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+        <div className="px-5 py-3.5 bg-gradient-to-r from-blue-700 to-indigo-800 text-white flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <i className="tabler-receipt text-xl text-[#2F57AB] dark:text-blue-400" />
-            <h3 className="font-bold text-sm text-gray-800 dark:text-gray-100">
+            <i className="tabler-receipt text-lg" />
+            <h3 className="font-bold text-sm">
               {isReceipt
-                ? dic.posPage?.receipt ?? "Receipt"
-                : dic.posPage?.checkBill ?? "Bill / Check Out"}
+                ? dic.posPage?.receipt ?? "Official Receipt"
+                : dic.posPage?.checkBill ?? "Order Bill"}
             </h3>
           </div>
           <button
             onClick={closeReceiptModal}
-            className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 flex items-center justify-center text-xs transition-all"
+            className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-xs transition-all"
           >
             ✕
           </button>
         </div>
 
-        {/* Receipt Preview */}
-        <div className="overflow-y-auto p-4 sm:p-5 flex-1 bg-gray-100/60 dark:bg-gray-900/50">
-          <div
-            id="printable-pos-receipt"
-            className="bg-white text-gray-900 p-5 rounded-xl border border-gray-200 shadow-sm font-mono text-xs space-y-3.5 max-w-[80mm] mx-auto"
-          >
-            {/* Header Brand */}
+        {/* Paper Preview Area (Simulating 80mm thermal roll) */}
+        <div className="p-4 overflow-y-auto bg-gray-100 dark:bg-gray-900/60 flex justify-center">
+          <div className="w-[300px] bg-white text-black p-4 rounded-lg shadow-sm border border-gray-300 font-mono text-xs space-y-3">
+            {/* Receipt Header */}
             <div className="text-center space-y-1">
-              <h2 className="text-base font-black tracking-wider text-gray-900">
-                LAO WORLD RESTAURANT
+              <h2 className="font-black text-sm tracking-wide">
+                {cashierPrinter.shopName || "LAO WORLD RESTAURANT"}
               </h2>
-              <p className="text-[10px] text-gray-500 font-sans">
-                Vientiane, Lao PDR • Tel: (+856) 20 5555 5555
+              <p className="text-[10px] text-gray-500">
+                {cashierPrinter.shopAddress || "Vientiane, Lao PDR"}
               </p>
-              <div className="inline-block px-2.5 py-0.5 rounded border border-gray-800 text-[11px] font-bold uppercase mt-1">
+              <p className="text-[10px] text-gray-500">
+                Tel: {cashierPrinter.shopPhone || "(+856) 20 5555 5555"}
+              </p>
+              <div className="inline-block border border-black font-sans font-bold text-[10px] px-2 py-0.5 rounded mt-1">
                 {isReceipt
                   ? dic.posPage?.receipt ?? "OFFICIAL RECEIPT"
                   : dic.posPage?.checkBill ?? "CHECK BILL"}
@@ -312,41 +372,31 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
             </div>
 
             {/* Meta Info */}
-            <div className="border-t border-dashed border-gray-300 pt-2.5 space-y-1 text-[11px]">
+            <div className="border-t border-dashed border-gray-300 pt-2 space-y-1 text-[11px]">
               <div className="flex justify-between">
-                <span className="text-gray-500">
-                  {dic.posPage?.table ?? "Table"}:
-                </span>
+                <span className="text-gray-500">{dic.posPage?.table ?? "Table"}:</span>
                 <span className="font-bold">
                   {receiptData.tableNumber}
                   {receiptData.zoneName ? ` (${receiptData.zoneName})` : ""}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">
-                  {dic.orderNumber ?? "Order"}:
-                </span>
-                <span className="font-medium">{receiptData.orderNumber}</span>
+                <span className="text-gray-500">{dic.orderNumber ?? "Order"}:</span>
+                <span className="font-semibold">{receiptData.orderNumber}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">
-                  {dic.posPage?.date ?? "Date"}:
-                </span>
+                <span className="text-gray-500">{dic.posPage?.date ?? "Date"}:</span>
                 <span>{receiptData.date}</span>
               </div>
               {receiptData.staffName && (
                 <div className="flex justify-between">
-                  <span className="text-gray-500">
-                    {dic.posPage?.cashier ?? "Cashier"}:
-                  </span>
+                  <span className="text-gray-500">{dic.posPage?.cashier ?? "Cashier"}:</span>
                   <span>{receiptData.staffName}</span>
                 </div>
               )}
               {receiptData.customerName && (
-                <div className="flex justify-between text-[#0A3981] dark:text-blue-400 font-semibold">
-                  <span className="text-gray-500 font-normal">
-                    {dic.customer ?? "Customer"}:
-                  </span>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Customer:</span>
                   <span>
                     {receiptData.customerName}
                     {receiptData.customerPhone ? ` (${receiptData.customerPhone})` : ""}
@@ -425,7 +475,7 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
                 {receiptData.change !== undefined && (
                   <div className="flex justify-between font-bold text-emerald-700">
                     <span>{dic.posPage?.change ?? "Change"}:</span>
-                    <span>${receiptData.change.toLocaleString()} ₭</span>
+                    <span>{receiptData.change.toLocaleString()} ₭</span>
                   </div>
                 )}
               </div>
@@ -434,7 +484,7 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
             {/* Footer Message */}
             <div className="border-t border-dashed border-gray-300 pt-3 text-center space-y-1">
               <p className="font-semibold text-[11px]">
-                {dic.posPage?.thankYou ?? "Thank you for your visit!"}
+                {cashierPrinter.footerText || dic.posPage?.thankYou || "Thank you for your visit!"}
               </p>
               <p className="text-[10px] text-gray-400 font-sans">
                 Please keep this receipt for verification
@@ -456,10 +506,26 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
             <span className="hidden sm:inline">
               {cashierPrinter.mode === "network" ? `ESC/POS: ${cashierPrinter.ip}` : "Browser Print"}
             </span>
-            <span className={`w-1.5 h-1.5 rounded-full ${cashierPrinter.mode === "network" ? "bg-emerald-500" : "bg-blue-500"}`} />
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${
+                cashierPrinter.mode === "network" ? "bg-emerald-500" : "bg-blue-500"
+              }`}
+            />
           </button>
 
           <div className="flex items-center gap-2">
+            {/* Quick Open Cash Drawer Button */}
+            <button
+              type="button"
+              onClick={handleKickDrawer}
+              disabled={isKickingDrawer}
+              className="px-2.5 py-2 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 transition-all flex items-center gap-1"
+              title="Kick open cash drawer"
+            >
+              <i className="tabler-cash text-sm" />
+              <span className="hidden md:inline">Drawer</span>
+            </button>
+
             {/* Fallback to Browser Print if in Network Mode */}
             {cashierPrinter.mode === "network" && (
               <button
@@ -485,20 +551,14 @@ const ReceiptModalComponent: React.FC<{ props: POSListProps }> = ({ props }) => 
               type="button"
               onClick={handlePrint}
               disabled={isDirectPrinting}
-              className="px-5 py-2 bg-[#2F57AB] hover:bg-[#25468a] text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
+              className="px-5 py-2 bg-blue-700 hover:bg-blue-800 text-white text-xs font-bold rounded-lg shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
             >
               {isDirectPrinting ? (
                 <i className="tabler-loader animate-spin text-base" />
               ) : (
                 <i className="tabler-printer text-base" />
               )}
-              <span>
-                {cashierPrinter.mode === "network"
-                  ? isLao
-                    ? "ພິມກົງ (ESC/POS)"
-                    : "พิมพ์ตรง (ESC/POS)"
-                  : dic.posPage?.print ?? "Print"}
-              </span>
+              <span>{printButtonLabel}</span>
             </button>
           </div>
         </div>
