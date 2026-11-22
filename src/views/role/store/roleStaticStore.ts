@@ -51,6 +51,18 @@ const restaurant_section = [
     __typename: "RoleMenu",
   },
   {
+    href: "/inventory",
+    icon: "tabler-packages",
+    exactMatch: false,
+    laMenu: "ສາງສິນຄ້າ & ວັດຖຸດິບ (Inventory)",
+    enMenu: "Inventory & Stock",
+    laSection: "ຈັດການຮ້ານອາຫານ",
+    enSection: "Restaurant Management",
+    permission: ["c", "r", "u", "d"],
+    feature: "inventory",
+    __typename: "RoleMenu",
+  },
+  {
     href: "/table",
     icon: "tabler-armchair",
     exactMatch: false,
