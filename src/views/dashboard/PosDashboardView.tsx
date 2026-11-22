@@ -438,7 +438,7 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
 
   const getDonutChartTitle = (): string => {
     if (lang === "la") {
-      return "ສະັດສ່ວນສະຖານະອໍເດີ";
+      return "ສັດສ່ວນສະຖານະອໍເດີ";
     }
     return "สัดส่วนสถานะออเดอร์";
   };
@@ -452,9 +452,9 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
 
   const getTopDishesTitle = (): string => {
     if (lang === "la") {
-      return "🔥 5 ອັນດັບເມນູຂາຍດີທີ່ສຸດ";
+      return "5 ອັນດັບເມນູຂາຍດີທີ່ສຸດ";
     }
-    return "🔥 5 อันดับเมนูขายดีที่สุด";
+    return "5 อันดับเมนูขายดีที่สุด";
   };
 
   const getTopDishesSubheader = (): string => {
@@ -473,9 +473,9 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
 
   const getZoneStatsTitle = (): string => {
     if (lang === "la") {
-      return "🗺️ ສະຖານະໂຕະແຍກຕາມໂຊນ";
+      return "ສະຖານະໂຕະແຍກຕາມໂຊນ";
     }
-    return "🗺️ สถานะโต๊ะแยกตามโซน";
+    return "สถานะโต๊ะแยกตามโซน";
   };
 
   const getZoneStatsSubheader = (): string => {
@@ -494,9 +494,9 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
 
   const getRecentOrdersTitle = (): string => {
     if (lang === "la") {
-      return "📋 ລາຍການອໍເດີຫຼ້າສຸດ";
+      return "ລາຍການອໍເດີຫຼ້າສຸດ";
     }
-    return "📋 รายการออเดอร์ล่าสุด";
+    return "รายการออเดอร์ล่าสุด";
   };
 
   const getRecentOrdersSubheader = (): string => {
@@ -576,30 +576,35 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
     return "โต๊ะ";
   };
 
-  const getRankMedal = (rank: number): string => {
+  const renderRankBadge = (rank: number) => {
     if (rank === 1) {
-      return "🥇";
+      return (
+        <CustomAvatar size={34} variant="rounded" skin="light" color="warning">
+          <i className="tabler-trophy text-[18px]" />
+        </CustomAvatar>
+      );
     }
     if (rank === 2) {
-      return "🥈";
+      return (
+        <CustomAvatar size={34} variant="rounded" skin="light" color="info">
+          <i className="tabler-medal text-[18px]" />
+        </CustomAvatar>
+      );
     }
     if (rank === 3) {
-      return "🥉";
+      return (
+        <CustomAvatar size={34} variant="rounded" skin="light" color="secondary">
+          <i className="tabler-award text-[18px]" />
+        </CustomAvatar>
+      );
     }
-    return `#${rank}`;
-  };
-
-  const getRankColor = (rank: number): "primary" | "warning" | "info" | "secondary" => {
-    if (rank === 1) {
-      return "primary";
-    }
-    if (rank === 2) {
-      return "warning";
-    }
-    if (rank === 3) {
-      return "info";
-    }
-    return "secondary";
+    return (
+      <CustomAvatar size={34} variant="rounded" skin="light" color="primary">
+        <Typography variant="body2" className="font-bold">
+          #{rank}
+        </Typography>
+      </CustomAvatar>
+    );
   };
 
   const getZoneChipColor = (rate: number): "success" | "warning" | "error" => {
@@ -660,6 +665,28 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
       return "ยกเลิก";
     }
     return status;
+  };
+
+  const getStatusIcon = (status: string): string => {
+    if (status === IPosOrderStatus.paid || status === IPosOrderStatus.completed) {
+      return "tabler-check text-xs";
+    }
+    if (status === IPosOrderStatus.served) {
+      return "tabler-tools-kitchen-2 text-xs";
+    }
+    if (status === IPosOrderStatus.preparing || status === IPosOrderStatus.cooking) {
+      return "tabler-flame text-xs";
+    }
+    if (status === IPosOrderStatus.confirmed) {
+      return "tabler-clock text-xs";
+    }
+    if (status === IPosOrderStatus.pending) {
+      return "tabler-hourglass-empty text-xs";
+    }
+    if (status === IPosOrderStatus.cancelled) {
+      return "tabler-x text-xs";
+    }
+    return "tabler-point text-xs";
   };
 
   const getStatusChipColor = (
@@ -923,8 +950,8 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
                 </Typography>
               </Breadcrumbs>
               <div className="flex items-center gap-3">
-                <CustomAvatar skin="light" variant="rounded" color="primary" size={44}>
-                  <i className="tabler-chart-pie text-[24px]" />
+                <CustomAvatar skin="light" variant="rounded" color="primary" size={46}>
+                  <i className="tabler-device-analytics text-[26px]" />
                 </CustomAvatar>
                 <div>
                   <div className="flex items-center gap-2">
@@ -936,6 +963,7 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
                       size="small"
                       variant="tonal"
                       color="primary"
+                      icon={<i className="tabler-broadcast text-xs" />}
                       label={getLiveChipLabel()}
                     />
                   </div>
@@ -963,7 +991,7 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
                 <Button
                   variant="contained"
                   color="primary"
-                  startIcon={<i className="tabler-device-laptop" />}
+                  startIcon={<i className="tabler-cash-register" />}
                 >
                   {getPosButtonLabel()}
                 </Button>
@@ -978,7 +1006,7 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
         <HorizontalWithSubtitle
           title={getRevenueTitle()}
           stats={formatPrice(kpiStats.revenue)}
-          avatarIcon="tabler-currency-dollar"
+          avatarIcon="tabler-wallet"
           avatarColor="success"
           trend="positive"
           trendNumber={`${kpiStats.completedCount}`}
@@ -990,7 +1018,7 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
         <HorizontalWithSubtitle
           title={getOrdersTitle()}
           stats={`${kpiStats.totalOrders}`}
-          avatarIcon="tabler-shopping-bag"
+          avatarIcon="tabler-shopping-cart"
           avatarColor="primary"
           trend="positive"
           trendNumber={`${kpiStats.activeCount}`}
@@ -1014,7 +1042,7 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
         <HorizontalWithSubtitle
           title={getAvgBillTitle()}
           stats={formatPrice(kpiStats.avgBill)}
-          avatarIcon="tabler-chart-arrows-vertical"
+          avatarIcon="tabler-receipt-2"
           avatarColor="info"
           trend="positive"
           trendNumber="AOV"
@@ -1038,6 +1066,11 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
       <Grid item xs={12} lg={8}>
         <Card sx={{ height: "100%" }}>
           <CardHeader
+            avatar={
+              <CustomAvatar skin="light" variant="rounded" color="primary" size={36}>
+                <i className="tabler-chart-line text-[20px]" />
+              </CustomAvatar>
+            }
             title={getSalesChartTitle()}
             subheader={getSalesChartSubheader()}
             action={
@@ -1047,6 +1080,7 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
                 color="primary"
                 size="small"
                 variant="tonal"
+                icon={<i className="tabler-broadcast text-xs" />}
               />
             }
           />
@@ -1064,6 +1098,11 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
       <Grid item xs={12} lg={4}>
         <Card sx={{ height: "100%" }}>
           <CardHeader
+            avatar={
+              <CustomAvatar skin="light" variant="rounded" color="warning" size={36}>
+                <i className="tabler-chart-pie-2 text-[20px]" />
+              </CustomAvatar>
+            }
             title={getDonutChartTitle()}
             subheader={getDonutChartSubheader()}
             action={<OptionMenu options={["Today", "This Week", "This Month"]} />}
@@ -1083,6 +1122,11 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
       <Grid item xs={12} md={6}>
         <Card sx={{ height: "100%" }}>
           <CardHeader
+            avatar={
+              <CustomAvatar skin="light" variant="rounded" color="error" size={36}>
+                <i className="tabler-flame text-[20px]" />
+              </CustomAvatar>
+            }
             title={getTopDishesTitle()}
             subheader={getTopDishesSubheader()}
             action={<OptionMenu options={["Top 5", "Top 10"]} />}
@@ -1094,35 +1138,31 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
               </div>
             ) : (
               topDishes.map((dish) => {
-                const medal = getRankMedal(dish.rank);
-                const rankColor = getRankColor(dish.rank);
-
                 return (
                   <div key={dish.name} className="flex flex-col gap-1.5">
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2.5">
-                        <CustomAvatar
-                          size={34}
-                          variant="rounded"
-                          skin="light"
-                          color={rankColor}
-                          className="text-sm font-bold"
-                        >
-                          {medal}
-                        </CustomAvatar>
-                        <Typography className="font-medium" color="text.primary">
-                          {dish.name}
-                        </Typography>
+                        {renderRankBadge(dish.rank)}
+                        <div className="flex items-center gap-1.5">
+                          <i className="tabler-soup text-xs text-textSecondary" />
+                          <Typography className="font-medium" color="text.primary">
+                            {dish.name}
+                          </Typography>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Typography variant="body2" color="text.secondary">
-                          {dish.quantity} {getDishUnitLabel()}
-                        </Typography>
+                        <div className="flex items-center gap-1 text-textSecondary">
+                          <i className="tabler-tools-kitchen-2 text-xs" />
+                          <Typography variant="body2" color="text.secondary">
+                            {dish.quantity} {getDishUnitLabel()}
+                          </Typography>
+                        </div>
                         <CustomChip
                           round="true"
                           size="small"
                           variant="tonal"
                           color="success"
+                          icon={<i className="tabler-coins text-xs" />}
                           label={formatPrice(dish.revenue)}
                         />
                       </div>
@@ -1154,6 +1194,11 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
       <Grid item xs={12} md={6}>
         <Card sx={{ height: "100%" }}>
           <CardHeader
+            avatar={
+              <CustomAvatar skin="light" variant="rounded" color="info" size={36}>
+                <i className="tabler-table text-[20px]" />
+              </CustomAvatar>
+            }
             title={getZoneStatsTitle()}
             subheader={getZoneStatsSubheader()}
             action={<OptionMenu options={["All Zones"]} />}
@@ -1184,9 +1229,12 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
                         </Typography>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Typography variant="body2" color="text.secondary">
-                          {z.occupied} / {z.total} {getTableUnitLabel()}
-                        </Typography>
+                        <div className="flex items-center gap-1 text-textSecondary">
+                          <i className="tabler-armchair text-xs" />
+                          <Typography variant="body2" color="text.secondary">
+                            {z.occupied} / {z.total} {getTableUnitLabel()}
+                          </Typography>
+                        </div>
                         <CustomChip
                           round="true"
                           size="small"
@@ -1221,6 +1269,11 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
       <Grid item xs={12}>
         <Card>
           <CardHeader
+            avatar={
+              <CustomAvatar skin="light" variant="rounded" color="primary" size={36}>
+                <i className="tabler-receipt-2 text-[20px]" />
+              </CustomAvatar>
+            }
             title={getRecentOrdersTitle()}
             subheader={getRecentOrdersSubheader()}
             action={
@@ -1229,6 +1282,7 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
                   size="small"
                   variant="tonal"
                   color="primary"
+                  startIcon={<i className="tabler-cash-register" />}
                   endIcon={<i className="tabler-arrow-right" />}
                 >
                   {getRecentOrdersActionLabel()}
@@ -1241,12 +1295,42 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>{getOrderHeader()}</th>
-                  <th>{getTableHeader()}</th>
-                  <th>{getItemsHeader()}</th>
-                  <th>{getTotalHeader()}</th>
-                  <th>{getStatusHeader()}</th>
-                  <th>{getTimeHeader()}</th>
+                  <th>
+                    <div className="flex items-center gap-1">
+                      <i className="tabler-hash text-xs" />
+                      <span>{getOrderHeader()}</span>
+                    </div>
+                  </th>
+                  <th>
+                    <div className="flex items-center gap-1">
+                      <i className="tabler-armchair text-xs" />
+                      <span>{getTableHeader()}</span>
+                    </div>
+                  </th>
+                  <th>
+                    <div className="flex items-center gap-1">
+                      <i className="tabler-soup text-xs" />
+                      <span>{getItemsHeader()}</span>
+                    </div>
+                  </th>
+                  <th>
+                    <div className="flex items-center gap-1">
+                      <i className="tabler-coins text-xs" />
+                      <span>{getTotalHeader()}</span>
+                    </div>
+                  </th>
+                  <th>
+                    <div className="flex items-center gap-1">
+                      <i className="tabler-flag text-xs" />
+                      <span>{getStatusHeader()}</span>
+                    </div>
+                  </th>
+                  <th>
+                    <div className="flex items-center gap-1">
+                      <i className="tabler-clock text-xs" />
+                      <span>{getTimeHeader()}</span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -1291,9 +1375,12 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
                         </td>
                         <td>
                           <div className="flex flex-col">
-                            <Typography variant="body2" className="font-medium" color="text.primary">
-                              {firstItem}
-                            </Typography>
+                            <div className="flex items-center gap-1.5">
+                              <i className="tabler-soup text-sm text-textSecondary" />
+                              <Typography variant="body2" className="font-medium" color="text.primary">
+                                {firstItem}
+                              </Typography>
+                            </div>
                             {otherCount > 0 && (
                               <Typography variant="caption" color="text.secondary">
                                 {otherItemsText}
@@ -1302,7 +1389,7 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
                           </div>
                         </td>
                         <td>
-                          <Typography variant="body2" className="font-bold" color="text.primary">
+                          <Typography variant="body2" className="font-bold text-success">
                             {formatPrice(order.total)}
                           </Typography>
                         </td>
@@ -1312,13 +1399,17 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
                             size="small"
                             variant="tonal"
                             color={getStatusChipColor(order.status)}
+                            icon={<i className={getStatusIcon(order.status)} />}
                             label={getStatusLabel(order.status)}
                           />
                         </td>
                         <td>
-                          <Typography variant="caption" color="text.secondary">
-                            {formatTimeAgo(order.createdAt)}
-                          </Typography>
+                          <div className="flex items-center gap-1 text-textSecondary">
+                            <i className="tabler-clock text-xs" />
+                            <Typography variant="caption" color="text.secondary">
+                              {formatTimeAgo(order.createdAt)}
+                            </Typography>
+                          </div>
                         </td>
                       </tr>
                     );
