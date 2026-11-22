@@ -6,6 +6,7 @@ import { usePOSStore } from "../../store/posStore";
 import { POSListProps, IEntityStatus } from "../../type/posType";
 import { resolveImageUrl } from "@/utils/imageUrl";
 import { PosOptionModal } from "./posOptionModal.component";
+import { ToastService } from "@/utils/toastService";
 
 interface MenuItemImageProps {
   photo?: string | null;
@@ -278,16 +279,26 @@ const MenuComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
             {filteredItems.map((item) => {
               const qtyInCart = getItemCartQty(item._id);
               const price = Number(item.price) || 0;
+              const isOutOfStock = item.isAvailable === false;
+
+              let cardBorderClass = "border-gray-200 dark:border-gray-700 hover:border-[#2F57AB] dark:hover:border-blue-500";
+              if (isOutOfStock) {
+                cardBorderClass = "opacity-60 border-rose-200 dark:border-rose-900/40";
+              } else if (qtyInCart > 0) {
+                cardBorderClass = "border-[#2F57AB] ring-1 ring-[#2F57AB]/40 shadow-sm";
+              }
 
               return (
                 <div
                   key={item._id}
-                  onClick={() => addToCart(item)}
-                  className={`group relative bg-white dark:bg-gray-800 rounded-xl border overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between select-none active:scale-[0.98] ${
-                    qtyInCart > 0
-                      ? "border-[#2F57AB] ring-1 ring-[#2F57AB]/40 shadow-sm"
-                      : "border-gray-200 dark:border-gray-700 hover:border-[#2F57AB] dark:hover:border-blue-500"
-                  }`}
+                  onClick={() => {
+                    if (isOutOfStock) {
+                      ToastService.warning(lang === "la" ? "ລາຍການນີ້ໝົດແລ້ວ (Out of stock)" : "เมนูนี้สินค้าหมดแล้ว");
+                      return;
+                    }
+                    addToCart(item);
+                  }}
+                  className={`group relative bg-white dark:bg-gray-800 rounded-xl border overflow-hidden shadow-sm hover:shadow-md transition-all cursor-pointer flex flex-col justify-between select-none active:scale-[0.98] ${cardBorderClass}`}
                 >
                   {/* Item Image or Fallback */}
                   <div className="relative w-full h-28 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center overflow-hidden">
@@ -297,8 +308,17 @@ const MenuComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
                       noImageLabel={dic.posPage?.noImage ?? "No Image"}
                     />
 
+                    {/* Out of Stock Overlay */}
+                    {isOutOfStock && (
+                      <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center z-10">
+                        <span className="bg-rose-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full shadow-md tracking-wider">
+                          {lang === "la" ? "ໝົດແລ້ວ" : "สินค้าหมด"}
+                        </span>
+                      </div>
+                    )}
+
                     {/* Quantity Badge if in cart */}
-                    {qtyInCart > 0 && (
+                    {!isOutOfStock && qtyInCart > 0 && (
                       <span className="absolute top-2 right-2 bg-[#2F57AB] text-white text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center shadow-md animate-bounce">
                         {qtyInCart}
                       </span>
@@ -382,16 +402,26 @@ const MenuComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
               const qtyInCart = getItemCartQty(item._id);
               const price = Number(item.price) || 0;
               const categoryName = getCategoryName(item.categoryId);
+              const isOutOfStock = item.isAvailable === false;
+
+              let listBorderClass = "border-gray-200 dark:border-gray-700 hover:border-[#2F57AB] dark:hover:border-blue-500";
+              if (isOutOfStock) {
+                listBorderClass = "opacity-60 border-rose-200 dark:border-rose-900/40";
+              } else if (qtyInCart > 0) {
+                listBorderClass = "border-[#2F57AB] bg-blue-50/20 dark:bg-blue-950/20 ring-1 ring-[#2F57AB]/30";
+              }
 
               return (
                 <div
                   key={item._id}
-                  onClick={() => addToCart(item)}
-                  className={`group bg-white dark:bg-gray-800 rounded-xl border p-2.5 sm:p-3 flex items-center justify-between gap-3 shadow-xs hover:shadow-md transition-all cursor-pointer select-none active:scale-[0.99] ${
-                    qtyInCart > 0
-                      ? "border-[#2F57AB] bg-blue-50/20 dark:bg-blue-950/20 ring-1 ring-[#2F57AB]/30"
-                      : "border-gray-200 dark:border-gray-700 hover:border-[#2F57AB] dark:hover:border-blue-500"
-                  }`}
+                  onClick={() => {
+                    if (isOutOfStock) {
+                      ToastService.warning(lang === "la" ? "ລາຍການນີ້ໝົດແລ້ວ (Out of stock)" : "เมนูนี้สินค้าหมดแล้ว");
+                      return;
+                    }
+                    addToCart(item);
+                  }}
+                  className={`group bg-white dark:bg-gray-800 rounded-xl border p-2.5 sm:p-3 flex items-center justify-between gap-3 shadow-xs hover:shadow-md transition-all cursor-pointer select-none active:scale-[0.99] ${listBorderClass}`}
                 >
                   {/* Left: Thumbnail & Details */}
                   <div className="flex items-center gap-3 min-w-0">
@@ -401,6 +431,13 @@ const MenuComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
                         name={item.name}
                         noImageLabel={dic.posPage?.noImage ?? "No Image"}
                       />
+                      {isOutOfStock && (
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center z-10">
+                          <span className="bg-rose-600 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full tracking-wider">
+                            {lang === "la" ? "ໝົດ" : "หมด"}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="min-w-0">

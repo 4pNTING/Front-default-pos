@@ -789,6 +789,10 @@
     "deleteQuestion": "Do you want to delete table \"{name}\"?",
     "deleteConfirm": "Delete"
   },
+  "inventory": "Inventory & Stock",
+  "inventoryPage": {
+    "title": "Inventory"
+  },
   "posPage": {
     "title": "POS Ordering",
     "floorPlan": "Floor Plan",

@@ -4,6 +4,8 @@ import TableComponent from "./components/table.component";
 import CreateComponent from "./components/formCreate.component";
 import UpdateComponent from "./components/formUpdate.component";
 import MenuOptionModalComponent from "./components/menuOptionModal.component";
+import RecipeModalComponent from "./components/recipeModal.component";
+import { MenuItemType } from "../type/menuItemType";
 import { useEffect, useCallback, useRef, useState } from "react";
 import { useMenuItemStore } from "../store/menuItemStore";
 import { LOAD_MENU_ITEM, LOAD_CATEGORY } from "@/gql/queries";
@@ -21,6 +23,7 @@ export const MenuItemList = ({ props }: { props: MenuItemListProps }) => {
   } = useMenuItemStore();
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [searchValue, setSearchValue] = useState("");
+  const [recipeModalItem, setRecipeModalItem] = useState<MenuItemType | null>(null);
 
   const [loadMenuItemCall] = useLazyQuery(LOAD_MENU_ITEM, {
     fetchPolicy: "network-only",
@@ -110,10 +113,20 @@ export const MenuItemList = ({ props }: { props: MenuItemListProps }) => {
         onCategoryChange={handleCategoryChange}
         onStatusChange={handleStatusChange}
       />
-      <TableComponent props={props} onRefresh={refreshList} />
+      <TableComponent
+        props={props}
+        onRefresh={refreshList}
+        onRecipeClick={(item) => setRecipeModalItem(item)}
+      />
       <CreateComponent props={props} onSuccess={refreshList} />
       <UpdateComponent props={props} onSuccess={refreshList} />
       <MenuOptionModalComponent props={props} />
+      <RecipeModalComponent
+        open={Boolean(recipeModalItem)}
+        onClose={() => setRecipeModalItem(null)}
+        menuItem={recipeModalItem}
+        lang={props.lang}
+      />
     </div>
   );
 };

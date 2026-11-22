@@ -10,3 +10,4 @@ export * from './menuItem';
 export * from './table';
 export * from './order';
 export * from './menuOption';
+export * from './inventory';

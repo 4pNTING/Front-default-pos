@@ -796,6 +796,10 @@
     "deleteQuestion": "ທ່ານຕ້ອງການລຶບໂຕະ \"{name}\" ຫຼື ບໍ່?",
     "deleteConfirm": "ລຶບ"
   },
+  "inventory": "ສາງສິນຄ້າ & ວັດຖຸດິບ",
+  "inventoryPage": {
+    "title": "ຈັດການສາງສິນຄ້າ"
+  },
   "posPage": {
     "title": "ໜ້າຂາຍ POS",
     "floorPlan": "ຜັງໂຕະ",

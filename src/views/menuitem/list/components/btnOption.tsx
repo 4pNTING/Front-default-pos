@@ -11,6 +11,7 @@ interface ButtonOptionProps {
   props: MenuItemListProps;
   currentToView: MenuItemType;
   onEditClick?: (item: MenuItemType) => void;
+  onRecipeClick?: (item: MenuItemType) => void;
   onRefresh?: () => Promise<void>;
 }
 
@@ -18,6 +19,7 @@ export function ButtonOption({
   props,
   currentToView,
   onEditClick,
+  onRecipeClick,
   onRefresh,
 }: ButtonOptionProps) {
   const { lang, dictionary: dic } = props;
@@ -110,6 +112,20 @@ export function ButtonOption({
               className="text-gray-600 hover:bg-gray-50"
             >
               <i className="tabler-adjustments-alt text-[18px] text-blue-600"></i>
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title={lang === "la" ? "ສູດອາຫານ & ວັດຖຸດິບ (Recipe)" : "สูตรอาหาร & วัตถุดิบ (Recipe BOM)"}>
+            <IconButton
+              onClick={() => {
+                if (onRecipeClick) {
+                  onRecipeClick(currentToView);
+                }
+              }}
+              size="small"
+              className="text-gray-600 hover:bg-gray-50"
+            >
+              <i className="tabler-chef-hat text-[18px] text-emerald-600"></i>
             </IconButton>
           </Tooltip>
 

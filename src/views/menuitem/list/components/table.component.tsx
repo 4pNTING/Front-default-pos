@@ -25,10 +25,12 @@ const TableComponent = ({
   props,
   onRefresh,
   onEditClick,
+  onRecipeClick,
 }: {
   props: MenuItemListProps;
   onRefresh: () => Promise<void>;
   onEditClick?: (item: MenuItemType) => void;
+  onRecipeClick?: (item: MenuItemType) => void;
 }) => {
   const { dictionary: dic } = props;
   const labels = dic.menuItemPage;
@@ -217,6 +219,7 @@ const TableComponent = ({
               props={props}
               currentToView={row.original}
               onEditClick={onEditClick}
+              onRecipeClick={onRecipeClick}
               onRefresh={onRefresh}
             />
           </div>
@@ -224,7 +227,7 @@ const TableComponent = ({
         enableSorting: false,
       }),
     ],
-    [labels, dic, pageIndex, pageSize, categoryList, onRefresh, onEditClick, props],
+    [labels, dic, pageIndex, pageSize, categoryList, onRefresh, onEditClick, onRecipeClick, props],
   );
 
   const table = useReactTable({

@@ -31,6 +31,11 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         href: '/category'
       },
       {
+        label: (dictionary as any).inventory ?? "Inventory & Stock",
+        icon: 'tabler-packages',
+        href: '/inventory'
+      },
+      {
         label: dictionary.tablePage?.title,
         icon: 'tabler-armchair',
         href: '/table'

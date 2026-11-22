@@ -14,6 +14,7 @@ export const LOAD_MENU_ITEM = gql`
         price
         categoryId
         isActive
+        isAvailable
         createdAt
         updatedAt
       }
@@ -34,6 +35,7 @@ export const LOAD_MENU_ITEM_BY_ID = gql`
         price
         categoryId
         isActive
+        isAvailable
         createdAt
         updatedAt
       }
@@ -54,6 +56,7 @@ export const CREATE_MENU_ITEM = gql`
         price
         categoryId
         isActive
+        isAvailable
         createdAt
         updatedAt
       }
@@ -74,6 +77,7 @@ export const UPDATE_MENU_ITEM = gql`
         price
         categoryId
         isActive
+        isAvailable
         createdAt
         updatedAt
       }
