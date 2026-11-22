@@ -11,20 +11,19 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardHeader from "@mui/material/CardHeader";
 import Typography from "@mui/material/Typography";
-import Chip from "@mui/material/Chip";
 import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import LinearProgress from "@mui/material/LinearProgress";
 import CircularProgress from "@mui/material/CircularProgress";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import Box from "@mui/material/Box";
+import Breadcrumbs from "@mui/material/Breadcrumbs";
 import { useTheme } from "@mui/material/styles";
+
+// Vuexy Components & Style Imports
+import HorizontalWithSubtitle from "@/components/card-statistics/HorizontalWithSubtitle";
+import CustomAvatar from "@core/components/mui/Avatar";
+import CustomChip from "@core/components/mui/Chip";
+import OptionMenu from "@core/components/option-menu";
+import tableStyles from "@core/styles/table.module.css";
 
 // GraphQL Queries
 import { LOAD_ORDER } from "@/gql/queries/order";
@@ -294,10 +293,9 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
     let countSeries: number[] = [];
 
     if (categories.length > 0) {
-      salesSeries = categories.map((cat) => Math.round(dateMap[cat].sales / 1000)); // In Thousands K
+      salesSeries = categories.map((cat) => Math.round(dateMap[cat].sales / 1000));
       countSeries = categories.map((cat) => dateMap[cat].count);
     } else {
-      // Default sample if newly created today
       categories.push("Today");
       salesSeries.push(Math.round(kpiStats.revenue / 1000));
       countSeries.push(kpiStats.completedCount);
@@ -310,181 +308,363 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
     };
   }, [orders, kpiStats.revenue, kpiStats.completedCount]);
 
-  // Sales Area Chart Options
-  const salesChartOptions: ApexOptions = {
-    chart: {
-      type: "area",
-      parentHeightOffset: 0,
-      toolbar: { show: false },
-      zoom: { enabled: false },
-    },
-    dataLabels: { enabled: false },
-    stroke: { curve: "smooth", width: [3, 2] },
-    colors: ["#2F57AB", "#10B981"],
-    fill: {
-      type: "gradient",
-      gradient: {
-        shadeIntensity: 0.8,
-        opacityFrom: 0.5,
-        opacityTo: 0.05,
-        stops: [0, 90, 100],
-      },
-    },
-    xaxis: {
-      categories: salesChartData.categories,
-      labels: {
-        style: {
-          colors: "var(--mui-palette-text-secondary)",
-          fontSize: "12px",
-        },
-      },
-      axisBorder: { show: false },
-      axisTicks: { show: false },
-    },
-    yaxis: [
-      {
-        title: {
-          text: lang === "la" ? "ຍອດຂາຍ (ພັນກີບ / k LAK)" : "Sales (k LAK)",
-          style: { color: "#2F57AB", fontSize: "11px", fontWeight: 500 },
-        },
-        labels: {
-          formatter: (val: number) => `${val.toLocaleString()}k`,
-          style: { colors: "var(--mui-palette-text-secondary)", fontSize: "11px" },
-        },
-      },
-      {
-        opposite: true,
-        title: {
-          text: lang === "la" ? "ຈຳນວນບິນ (Orders)" : "Orders Count",
-          style: { color: "#10B981", fontSize: "11px", fontWeight: 500 },
-        },
-        labels: {
-          formatter: (val: number) => `${Math.round(val)}`,
-          style: { colors: "var(--mui-palette-text-secondary)", fontSize: "11px" },
-        },
-      },
-    ],
-    tooltip: {
-      theme: theme.palette.mode === "dark" ? "dark" : "light",
-      shared: true,
-      intersect: false,
-      y: {
-        formatter: (val: number, { seriesIndex }) => {
-          if (seriesIndex === 0) {
-            return `${(val * 1000).toLocaleString()} ₭`;
-          }
-          return `${val} ${lang === "la" ? "ບິນ" : "orders"}`;
-        },
-      },
-    },
-    legend: {
-      position: "top",
-      horizontalAlign: "right",
-      labels: { colors: "var(--mui-palette-text-primary)" },
-    },
-    grid: {
-      borderColor: "var(--mui-palette-divider)",
-      strokeDashArray: 4,
-    },
+  // Helpers with strict NO nested ternary operators
+  const getDashboardTitle = (): string => {
+    if (lang === "la") {
+      return "ພາບລວມລະບົບຮ້ານອາຫານ & ຍອດຂາຍ";
+    }
+    return "ภาพรวมระบบร้านอาหาร & ยอดขาย";
   };
 
-  const salesChartSeries = [
-    {
-      name: lang === "la" ? "ຍອດຂາຍ (LAK)" : "Revenue (LAK)",
-      data: salesChartData.salesSeries,
-    },
-    {
-      name: lang === "la" ? "ຈຳນວນບິນ (Orders)" : "Orders Count",
-      data: salesChartData.countSeries,
-    },
-  ];
-
-  // Order Status Donut Options
-  const donutOptions: ApexOptions = {
-    chart: {
-      type: "donut",
-      parentHeightOffset: 0,
-    },
-    labels: [
-      lang === "la" ? "ສຳເລັດແລ້ວ (Completed)" : "Completed",
-      lang === "la" ? "ກຳລັງດຳເນີນການ (Active)" : "Active / Cooking",
-      lang === "la" ? "ຍົກເລີກ (Cancelled)" : "Cancelled",
-    ],
-    colors: ["#10B981", "#F59E0B", "#EF4444"],
-    dataLabels: { enabled: false },
-    legend: {
-      position: "bottom",
-      labels: { colors: "var(--mui-palette-text-primary)" },
-    },
-    stroke: { width: 0 },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: "70%",
-          labels: {
-            show: true,
-            total: {
-              show: true,
-              label: lang === "la" ? "ອໍເດີທັງໝົດ" : "Total Orders",
-              formatter: () => `${kpiStats.totalOrders}`,
-              color: "var(--mui-palette-text-primary)",
-            },
-          },
-        },
-      },
-    },
+  const getDashboardSubtitle = (): string => {
+    const timeStr = lastRefreshedAt.toLocaleTimeString();
+    if (lang === "la") {
+      return `ຂໍ້ມູນຈິງຈາກລະບົບ POS • ອັບເດດລ່າສຸດ: ${timeStr}`;
+    }
+    return `ข้อมูลสดจากระบบ POS • อัปเดตล่าสุด: ${timeStr}`;
   };
 
-  const donutSeries = [
-    kpiStats.completedCount,
-    kpiStats.activeCount,
-    kpiStats.cancelledCount,
-  ];
+  const getLiveChipLabel = (): string => {
+    if (lang === "la") {
+      return "ຂໍ້ມູນ Real-time";
+    }
+    return "ข้อมูล Real-time";
+  };
 
-  // Helper formatting functions (Using if/else, NO nested ternaries)
+  const getRefreshTooltip = (): string => {
+    if (lang === "la") {
+      return "ຣີເຟຣຊຂໍ້ມູນໃໝ່";
+    }
+    return "รีเฟรชข้อมูล";
+  };
+
+  const getRefreshButtonLabel = (): string => {
+    if (lang === "la") {
+      return "ຣີເຟຣຊ";
+    }
+    return "รีเฟรช";
+  };
+
+  const getPosButtonLabel = (): string => {
+    if (lang === "la") {
+      return "ເປີດລະບົບຂາຍ (POS)";
+    }
+    return "เปิดระบบขาย (POS)";
+  };
+
+  const getRevenueTitle = (): string => {
+    if (lang === "la") {
+      return "ຍອດຂາຍລວມ";
+    }
+    return "ยอดขายรวม";
+  };
+
+  const getRevenueSubtitle = (): string => {
+    if (lang === "la") {
+      return `${kpiStats.completedCount} ບິນທີ່ຊຳລະແລ້ວ`;
+    }
+    return `${kpiStats.completedCount} บิลที่ชำระแล้ว`;
+  };
+
+  const getOrdersTitle = (): string => {
+    if (lang === "la") {
+      return "ອໍເດີທັງໝົດ";
+    }
+    return "ออเดอร์ทั้งหมด";
+  };
+
+  const getOrdersSubtitle = (): string => {
+    if (lang === "la") {
+      return `ກຳລັງດຳເນີນ: ${kpiStats.activeCount}`;
+    }
+    return `กำลังดำเนินการ: ${kpiStats.activeCount}`;
+  };
+
+  const getOccupancyTitle = (): string => {
+    if (lang === "la") {
+      return "ອັດຕາຄອງໂຕະ";
+    }
+    return "อัตราครองโต๊ะ";
+  };
+
+  const getOccupancySubtitle = (): string => {
+    if (lang === "la") {
+      return `ມີແຂກ: ${kpiStats.occupiedTables}/${kpiStats.totalTables} ໂຕະ`;
+    }
+    return `มีลูกค้า: ${kpiStats.occupiedTables}/${kpiStats.totalTables} โต๊ะ`;
+  };
+
+  const getAvgBillTitle = (): string => {
+    if (lang === "la") {
+      return "ຍອດສະເລ່ຍຕໍ່ບິນ";
+    }
+    return "เฉลี่ยต่อบิล";
+  };
+
+  const getAvgBillSubtitle = (): string => {
+    if (lang === "la") {
+      return "ຕໍ່ບິນທີ່ເຊັກແລ້ວ";
+    }
+    return "ต่อบิลที่ปิดยอด";
+  };
+
+  const getCustomersTitle = (): string => {
+    if (lang === "la") {
+      return "ສະມາຊິກໃນລະບົບ";
+    }
+    return "สมาชิกลูกค้า";
+  };
+
+  const getCustomersSubtitle = (): string => {
+    if (lang === "la") {
+      return `${kpiStats.totalMenuItems} ລາຍການເມນູ`;
+    }
+    return `${kpiStats.totalMenuItems} เมนูทั้งหมด`;
+  };
+
+  const getSalesChartTitle = (): string => {
+    if (lang === "la") {
+      return "ແນວໂນ້ມຍອດຂາຍ & ຈຳນວນບິນ";
+    }
+    return "แนวโน้มยอดขาย & จำนวนบิล";
+  };
+
+  const getSalesChartSubheader = (): string => {
+    if (lang === "la") {
+      return "ສະຫຼຸບຍອດຂາຍລາຍວັນຈາກບິນຊຳລະເງິນຕົວຈິງ";
+    }
+    return "สรุปยอดขายรายวันจากบิลชำระเงินจริง";
+  };
+
+  const getDonutChartTitle = (): string => {
+    if (lang === "la") {
+      return "ສະັດສ່ວນສະຖານະອໍເດີ";
+    }
+    return "สัดส่วนสถานะออเดอร์";
+  };
+
+  const getDonutChartSubheader = (): string => {
+    if (lang === "la") {
+      return `ທັງໝົດ ${kpiStats.totalOrders} ອໍເດີ`;
+    }
+    return `ทั้งหมด ${kpiStats.totalOrders} ออเดอร์ในระบบ`;
+  };
+
+  const getTopDishesTitle = (): string => {
+    if (lang === "la") {
+      return "🔥 5 ອັນດັບເມນູຂາຍດີທີ່ສຸດ";
+    }
+    return "🔥 5 อันดับเมนูขายดีที่สุด";
+  };
+
+  const getTopDishesSubheader = (): string => {
+    if (lang === "la") {
+      return "ຄຳນວນຈາກຈຳນວນຈານທີ່ຂາຍໄດ້ທັງໝົດ";
+    }
+    return "คำนวณจากจำนวนจานที่ขายได้ทั้งหมด";
+  };
+
+  const getTopDishesEmptyText = (): string => {
+    if (lang === "la") {
+      return "ຍັງບໍ່ມີຂໍ້ມູນເມນູທີ່ສັ່ງ";
+    }
+    return "ยังไม่มีข้อมูลเมนูที่ขาย";
+  };
+
+  const getZoneStatsTitle = (): string => {
+    if (lang === "la") {
+      return "🗺️ ສະຖານະໂຕະແຍກຕາມໂຊນ";
+    }
+    return "🗺️ สถานะโต๊ะแยกตามโซน";
+  };
+
+  const getZoneStatsSubheader = (): string => {
+    if (lang === "la") {
+      return "ອັດຕາການຄອງໂຕະໃນແຕ່ລະພື້ນທີ່ຂອງຮ້ານ";
+    }
+    return "อัตราการครองโต๊ะในแต่ละพื้นที่ของร้าน";
+  };
+
+  const getZoneStatsEmptyText = (): string => {
+    if (lang === "la") {
+      return "ບໍ່ມີຂໍ້ມູນໂຊນ";
+    }
+    return "ไม่มีข้อมูลโซน";
+  };
+
+  const getRecentOrdersTitle = (): string => {
+    if (lang === "la") {
+      return "📋 ລາຍການອໍເດີຫຼ້າສຸດ";
+    }
+    return "📋 รายการออเดอร์ล่าสุด";
+  };
+
+  const getRecentOrdersSubheader = (): string => {
+    if (lang === "la") {
+      return "ອໍເດີທີ່ເຂົ້າມາຫຼ້າສຸດໃນລະບົບ";
+    }
+    return "ออเดอร์ล่าสุดที่บันทึกในระบบ POS";
+  };
+
+  const getRecentOrdersEmptyText = (): string => {
+    if (lang === "la") {
+      return "ບໍ່ມີຂໍ້ມູນອໍເດີ";
+    }
+    return "ไม่มีข้อมูลออเดอร์";
+  };
+
+  const getRecentOrdersActionLabel = (): string => {
+    if (lang === "la") {
+      return "ເບິ່ງໃນ POS ທັງໝົດ";
+    }
+    return "ดูใน POS ทั้งหมด";
+  };
+
+  const getOrderHeader = (): string => {
+    if (lang === "la") {
+      return "ເລກອໍເດີ";
+    }
+    return "เลขออเดอร์";
+  };
+
+  const getTableHeader = (): string => {
+    if (lang === "la") {
+      return "ໂຕະ";
+    }
+    return "โต๊ะ";
+  };
+
+  const getItemsHeader = (): string => {
+    if (lang === "la") {
+      return "ລາຍການອາຫານ";
+    }
+    return "รายการอาหาร";
+  };
+
+  const getTotalHeader = (): string => {
+    if (lang === "la") {
+      return "ຍອດລວມ";
+    }
+    return "ยอดรวม";
+  };
+
+  const getStatusHeader = (): string => {
+    if (lang === "la") {
+      return "ສະຖານະ";
+    }
+    return "สถานะ";
+  };
+
+  const getTimeHeader = (): string => {
+    if (lang === "la") {
+      return "ເວລາ";
+    }
+    return "เวลา";
+  };
+
+  const getDishUnitLabel = (): string => {
+    if (lang === "la") {
+      return "ຈານ";
+    }
+    return "จาน";
+  };
+
+  const getTableUnitLabel = (): string => {
+    if (lang === "la") {
+      return "ໂຕະ";
+    }
+    return "โต๊ะ";
+  };
+
+  const getRankMedal = (rank: number): string => {
+    if (rank === 1) {
+      return "🥇";
+    }
+    if (rank === 2) {
+      return "🥈";
+    }
+    if (rank === 3) {
+      return "🥉";
+    }
+    return `#${rank}`;
+  };
+
+  const getRankColor = (rank: number): "primary" | "warning" | "info" | "secondary" => {
+    if (rank === 1) {
+      return "primary";
+    }
+    if (rank === 2) {
+      return "warning";
+    }
+    if (rank === 3) {
+      return "info";
+    }
+    return "secondary";
+  };
+
+  const getZoneChipColor = (rate: number): "success" | "warning" | "error" => {
+    if (rate >= 80) {
+      return "error";
+    }
+    if (rate >= 40) {
+      return "warning";
+    }
+    return "success";
+  };
+
+  const getProgressBarColor = (chipColor: "success" | "warning" | "error"): string => {
+    if (chipColor === "error") {
+      return "var(--mui-palette-error-main)";
+    }
+    if (chipColor === "warning") {
+      return "var(--mui-palette-warning-main)";
+    }
+    return "var(--mui-palette-success-main)";
+  };
+
   const getStatusLabel = (status: string): string => {
     if (status === IPosOrderStatus.paid || status === IPosOrderStatus.completed) {
       if (lang === "la") {
         return "ຊຳລະແລ້ວ";
       }
-      return "Paid";
+      return "ชำระแล้ว";
     }
     if (status === IPosOrderStatus.served) {
       if (lang === "la") {
         return "ເສີບແລ້ວ";
       }
-      return "Served";
+      return "เสิร์ฟแล้ว";
     }
     if (status === IPosOrderStatus.preparing || status === IPosOrderStatus.cooking) {
       if (lang === "la") {
         return "ກຳລັງປຸງ";
       }
-      return "Cooking";
+      return "กำลังปรุง";
     }
     if (status === IPosOrderStatus.confirmed) {
       if (lang === "la") {
         return "ຢືນຢັນແລ້ວ";
       }
-      return "Confirmed";
+      return "ยืนยันแล้ว";
     }
     if (status === IPosOrderStatus.pending) {
       if (lang === "la") {
         return "ລໍຖ້າ";
       }
-      return "Pending";
+      return "รอดำเนินการ";
     }
     if (status === IPosOrderStatus.cancelled) {
       if (lang === "la") {
         return "ຍົກເລີກ";
       }
-      return "Cancelled";
+      return "ยกเลิก";
     }
     return status;
   };
 
   const getStatusChipColor = (
     status: string
-  ): "success" | "warning" | "info" | "error" | "default" => {
+  ): "success" | "warning" | "info" | "error" | "default" | "secondary" | "primary" => {
     if (status === IPosOrderStatus.paid || status === IPosOrderStatus.completed) {
       return "success";
     }
@@ -499,7 +679,7 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
       return "warning";
     }
     if (status === IPosOrderStatus.pending) {
-      return "info";
+      return "secondary";
     }
     if (status === IPosOrderStatus.cancelled) {
       return "error";
@@ -535,521 +715,621 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
       if (lang === "la") {
         return "ມື້ກີ້";
       }
-      return "Just now";
+      return "เมื่อสักครู่";
     }
     if (diffMin < 60) {
       if (lang === "la") {
         return `${diffMin} ນາທີກ່ອນ`;
       }
-      return `${diffMin}m ago`;
+      return `${diffMin} นาทีที่แล้ว`;
     }
     const diffHours = Math.floor(diffMin / 60);
     if (diffHours < 24) {
       if (lang === "la") {
         return `${diffHours} ຊົ່ວໂມງກ່ອນ`;
       }
-      return `${diffHours}h ago`;
+      return `${diffHours} ชม. ที่แล้ว`;
     }
     return orderDate.toLocaleDateString();
   };
 
+  const getRefreshIconClass = (): string => {
+    if (isRefetching) {
+      return "tabler-refresh animate-spin";
+    }
+    return "tabler-refresh";
+  };
+
+  const renderOtherItemsText = (otherCount: number, itemCount: number): string => {
+    if (otherCount <= 0) {
+      return "";
+    }
+    if (lang === "la") {
+      return `+${otherCount} ລາຍການອື່ນ (${itemCount} ຈານ)`;
+    }
+    return `+${otherCount} รายการอื่น (${itemCount} จาน)`;
+  };
+
+  // ApexCharts Configs
+  const yaxisSalesTitle = lang === "la" ? "ຍອດຂາຍ (ພັນກີບ / k LAK)" : "ยอดขาย (k LAK)";
+  const yaxisOrdersTitle = lang === "la" ? "ຈຳນວນບິນ (Orders)" : "จำนวนบิล (Orders)";
+  const seriesSalesName = lang === "la" ? "ຍອດຂາຍ (LAK)" : "ยอดขาย (LAK)";
+  const seriesOrdersName = lang === "la" ? "ຈຳນວນບິນ (Orders)" : "จำนวนบิล (Orders)";
+  const donutTotalLabel = lang === "la" ? "ອໍເດີທັງໝົດ" : "ออเดอร์ทั้งหมด";
+
+  const chartTooltipTheme: "dark" | "light" = theme.palette.mode === "dark" ? "dark" : "light";
+
+  const salesChartOptions: ApexOptions = {
+    chart: {
+      type: "area",
+      parentHeightOffset: 0,
+      toolbar: { show: false },
+      zoom: { enabled: false },
+    },
+    dataLabels: { enabled: false },
+    stroke: { curve: "smooth", width: [3, 2] },
+    colors: ["var(--mui-palette-primary-main)", "var(--mui-palette-success-main)"],
+    fill: {
+      type: "gradient",
+      gradient: {
+        shadeIntensity: 0.8,
+        opacityFrom: 0.5,
+        opacityTo: 0.05,
+        stops: [0, 90, 100],
+      },
+    },
+    xaxis: {
+      categories: salesChartData.categories,
+      labels: {
+        style: {
+          colors: "var(--mui-palette-text-secondary)",
+          fontSize: "12px",
+          fontFamily: theme.typography.fontFamily,
+        },
+      },
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+    },
+    yaxis: [
+      {
+        title: {
+          text: yaxisSalesTitle,
+          style: { color: "var(--mui-palette-primary-main)", fontSize: "11px", fontWeight: 500 },
+        },
+        labels: {
+          formatter: (val: number) => `${val.toLocaleString()}k`,
+          style: { colors: "var(--mui-palette-text-secondary)", fontSize: "11px", fontFamily: theme.typography.fontFamily },
+        },
+      },
+      {
+        opposite: true,
+        title: {
+          text: yaxisOrdersTitle,
+          style: { color: "var(--mui-palette-success-main)", fontSize: "11px", fontWeight: 500 },
+        },
+        labels: {
+          formatter: (val: number) => `${Math.round(val)}`,
+          style: { colors: "var(--mui-palette-text-secondary)", fontSize: "11px", fontFamily: theme.typography.fontFamily },
+        },
+      },
+    ],
+    tooltip: {
+      theme: chartTooltipTheme,
+      shared: true,
+      intersect: false,
+      y: {
+        formatter: (val: number, { seriesIndex }) => {
+          if (seriesIndex === 0) {
+            return `${(val * 1000).toLocaleString()} ₭`;
+          }
+          const unit = lang === "la" ? "ບິນ" : "บิล";
+          return `${val} ${unit}`;
+        },
+      },
+    },
+    legend: {
+      position: "top",
+      horizontalAlign: "right",
+      labels: { colors: "var(--mui-palette-text-primary)" },
+    },
+    grid: {
+      borderColor: "var(--mui-palette-divider)",
+      strokeDashArray: 4,
+    },
+  };
+
+  const salesChartSeries = [
+    {
+      name: seriesSalesName,
+      data: salesChartData.salesSeries,
+    },
+    {
+      name: seriesOrdersName,
+      data: salesChartData.countSeries,
+    },
+  ];
+
+  const donutOptions: ApexOptions = {
+    chart: {
+      type: "donut",
+      parentHeightOffset: 0,
+    },
+    labels: [
+      lang === "la" ? "ສຳເລັດແລ້ວ (Completed)" : "สำเร็จแล้ว (Completed)",
+      lang === "la" ? "ກຳລັງດຳເນີນການ (Active)" : "กำลังดำเนินการ (Active)",
+      lang === "la" ? "ຍົກເລີກ (Cancelled)" : "ยกเลิก (Cancelled)",
+    ],
+    colors: ["var(--mui-palette-success-main)", "var(--mui-palette-warning-main)", "var(--mui-palette-error-main)"],
+    dataLabels: { enabled: false },
+    legend: {
+      position: "bottom",
+      labels: { colors: "var(--mui-palette-text-primary)" },
+    },
+    stroke: { width: 0 },
+    plotOptions: {
+      pie: {
+        donut: {
+          size: "70%",
+          labels: {
+            show: true,
+            total: {
+              show: true,
+              label: donutTotalLabel,
+              formatter: () => `${kpiStats.totalOrders}`,
+              color: "var(--mui-palette-text-primary)",
+            },
+          },
+        },
+      },
+    },
+  };
+
+  const donutSeries = [
+    kpiStats.completedCount,
+    kpiStats.activeCount,
+    kpiStats.cancelledCount,
+  ];
+
   if (isLoadingInitial) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
-        <CircularProgress size={44} sx={{ color: "#2F57AB" }} />
+        <CircularProgress size={44} color="primary" />
         <Typography variant="body1" color="text.secondary">
-          {lang === "la" ? "ກຳລັງໂຫຼດຂໍ້ມູນ Dashboard..." : "Loading Dashboard Analytics..."}
+          {lang === "la" ? "ກຳລັງໂຫຼດຂໍ້ມູນ Dashboard..." : "กำลังโหลดข้อมูล Dashboard..."}
         </Typography>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full">
-      {/* 1. Header Banner & Action Bar */}
-      <Card
-        sx={{
-          background:
-            theme.palette.mode === "dark"
-              ? "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)"
-              : "linear-gradient(135deg, #2F57AB 0%, #1e3a8a 100%)",
-          color: "#fff",
-          p: { xs: 2, md: 3 },
-          borderRadius: 3,
-          boxShadow: "0 10px 25px -5px rgba(47, 87, 171, 0.3)",
-        }}
-      >
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
-              <i className="tabler-chart-pie text-2xl text-white" />
-            </div>
-            <div>
-              <Typography variant="h5" sx={{ color: "#fff", fontWeight: 700 }}>
-                {lang === "la" ? "ພາບລວມລະບົບຮ້ານອາຫານ & ຍອດຂາຍ" : "Restaurant & POS Analytics"}
-              </Typography>
-              <Typography variant="body2" sx={{ color: "rgba(255, 255, 255, 0.8)" }}>
-                {lang === "la"
-                  ? `ຂໍ້ມູນຈິງຈາກລະບົບ POS • ອັບເດດລ່າສຸດ: ${lastRefreshedAt.toLocaleTimeString()}`
-                  : `Real-time POS live data • Last updated: ${lastRefreshedAt.toLocaleTimeString()}`}
-              </Typography>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap">
-            <Tooltip title={lang === "la" ? "ຣີເຟຣຊຂໍ້ມູນໃໝ່" : "Refresh Data"}>
-              <IconButton
-                onClick={handleRefreshAll}
-                disabled={isRefetching}
-                sx={{
-                  bgcolor: "rgba(255, 255, 255, 0.15)",
-                  color: "#fff",
-                  "&:hover": { bgcolor: "rgba(255, 255, 255, 0.25)" },
-                }}
+    <Grid container spacing={6}>
+      {/* 1. Header Banner & Action Bar (Vuexy Standard) */}
+      <Grid item xs={12}>
+        <Card>
+          <CardContent className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5">
+            <div className="flex gap-2.5 flex-col">
+              <Breadcrumbs
+                separator={<span style={{ margin: "0 8px" }}>›</span>}
+                aria-label="breadcrumb"
               >
-                <i
-                  className={`tabler-refresh text-lg ${
-                    isRefetching ? "animate-spin" : ""
-                  }`}
-                />
-              </IconButton>
-            </Tooltip>
-
-            <Link href={`/${lang}/pos`} passHref>
-              <Button
-                variant="contained"
-                sx={{
-                  bgcolor: "#fff",
-                  color: "#2F57AB",
-                  fontWeight: 600,
-                  px: 3,
-                  py: 1,
-                  borderRadius: 2,
-                  "&:hover": { bgcolor: "#f1f5f9" },
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                }}
-                startIcon={<i className="tabler-device-laptop" />}
-              >
-                {lang === "la" ? "ເປີດລະບົບຂາຍ (POS)" : "Launch POS"}
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </Card>
-
-      {/* 2. Top 5 Key Metrics (KPI Cards) */}
-      <Grid container spacing={4}>
-        {/* KPI 1: Total Revenue */}
-        <Grid item xs={12} sm={6} md={4} lg={2.4}>
-          <Card sx={{ height: "100%", borderRadius: 2.5, boxShadow: 1 }}>
-            <CardContent className="flex flex-col gap-2 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  {lang === "la" ? "ຍອດຂາຍລວມ" : "Total Revenue"}
-                </span>
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                  <i className="tabler-currency-dollar text-lg" />
+                <Link
+                  className="text-textSecondary hover:underline hover:underline-offset-1 text-sm"
+                  href={`/${lang}`}
+                >
+                  {dic?.pageBreadcrumbs?.homePage || (lang === "la" ? "ໜ້າຫຼັກ" : "หน้าหลัก")}
+                </Link>
+                <Typography color="text.primary" className="font-semibold text-sm">
+                  {dic?.dashboard || (lang === "la" ? "ແດຊບອດ" : "แดชบอร์ด")}
+                </Typography>
+              </Breadcrumbs>
+              <div className="flex items-center gap-3">
+                <CustomAvatar skin="light" variant="rounded" color="primary" size={44}>
+                  <i className="tabler-chart-pie text-[24px]" />
+                </CustomAvatar>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Typography variant="h4" className="font-bold">
+                      {getDashboardTitle()}
+                    </Typography>
+                    <CustomChip
+                      round="true"
+                      size="small"
+                      variant="tonal"
+                      color="primary"
+                      label={getLiveChipLabel()}
+                    />
+                  </div>
+                  <Typography variant="body2" color="text.secondary">
+                    {getDashboardSubtitle()}
+                  </Typography>
                 </div>
               </div>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: "text.primary" }}>
-                {formatPrice(kpiStats.revenue)}
-              </Typography>
-              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {lang === "la"
-                  ? `${kpiStats.completedCount} ບິນທີ່ຊຳລະແລ້ວ`
-                  : `From ${kpiStats.completedCount} paid bills`}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+            </div>
 
-        {/* KPI 2: Total Orders */}
-        <Grid item xs={12} sm={6} md={4} lg={2.4}>
-          <Card sx={{ height: "100%", borderRadius: 2.5, boxShadow: 1 }}>
-            <CardContent className="flex flex-col gap-2 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  {lang === "la" ? "ອໍເດີທັງໝົດ" : "Total Orders"}
-                </span>
-                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                  <i className="tabler-shopping-bag text-lg" />
-                </div>
-              </div>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: "text.primary" }}>
-                {kpiStats.totalOrders}
-              </Typography>
-              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {lang === "la"
-                  ? `ກຳລັງດຳເນີນ: ${kpiStats.activeCount} | ຍົກເລີກ: ${kpiStats.cancelledCount}`
-                  : `Active: ${kpiStats.activeCount} | Cancelled: ${kpiStats.cancelledCount}`}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
+            <div className="flex items-center gap-3 flex-wrap">
+              <Tooltip title={getRefreshTooltip()}>
+                <Button
+                  variant="tonal"
+                  color="secondary"
+                  onClick={handleRefreshAll}
+                  disabled={isRefetching}
+                  startIcon={<i className={getRefreshIconClass()} />}
+                >
+                  {getRefreshButtonLabel()}
+                </Button>
+              </Tooltip>
 
-        {/* KPI 3: Table Occupancy */}
-        <Grid item xs={12} sm={6} md={4} lg={2.4}>
-          <Card sx={{ height: "100%", borderRadius: 2.5, boxShadow: 1 }}>
-            <CardContent className="flex flex-col gap-2 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  {lang === "la" ? "ອັດຕາຄອງໂຕະ" : "Occupancy Rate"}
-                </span>
-                <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                  <i className="tabler-armchair text-lg" />
-                </div>
-              </div>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: "text.primary" }}>
-                {kpiStats.occupancyRate}%
-              </Typography>
-              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {lang === "la"
-                  ? `ມີແຂກ: ${kpiStats.occupiedTables} / ${kpiStats.totalTables} ໂຕະ`
-                  : `Occupied: ${kpiStats.occupiedTables} / ${kpiStats.totalTables} tables`}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* KPI 4: Average Bill (AOV) */}
-        <Grid item xs={12} sm={6} md={4} lg={2.4}>
-          <Card sx={{ height: "100%", borderRadius: 2.5, boxShadow: 1 }}>
-            <CardContent className="flex flex-col gap-2 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  {lang === "la" ? "ຍອດສະເລ່ຍຕໍ່ບິນ" : "Average Ticket"}
-                </span>
-                <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                  <i className="tabler-chart-arrows-vertical text-lg" />
-                </div>
-              </div>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: "text.primary" }}>
-                {formatPrice(kpiStats.avgBill)}
-              </Typography>
-              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {lang === "la" ? "ຕໍ່ບິນທີ່ເຊັກແລ້ວ" : "Per closed receipt"}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* KPI 5: Active Customers */}
-        <Grid item xs={12} sm={6} md={4} lg={2.4}>
-          <Card sx={{ height: "100%", borderRadius: 2.5, boxShadow: 1 }}>
-            <CardContent className="flex flex-col gap-2 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  {lang === "la" ? "ສະມາຊິກໃນລະບົບ" : "Members / Customers"}
-                </span>
-                <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center">
-                  <i className="tabler-users text-lg" />
-                </div>
-              </div>
-              <Typography variant="h5" sx={{ fontWeight: 700, color: "text.primary" }}>
-                {kpiStats.totalCustomers}
-              </Typography>
-              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {lang === "la"
-                  ? `${kpiStats.totalMenuItems} ລາຍການເມນູທັງໝົດ`
-                  : `Across ${kpiStats.totalMenuItems} menu items`}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* 3. Charts Row: Sales Trend (Left 8) + Order Status Donut (Right 4) */}
-      <Grid container spacing={4}>
-        <Grid item xs={12} lg={8}>
-          <Card sx={{ height: "100%", borderRadius: 2.5, boxShadow: 1 }}>
-            <CardHeader
-              title={lang === "la" ? "ແນວໂນ້ມຍອດຂາຍ & ຈຳນວນບິນ" : "Sales & Orders Performance"}
-              subheader={
-                lang === "la"
-                  ? "ສະຫຼຸບຍອດຂາຍລາຍວັນຈາກບິນຊຳລະເງິນຕົວຈິງ"
-                  : "Daily revenue & completed orders volume"
-              }
-              action={
-                <Chip
-                  label={lang === "la" ? "ຂໍ້ມູນ Real-time" : "Live Data"}
+              <Link href={`/${lang}/pos`} passHref>
+                <Button
+                  variant="contained"
                   color="primary"
-                  size="small"
-                  variant="outlined"
-                />
-              }
-            />
-            <CardContent sx={{ pt: 0 }}>
-              <AppReactApexCharts
-                type="area"
-                height={300}
-                options={salesChartOptions}
-                series={salesChartSeries}
-              />
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} lg={4}>
-          <Card sx={{ height: "100%", borderRadius: 2.5, boxShadow: 1 }}>
-            <CardHeader
-              title={lang === "la" ? "ສະັດສ່ວນສະຖານະອໍເດີ" : "Order Status Distribution"}
-              subheader={
-                lang === "la"
-                  ? `ທັງໝົດ ${kpiStats.totalOrders} ອໍເດີ`
-                  : `Total ${kpiStats.totalOrders} orders in system`
-              }
-            />
-            <CardContent sx={{ display: "flex", justifyContent: "center", pt: 1 }}>
-              <AppReactApexCharts
-                type="donut"
-                height={300}
-                options={donutOptions}
-                series={donutSeries}
-              />
-            </CardContent>
-          </Card>
-        </Grid>
+                  startIcon={<i className="tabler-device-laptop" />}
+                >
+                  {getPosButtonLabel()}
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </Grid>
 
-      {/* 4. Middle Row: Top 5 Best-Selling Dishes (6) + Zone Table Occupancy (6) */}
-      <Grid container spacing={4}>
-        {/* Top 5 Dishes */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ height: "100%", borderRadius: 2.5, boxShadow: 1 }}>
-            <CardHeader
-              title={lang === "la" ? "🔥 5 ອັນດັບເມນູຂາຍດີທີ່ສຸດ" : "🔥 Top 5 Best-Selling Items"}
-              subheader={
-                lang === "la"
-                  ? "ຄຳນວນຈາກຈຳນວນຈານທີ່ຂາຍໄດ້ທັງໝົດ"
-                  : "Ranked by total quantity ordered"
-              }
-            />
-            <CardContent sx={{ pt: 1 }}>
-              {topDishes.length === 0 ? (
-                <div className="py-8 text-center text-gray-500 text-sm">
-                  {lang === "la" ? "ຍັງບໍ່ມີຂໍ້ມູນເມນູທີ່ສັ່ງ" : "No sales items recorded yet"}
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {topDishes.map((dish) => {
-                    let medalBadge = `#${dish.rank}`;
-                    if (dish.rank === 1) medalBadge = "🥇";
-                    else if (dish.rank === 2) medalBadge = "🥈";
-                    else if (dish.rank === 3) medalBadge = "🥉";
-
-                    return (
-                      <div key={dish.name} className="flex flex-col gap-1.5">
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-base w-6">{medalBadge}</span>
-                            <span className="font-semibold text-gray-800 dark:text-gray-100">
-                              {dish.name}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-gray-600 dark:text-gray-400 font-medium">
-                              {dish.quantity} {lang === "la" ? "ຈານ" : "dishes"}
-                            </span>
-                            <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                              {formatPrice(dish.revenue)}
-                            </span>
-                          </div>
-                        </div>
-                        <LinearProgress
-                          variant="determinate"
-                          value={dish.percent}
-                          sx={{
-                            height: 6,
-                            borderRadius: 3,
-                            bgcolor: "var(--mui-palette-divider)",
-                            "& .MuiLinearProgress-bar": {
-                              bgcolor: dish.rank === 1 ? "#2F57AB" : "#10B981",
-                            },
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-
-        {/* Zone Table Occupancy */}
-        <Grid item xs={12} md={6}>
-          <Card sx={{ height: "100%", borderRadius: 2.5, boxShadow: 1 }}>
-            <CardHeader
-              title={lang === "la" ? "🗺️ ສະຖານະໂຕະແຍກຕາມໂຊນ" : "🗺️ Table Occupancy by Zone"}
-              subheader={
-                lang === "la"
-                  ? "ອັດຕາການຄອງໂຕະໃນແຕ່ລະພື້ນທີ່ຂອງຮ້ານ"
-                  : "Live seat occupancy across restaurant zones"
-              }
-            />
-            <CardContent sx={{ pt: 1 }}>
-              {zoneStats.length === 0 ? (
-                <div className="py-8 text-center text-gray-500 text-sm">
-                  {lang === "la" ? "ບໍ່ມີຂໍ້ມູນໂຊນ" : "No zones defined"}
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {zoneStats.map((z) => {
-                    let progressColor = "#10B981"; // green
-                    if (z.rate >= 80) {
-                      progressColor = "#EF4444"; // red
-                    } else if (z.rate >= 40) {
-                      progressColor = "#F59E0B"; // amber
-                    }
-
-                    return (
-                      <div key={z._id} className="flex flex-col gap-1.5">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-semibold text-gray-800 dark:text-gray-100 flex items-center gap-1.5">
-                            <i className="tabler-map-pin text-sm text-gray-400" />
-                            {z.name}
-                          </span>
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="text-gray-500">
-                              {z.occupied} / {z.total} {lang === "la" ? "ໂຕະ" : "tables"}
-                            </span>
-                            <span
-                              className="font-bold px-1.5 py-0.5 rounded text-[11px]"
-                              style={{
-                                backgroundColor: `${progressColor}20`,
-                                color: progressColor,
-                              }}
-                            >
-                              {z.rate}%
-                            </span>
-                          </div>
-                        </div>
-                        <LinearProgress
-                          variant="determinate"
-                          value={z.rate}
-                          sx={{
-                            height: 6,
-                            borderRadius: 3,
-                            bgcolor: "var(--mui-palette-divider)",
-                            "& .MuiLinearProgress-bar": {
-                              bgcolor: progressColor,
-                            },
-                          }}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* 5. Bottom Row: Recent Orders Table */}
-      <Card sx={{ borderRadius: 2.5, boxShadow: 1 }}>
-        <CardHeader
-          title={lang === "la" ? "📋 ລາຍການອໍເດີຫຼ້າສຸດ" : "📋 Recent Orders & Transactions"}
-          subheader={
-            lang === "la"
-              ? "ອໍເດີທີ່ເຂົ້າມາຫຼ້າສຸດໃນລະບົບ"
-              : "Latest order activities recorded in POS"
-          }
-          action={
-            <Link href={`/${lang}/pos`} passHref>
-              <Button
-                size="small"
-                endIcon={<i className="tabler-arrow-right" />}
-                sx={{ textTransform: "none" }}
-              >
-                {lang === "la" ? "ເບິ່ງໃນ POS ທັງໝົດ" : "View all in POS"}
-              </Button>
-            </Link>
-          }
+      {/* 2. Top 5 Key Metrics (Vuexy HorizontalWithSubtitle KPI Cards) */}
+      <Grid item xs={12} sm={6} md={4} lg={2.4}>
+        <HorizontalWithSubtitle
+          title={getRevenueTitle()}
+          stats={formatPrice(kpiStats.revenue)}
+          avatarIcon="tabler-currency-dollar"
+          avatarColor="success"
+          trend="positive"
+          trendNumber={`${kpiStats.completedCount}`}
+          subtitle={getRevenueSubtitle()}
         />
-        <TableContainer>
-          <Table sx={{ minWidth: 650 }}>
-            <TableHead>
-              <TableRow sx={{ bgcolor: "var(--mui-palette-action-hover)" }}>
-                <TableCell sx={{ fontWeight: 600 }}>
-                  {lang === "la" ? "ເລກອໍເດີ" : "Order #"}
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>
-                  {lang === "la" ? "ໂຕະ" : "Table"}
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>
-                  {lang === "la" ? "ລາຍການອາຫານ" : "Items Summary"}
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>
-                  {lang === "la" ? "ຍອດລວມ" : "Total"}
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>
-                  {lang === "la" ? "ສະຖານະ" : "Status"}
-                </TableCell>
-                <TableCell sx={{ fontWeight: 600 }}>
-                  {lang === "la" ? "ເວລາ" : "Time"}
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {recentOrders.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4, color: "text.secondary" }}>
-                    {lang === "la" ? "ບໍ່ມີຂໍ້ມູນອໍເດີ" : "No orders found"}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                recentOrders.map((order) => {
-                  const itemCount = order.items?.reduce((s, it) => s + (it.quantity || 1), 0) || 0;
-                  const firstItem = order.items && order.items.length > 0 ? order.items[0].menuItemName : "-";
-                  const otherCount = order.items && order.items.length > 1 ? order.items.length - 1 : 0;
+      </Grid>
 
-                  return (
-                    <TableRow key={order._id} hover>
-                      <TableCell sx={{ fontWeight: 600, color: "#2F57AB" }}>
-                        #{order.orderNumber || order._id.slice(-6)}
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          icon={<i className="tabler-armchair text-xs" />}
-                          label={`${lang === "la" ? "ໂຕະ" : "Table"} ${getTableNumberById(order.tableId)}`}
-                          size="small"
-                          variant="outlined"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium">{firstItem}</span>
-                          {otherCount > 0 && (
-                            <span className="text-xs text-gray-500">
-                              +{otherCount} {lang === "la" ? "ລາຍການອື່ນ" : "more items"} ({itemCount} {lang === "la" ? "ຈານ" : "total"})
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 700 }}>
-                        {formatPrice(order.total)}
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          label={getStatusLabel(order.status)}
-                          color={getStatusChipColor(order.status)}
+      <Grid item xs={12} sm={6} md={4} lg={2.4}>
+        <HorizontalWithSubtitle
+          title={getOrdersTitle()}
+          stats={`${kpiStats.totalOrders}`}
+          avatarIcon="tabler-shopping-bag"
+          avatarColor="primary"
+          trend="positive"
+          trendNumber={`${kpiStats.activeCount}`}
+          subtitle={getOrdersSubtitle()}
+        />
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4} lg={2.4}>
+        <HorizontalWithSubtitle
+          title={getOccupancyTitle()}
+          stats={`${kpiStats.occupancyRate}%`}
+          avatarIcon="tabler-armchair"
+          avatarColor="warning"
+          trend="positive"
+          trendNumber={`${kpiStats.occupiedTables}/${kpiStats.totalTables}`}
+          subtitle={getOccupancySubtitle()}
+        />
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4} lg={2.4}>
+        <HorizontalWithSubtitle
+          title={getAvgBillTitle()}
+          stats={formatPrice(kpiStats.avgBill)}
+          avatarIcon="tabler-chart-arrows-vertical"
+          avatarColor="info"
+          trend="positive"
+          trendNumber="AOV"
+          subtitle={getAvgBillSubtitle()}
+        />
+      </Grid>
+
+      <Grid item xs={12} sm={6} md={4} lg={2.4}>
+        <HorizontalWithSubtitle
+          title={getCustomersTitle()}
+          stats={`${kpiStats.totalCustomers}`}
+          avatarIcon="tabler-users"
+          avatarColor="secondary"
+          trend="positive"
+          trendNumber={`${kpiStats.totalMenuItems}`}
+          subtitle={getCustomersSubtitle()}
+        />
+      </Grid>
+
+      {/* 3. Charts Row: Sales Performance (8 cols) + Order Distribution Donut (4 cols) */}
+      <Grid item xs={12} lg={8}>
+        <Card sx={{ height: "100%" }}>
+          <CardHeader
+            title={getSalesChartTitle()}
+            subheader={getSalesChartSubheader()}
+            action={
+              <CustomChip
+                round="true"
+                label={getLiveChipLabel()}
+                color="primary"
+                size="small"
+                variant="tonal"
+              />
+            }
+          />
+          <CardContent sx={{ pt: 0 }}>
+            <AppReactApexCharts
+              type="area"
+              height={320}
+              options={salesChartOptions}
+              series={salesChartSeries}
+            />
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid item xs={12} lg={4}>
+        <Card sx={{ height: "100%" }}>
+          <CardHeader
+            title={getDonutChartTitle()}
+            subheader={getDonutChartSubheader()}
+            action={<OptionMenu options={["Today", "This Week", "This Month"]} />}
+          />
+          <CardContent sx={{ display: "flex", justifyContent: "center", pt: 1 }}>
+            <AppReactApexCharts
+              type="donut"
+              height={320}
+              options={donutOptions}
+              series={donutSeries}
+            />
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* 4. Middle Row: Top 5 Best-Selling Items (6 cols) + Zone Occupancy (6 cols) */}
+      <Grid item xs={12} md={6}>
+        <Card sx={{ height: "100%" }}>
+          <CardHeader
+            title={getTopDishesTitle()}
+            subheader={getTopDishesSubheader()}
+            action={<OptionMenu options={["Top 5", "Top 10"]} />}
+          />
+          <CardContent className="flex flex-col gap-4">
+            {topDishes.length === 0 ? (
+              <div className="py-8 text-center text-textSecondary text-sm">
+                {getTopDishesEmptyText()}
+              </div>
+            ) : (
+              topDishes.map((dish) => {
+                const medal = getRankMedal(dish.rank);
+                const rankColor = getRankColor(dish.rank);
+
+                return (
+                  <div key={dish.name} className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2.5">
+                        <CustomAvatar
+                          size={34}
+                          variant="rounded"
+                          skin="light"
+                          color={rankColor}
+                          className="text-sm font-bold"
+                        >
+                          {medal}
+                        </CustomAvatar>
+                        <Typography className="font-medium" color="text.primary">
+                          {dish.name}
+                        </Typography>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Typography variant="body2" color="text.secondary">
+                          {dish.quantity} {getDishUnitLabel()}
+                        </Typography>
+                        <CustomChip
+                          round="true"
                           size="small"
                           variant="tonal"
+                          color="success"
+                          label={formatPrice(dish.revenue)}
                         />
-                      </TableCell>
-                      <TableCell sx={{ color: "text.secondary", fontSize: "12px" }}>
-                        {formatTimeAgo(order.createdAt)}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Card>
-    </div>
+                      </div>
+                    </div>
+                    <LinearProgress
+                      variant="determinate"
+                      value={dish.percent}
+                      sx={{
+                        height: 6,
+                        borderRadius: 3,
+                        bgcolor: "var(--mui-palette-action-hover)",
+                        "& .MuiLinearProgress-bar": {
+                          borderRadius: 3,
+                          bgcolor:
+                            dish.rank === 1
+                              ? "var(--mui-palette-primary-main)"
+                              : "var(--mui-palette-success-main)",
+                        },
+                      }}
+                    />
+                  </div>
+                );
+              })
+            )}
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid item xs={12} md={6}>
+        <Card sx={{ height: "100%" }}>
+          <CardHeader
+            title={getZoneStatsTitle()}
+            subheader={getZoneStatsSubheader()}
+            action={<OptionMenu options={["All Zones"]} />}
+          />
+          <CardContent className="flex flex-col gap-4">
+            {zoneStats.length === 0 ? (
+              <div className="py-8 text-center text-textSecondary text-sm">
+                {getZoneStatsEmptyText()}
+              </div>
+            ) : (
+              zoneStats.map((z) => {
+                const chipColor = getZoneChipColor(z.rate);
+
+                return (
+                  <div key={z._id} className="flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2.5">
+                        <CustomAvatar
+                          size={34}
+                          variant="rounded"
+                          skin="light"
+                          color="primary"
+                        >
+                          <i className="tabler-map-pin text-[18px]" />
+                        </CustomAvatar>
+                        <Typography className="font-medium" color="text.primary">
+                          {z.name}
+                        </Typography>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Typography variant="body2" color="text.secondary">
+                          {z.occupied} / {z.total} {getTableUnitLabel()}
+                        </Typography>
+                        <CustomChip
+                          round="true"
+                          size="small"
+                          variant="tonal"
+                          color={chipColor}
+                          label={`${z.rate}%`}
+                        />
+                      </div>
+                    </div>
+                    <LinearProgress
+                      variant="determinate"
+                      value={z.rate}
+                      sx={{
+                        height: 6,
+                        borderRadius: 3,
+                        bgcolor: "var(--mui-palette-action-hover)",
+                        "& .MuiLinearProgress-bar": {
+                          borderRadius: 3,
+                          bgcolor: getProgressBarColor(chipColor),
+                        },
+                      }}
+                    />
+                  </div>
+                );
+              })
+            )}
+          </CardContent>
+        </Card>
+      </Grid>
+
+      {/* 5. Bottom Row: Recent Orders Table (Vuexy Table Style) */}
+      <Grid item xs={12}>
+        <Card>
+          <CardHeader
+            title={getRecentOrdersTitle()}
+            subheader={getRecentOrdersSubheader()}
+            action={
+              <Link href={`/${lang}/pos`} passHref>
+                <Button
+                  size="small"
+                  variant="tonal"
+                  color="primary"
+                  endIcon={<i className="tabler-arrow-right" />}
+                >
+                  {getRecentOrdersActionLabel()}
+                </Button>
+              </Link>
+            }
+          />
+          <div className="overflow-x-auto">
+            <table className={tableStyles.table}>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>{getOrderHeader()}</th>
+                  <th>{getTableHeader()}</th>
+                  <th>{getItemsHeader()}</th>
+                  <th>{getTotalHeader()}</th>
+                  <th>{getStatusHeader()}</th>
+                  <th>{getTimeHeader()}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="text-center py-6 text-textSecondary">
+                      {getRecentOrdersEmptyText()}
+                    </td>
+                  </tr>
+                ) : (
+                  recentOrders.map((order, index) => {
+                    const itemCount = order.items?.reduce((s, it) => s + (it.quantity || 1), 0) || 0;
+                    let firstItem = "-";
+                    if (order.items && order.items.length > 0) {
+                      firstItem = order.items[0].menuItemName;
+                    }
+                    let otherCount = 0;
+                    if (order.items && order.items.length > 1) {
+                      otherCount = order.items.length - 1;
+                    }
+                    const otherItemsText = renderOtherItemsText(otherCount, itemCount);
+                    const orderNum = order.orderNumber || order._id.slice(-6);
+                    const tableNum = getTableNumberById(order.tableId);
+                    const tableText = lang === "la" ? `ໂຕະ ${tableNum}` : `โต๊ะ ${tableNum}`;
+
+                    return (
+                      <tr key={order._id}>
+                        <td>{index + 1}</td>
+                        <td>
+                          <Typography className="font-semibold text-primary" variant="body2">
+                            #{orderNum}
+                          </Typography>
+                        </td>
+                        <td>
+                          <CustomChip
+                            size="small"
+                            variant="tonal"
+                            color="secondary"
+                            icon={<i className="tabler-armchair text-xs" />}
+                            label={tableText}
+                          />
+                        </td>
+                        <td>
+                          <div className="flex flex-col">
+                            <Typography variant="body2" className="font-medium" color="text.primary">
+                              {firstItem}
+                            </Typography>
+                            {otherCount > 0 && (
+                              <Typography variant="caption" color="text.secondary">
+                                {otherItemsText}
+                              </Typography>
+                            )}
+                          </div>
+                        </td>
+                        <td>
+                          <Typography variant="body2" className="font-bold" color="text.primary">
+                            {formatPrice(order.total)}
+                          </Typography>
+                        </td>
+                        <td>
+                          <CustomChip
+                            round="true"
+                            size="small"
+                            variant="tonal"
+                            color={getStatusChipColor(order.status)}
+                            label={getStatusLabel(order.status)}
+                          />
+                        </td>
+                        <td>
+                          <Typography variant="caption" color="text.secondary">
+                            {formatTimeAgo(order.createdAt)}
+                          </Typography>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </Grid>
+    </Grid>
   );
 };
 
