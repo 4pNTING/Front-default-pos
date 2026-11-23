@@ -1346,5 +1346,9 @@
   "yearsOfWork": "ປີການເຮັດວຽກ",
   "zone": "Zone",
   "zoneCreatedSuccessfully": "ສ້າງ Zone ສຳເລັດແລ້ວ",
-  "zoneName": "ຊື່ Zone"
+  "zoneName": "ຊື່ Zone",
+  "kds": {
+    "title": "ຈໍສະແດງຜົນໃນຄົວ (KDS)",
+    "subtitle": "ລະບົບສະແດງຜົນ ແລະ ຈັດການອໍເດີໃນຄົວແບບ Real-time"
+  }
 }

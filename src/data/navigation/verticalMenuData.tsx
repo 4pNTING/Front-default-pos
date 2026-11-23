@@ -14,6 +14,11 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
     icon: 'tabler-cash-register',
     href: '/pos'
   },
+  {
+    label: (dictionary as any).kds?.title ?? "Kitchen Display (KDS)",
+    icon: 'tabler-tools-kitchen-2',
+    href: '/kds'
+  },
 
   // Restaurant Management
   {

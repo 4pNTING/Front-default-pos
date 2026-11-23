@@ -23,6 +23,18 @@ const overview_section = [
     feature: "pos",
     __typename: "RoleMenu",
   },
+  {
+    href: "/kds",
+    icon: "tabler-tools-kitchen-2",
+    exactMatch: false,
+    laMenu: "ຈໍສະແດງຜົນໃນຄົວ (KDS)",
+    enMenu: "Kitchen Display (KDS)",
+    laSection: "ລະບົບຫຼັກ",
+    enSection: "Main System",
+    permission: ["c", "r", "u", "d"],
+    feature: "kds",
+    __typename: "RoleMenu",
+  },
 ];
 
 const restaurant_section = [

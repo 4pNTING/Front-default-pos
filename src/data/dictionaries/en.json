@@ -1346,5 +1346,9 @@
   "yearsOfWork": "Years of work",
   "zone": "Zone",
   "zoneCreatedSuccessfully": "Zone created successfully",
-  "zoneName": "Zone Name"
+  "zoneName": "Zone Name",
+  "kds": {
+    "title": "Kitchen Display (KDS)",
+    "subtitle": "Real-time kitchen order dispatch and status tracking"
+  }
 }
