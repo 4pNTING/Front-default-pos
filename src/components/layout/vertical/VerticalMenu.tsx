@@ -35,6 +35,7 @@ import StyledVerticalNavExpandIcon from "@menu/styles/vertical/StyledVerticalNav
 import menuItemStyles from "@core/styles/vertical/menuItemStyles";
 import menuSectionStyles from "@core/styles/vertical/menuSectionStyles";
 import { useRoleStore } from "@/views/role/store/roleStore";
+import { roleStatic } from "@/views/role/store/roleStaticStore";
 
 // React/NextAuth
 import React, { useEffect, useMemo } from "react";
@@ -110,16 +111,14 @@ const VerticalMenu = ({ dictionary, scrollMenu, lang }: Props) => {
   };
 
   useEffect(() => {
-    if (session?.status === "authenticated" && session?.data?.user) {
-      const user = session.data.user as any;
-      const roleIdentifier = user.level || "";
+    if (session?.status === "authenticated") {
+      const user = session?.data?.user as any;
+      const roleIdentifier = user?.level || "manager";
 
-      if (roleIdentifier) {
-        queryRoleById({
-          props: { queryRoles: "", dictionary },
-          id: roleIdentifier,
-        });
-      }
+      queryRoleById({
+        props: { queryRoles: "", dictionary },
+        id: roleIdentifier,
+      });
     }
   }, [session, queryRoleById, dictionary]);
 
@@ -144,7 +143,10 @@ const VerticalMenu = ({ dictionary, scrollMenu, lang }: Props) => {
   };
 
   const filteredMenus = React.useMemo(() => {
-    return role?.menus || [];
+    if (role?.menus && role.menus.length > 0) {
+      return role.menus;
+    }
+    return roleStatic?.data?.Role?.menus || [];
   }, [role?.menus]);
 
   const handleUserLogout = async () => {

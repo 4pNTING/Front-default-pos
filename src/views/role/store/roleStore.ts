@@ -100,33 +100,20 @@ export const useRoleStore = create<RoleState>((set, get) => ({
         props,
         id,
     }: {
-        props: RoleNetworkProps;
-        id: string;
+        props?: RoleNetworkProps;
+        id?: string;
     }) => {
         try {
             set({ loading: true });
-            if (props?.queryRoles === undefined)
-                return toast.error(props.dictionary.missingGqlHook);
-            // const { data, error } = await props?.queryRoles({
-            //     variables: {
-            //         roleId: id,
-            //     }
-            // });
-
             const data = roleStatic?.data as any;
-            const error = {} as any;
 
-            if (data) {
-                // Cast Role result to Role (TempRole)
-                const role: Role = data?.Role as Role ?? null;
+            if (data?.Role) {
+                const role: Role = data.Role as Role;
                 set(() => ({ role: role }));
-            } else {
-                set(() => ({ role: null }));
-                toast.error(graphErrorHelper(error));
             }
         } catch (e) {
-            set(() => ({ role: null }));
-            toast.error(graphErrorHelper(e));
+            const fallbackRole = roleStatic?.data?.Role as Role;
+            set(() => ({ role: fallbackRole }));
         } finally {
             set({ loading: false });
         }
