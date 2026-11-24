@@ -35,7 +35,7 @@ import StyledVerticalNavExpandIcon from "@menu/styles/vertical/StyledVerticalNav
 import menuItemStyles from "@core/styles/vertical/menuItemStyles";
 import menuSectionStyles from "@core/styles/vertical/menuSectionStyles";
 import { useRoleStore } from "@/views/role/store/roleStore";
-import { roleStatic } from "@/views/role/store/roleStaticStore";
+import { roleStatic, kdsMenuItem } from "@/views/role/store/roleStaticStore";
 
 // React/NextAuth
 import React, { useEffect, useMemo } from "react";
@@ -111,14 +111,16 @@ const VerticalMenu = ({ dictionary, scrollMenu, lang }: Props) => {
   };
 
   useEffect(() => {
-    if (session?.status === "authenticated") {
-      const user = session?.data?.user as any;
-      const roleIdentifier = user?.level || "manager";
+    if (session?.status === "authenticated" && session?.data?.user) {
+      const user = session.data.user as any;
+      const roleIdentifier = user.level || "";
 
-      queryRoleById({
-        props: { queryRoles: "", dictionary },
-        id: roleIdentifier,
-      });
+      if (roleIdentifier) {
+        queryRoleById({
+          props: { queryRoles: "", dictionary },
+          id: roleIdentifier,
+        });
+      }
     }
   }, [session, queryRoleById, dictionary]);
 
@@ -143,10 +145,24 @@ const VerticalMenu = ({ dictionary, scrollMenu, lang }: Props) => {
   };
 
   const filteredMenus = React.useMemo(() => {
-    if (role?.menus && role.menus.length > 0) {
-      return role.menus;
+    let menus = role?.menus;
+    if (!menus || menus.length === 0) {
+      menus = roleStatic?.data?.Role?.menus || [];
     }
-    return roleStatic?.data?.Role?.menus || [];
+
+    // Ensure /kds is accessible to EVERY role without exception
+    const hasKds = menus.some((item: any) => item?.href === "/kds");
+    if (!hasKds) {
+      const posIndex = menus.findIndex((item: any) => item?.href === "/pos");
+      if (posIndex !== -1) {
+        const nextMenus = [...menus];
+        nextMenus.splice(posIndex + 1, 0, kdsMenuItem);
+        return nextMenus;
+      }
+      return [kdsMenuItem, ...menus];
+    }
+
+    return menus;
   }, [role?.menus]);
 
   const handleUserLogout = async () => {

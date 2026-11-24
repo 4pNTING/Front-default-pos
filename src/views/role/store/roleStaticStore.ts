@@ -1,3 +1,16 @@
+export const kdsMenuItem = {
+  href: "/kds",
+  icon: "tabler-tools-kitchen-2",
+  exactMatch: false,
+  laMenu: "ຈໍສະແດງຜົນໃນຄົວ (KDS)",
+  enMenu: "Kitchen Display (KDS)",
+  laSection: "ລະບົບຫຼັກ",
+  enSection: "Main System",
+  permission: ["c", "r", "u", "d"],
+  feature: "kds",
+  __typename: "RoleMenu",
+};
+
 const overview_section = [
   {
     href: "/dashboard",
@@ -23,18 +36,7 @@ const overview_section = [
     feature: "pos",
     __typename: "RoleMenu",
   },
-  {
-    href: "/kds",
-    icon: "tabler-tools-kitchen-2",
-    exactMatch: false,
-    laMenu: "ຈໍສະແດງຜົນໃນຄົວ (KDS)",
-    enMenu: "Kitchen Display (KDS)",
-    laSection: "ລະບົບຫຼັກ",
-    enSection: "Main System",
-    permission: ["c", "r", "u", "d"],
-    feature: "kds",
-    __typename: "RoleMenu",
-  },
+  kdsMenuItem,
 ];
 
 const restaurant_section = [
@@ -149,9 +151,9 @@ export const roleStatic = {
       _id: "67643abba78e121bcea07a53",
       createdAt: "Thu Dec 19 2024 15:24:43 GMT+0000 (Coordinated Universal Time)",
       updatedAt: "Thu Dec 19 2024 15:24:43 GMT+0000 (Coordinated Universal Time)",
-      laName: "ຜູ້ຈັດການ (Manager)",
-      enName: "Manager",
-      systemCode: "Manager",
+      laName: "Super Admin",
+      enName: "Super Admin",
+      systemCode: "Supper",
       menus: [...overview_section, ...restaurant_section, ...settings_section],
       __typename: "Role",
     },
