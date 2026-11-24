@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import Link from "next/link";
 import { useQuery, useMutation } from "@apollo/client";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
+import Button from "@mui/material/Button";
 
 import CustomAvatar from "@core/components/mui/Avatar";
 import { KdsProps } from "../type/kdsType";
@@ -17,15 +19,18 @@ import { KdsTicketCardComponent } from "./components/kdsTicketCard.component";
 import { LOAD_ORDER, UPDATE_ORDER_STATUS } from "@/gql/queries/order";
 import { LOAD_TABLE } from "@/gql/queries/table";
 import { LOAD_CATEGORY } from "@/gql/queries/category";
-import { OrderType, POSTableType, IPosOrderStatus } from "@/views/pos/type/posType";
+import { OrderType, POSTableType, IPosOrderStatus, IPosTableStatus } from "@/views/pos/type/posType";
 import { ToastService } from "@/utils/toastService";
 
 export const KdsList: React.FC<{ props: KdsProps }> = ({ props }) => {
   const { lang, dictionary: dic } = props;
   const {
     statusFilter,
+    setStatusFilter,
     stationFilter,
     audioEnabled,
+    showDemo,
+    setShowDemo,
     setOrders,
     setTables,
     setCategories,
@@ -35,6 +40,122 @@ export const KdsList: React.FC<{ props: KdsProps }> = ({ props }) => {
 
   const [currentTime, setCurrentTime] = useState<number>(Date.now());
   const prevOrdersCountRef = useRef<number>(0);
+
+  // Demo orders state for instant testing
+  const [demoOrdersList, setDemoOrdersList] = useState<OrderType[]>([
+    {
+      _id: "demo_1",
+      orderNumber: "1001",
+      tableId: "table_demo_1",
+      staffId: "staff_1",
+      status: IPosOrderStatus.pending,
+      note: "ບໍ່ໃສ່ຜັກຊີ / ไม่ใส่ผักชี",
+      subTotal: 85000,
+      discount: 0,
+      total: 85000,
+      createdAt: new Date(Date.now() - 3 * 60 * 1000).toISOString(),
+      items: [
+        {
+          _id: "item_1",
+          menuItemId: "m1",
+          menuItemName: "ຕົ້ມຍຳກຸ້ງ (Tom Yum Kung)",
+          quantity: 1,
+          unitPrice: 50000,
+          totalPrice: 50000,
+          note: "ເຜັດໜ້ອຍ / เผ็ดน้อย",
+        },
+        {
+          _id: "item_2",
+          menuItemId: "m2",
+          menuItemName: "ເຂົ້າຜັດທະເລ (Seafood Fried Rice)",
+          quantity: 2,
+          unitPrice: 35000,
+          totalPrice: 70000,
+        },
+      ],
+    },
+    {
+      _id: "demo_2",
+      orderNumber: "1002",
+      tableId: "table_demo_2",
+      staffId: "staff_1",
+      status: IPosOrderStatus.preparing,
+      subTotal: 65000,
+      discount: 0,
+      total: 65000,
+      createdAt: new Date(Date.now() - 13 * 60 * 1000).toISOString(),
+      items: [
+        {
+          _id: "item_3",
+          menuItemId: "m3",
+          menuItemName: "ລາບໝູ (Larb Moo)",
+          quantity: 1,
+          unitPrice: 40000,
+          totalPrice: 40000,
+          note: "ເຜັດກາງ / เผ็ดปานกลาง",
+        },
+        {
+          _id: "item_4",
+          menuItemId: "m4",
+          menuItemName: "ຕຳໝາກຮຸ່ງ (Papaya Salad)",
+          quantity: 1,
+          unitPrice: 25000,
+          totalPrice: 25000,
+        },
+      ],
+    },
+    {
+      _id: "demo_3",
+      orderNumber: "1003",
+      tableId: "table_demo_3",
+      staffId: "staff_1",
+      status: IPosOrderStatus.preparing,
+      note: "ລູກຄ້າຮີບດ່ວນ / ลูกค้ารีบด่วน",
+      subTotal: 120000,
+      discount: 0,
+      total: 120000,
+      createdAt: new Date(Date.now() - 24 * 60 * 1000).toISOString(),
+      items: [
+        {
+          _id: "item_5",
+          menuItemId: "m5",
+          menuItemName: "ສະເຕັກຊີ້ນງົວ (Beef Steak)",
+          quantity: 2,
+          unitPrice: 60000,
+          totalPrice: 120000,
+          note: "Medium Rare",
+        },
+      ],
+    },
+    {
+      _id: "demo_4",
+      orderNumber: "1004",
+      tableId: "table_demo_4",
+      staffId: "staff_1",
+      status: IPosOrderStatus.served,
+      subTotal: 45000,
+      discount: 0,
+      total: 45000,
+      createdAt: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
+      items: [
+        {
+          _id: "item_6",
+          menuItemId: "m6",
+          menuItemName: "ກາເຟເຢັນ (Iced Latte)",
+          quantity: 2,
+          unitPrice: 20000,
+          totalPrice: 40000,
+        },
+      ],
+    },
+  ]);
+
+  const demoTables: POSTableType[] = useMemo(() => [
+    { _id: "table_demo_1", number: "01", zoneId: "z1", zoneName: "VIP Zone", capacity: 4, status: IPosTableStatus.occupied, isActive: "active" },
+    { _id: "table_demo_2", number: "04", zoneId: "z2", zoneName: "Indoor", capacity: 4, status: IPosTableStatus.occupied, isActive: "active" },
+    { _id: "table_demo_3", number: "07", zoneId: "z3", zoneName: "Outdoor", capacity: 6, status: IPosTableStatus.occupied, isActive: "active" },
+    { _id: "table_demo_4", number: "02", zoneId: "z1", zoneName: "Terrace", capacity: 2, status: IPosTableStatus.occupied, isActive: "active" },
+  ], []);
 
   // 1. Fetch Orders with Auto-Polling every 5 seconds
   const {
@@ -134,13 +255,25 @@ export const KdsList: React.FC<{ props: KdsProps }> = ({ props }) => {
     }
   }, [audioEnabled]);
 
+  // Source list: use demo if showDemo is enabled, or fallback to demo if no orders and showDemo toggled
+  const activeSourceOrders = useMemo(() => {
+    if (showDemo) {
+      return demoOrdersList;
+    }
+    return rawOrders;
+  }, [showDemo, demoOrdersList, rawOrders]);
+
   // Filter Active Tickets for KDS
   const filteredOrders = useMemo(() => {
-    return rawOrders.filter((order) => {
+    return activeSourceOrders.filter((order) => {
       // Status filter
+      if (statusFilter === "all") {
+        return true;
+      }
       if (statusFilter === "all_active") {
         if (
           order.status === IPosOrderStatus.paid ||
+          order.status === IPosOrderStatus.completed ||
           order.status === IPosOrderStatus.cancelled
         ) {
           return false;
@@ -178,7 +311,7 @@ export const KdsList: React.FC<{ props: KdsProps }> = ({ props }) => {
 
       return true;
     });
-  }, [rawOrders, statusFilter, stationFilter]);
+  }, [activeSourceOrders, statusFilter, stationFilter]);
 
   // Detect incoming orders and trigger audio alert
   useEffect(() => {
@@ -207,6 +340,25 @@ export const KdsList: React.FC<{ props: KdsProps }> = ({ props }) => {
 
   // Status transition handler from tickets
   const handleUpdateStatus = async (order: OrderType, newStatus: string) => {
+    // If it's a demo order, update local demo state
+    if (order._id.startsWith("demo_")) {
+      setDemoOrdersList((prev) =>
+        prev.map((o) => {
+          if (o._id === order._id) {
+            return { ...o, status: newStatus as any };
+          }
+          return o;
+        })
+      );
+      if (newStatus === IPosOrderStatus.preparing) {
+        ToastService.success(lang === "la" ? "ເລີ່ມປຸງແຕ່ງອໍເດີແລ້ວ" : "เริ่มปรุงอาหารแล้ว");
+      } else if (newStatus === IPosOrderStatus.served) {
+        ToastService.success(lang === "la" ? "ເສີບອາຫານຮຽບຮ້ອຍ" : "เสิร์ฟอาหารเรียบร้อย");
+      }
+      return;
+    }
+
+    // Real backend mutation
     try {
       await updateOrderStatusMutation({
         variables: {
@@ -230,10 +382,17 @@ export const KdsList: React.FC<{ props: KdsProps }> = ({ props }) => {
   };
 
   const getTableById = (tableId: string): POSTableType | undefined => {
-    return rawTables.find((t) => t._id === tableId);
+    if (showDemo) {
+      return demoTables.find((t) => t._id === tableId);
+    }
+    const found = rawTables.find((t) => t._id === tableId);
+    if (found) {
+      return found;
+    }
+    return demoTables.find((t) => t._id === tableId);
   };
 
-  const isLoadingInitial = ordersLoading && tablesLoading && rawOrders.length === 0;
+  const isLoadingInitial = ordersLoading && rawOrders.length === 0 && !showDemo;
 
   if (isLoadingInitial) {
     return (
@@ -246,6 +405,102 @@ export const KdsList: React.FC<{ props: KdsProps }> = ({ props }) => {
     );
   }
 
+  // Render empty state card
+  const renderEmptyState = () => {
+    if (rawOrders.length > 0 && !showDemo) {
+      return (
+        <Card sx={{ borderRadius: 3 }}>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center gap-3">
+            <CustomAvatar skin="light" variant="rounded" color="info" size={72}>
+              <i className="tabler-checkup-list text-[38px]" />
+            </CustomAvatar>
+            <Typography variant="h5" className="font-bold">
+              {lang === "la"
+                ? "ບໍ່ມີອໍເດີທີ່ຄ້າງປຸງແຕ່ງໃນຄິວ"
+                : "ไม่มีออเดอร์ที่ค้างปรุงในคิว"}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 460 }}>
+              {lang === "la"
+                ? `ມີອໍເດີໃນລະບົບ ${rawOrders.length} ລາຍການ ແຕ່ທຸກລາຍການຖືກຊຳລະເງິນ ຫຼື ເສີບຄົບຖ້ວນແລ້ວ. ທ່ານສາມາດເລືອກແຖບ "ອໍເດີທັງໝົດ" ເພື່ອກວດສອບປະຫວັດໄດ້.`
+                : `มีออเดอร์ในระบบ ${rawOrders.length} รายการ แต่ทุกรายการถูกชำระเงินหรือเสิร์ฟครบถ้วนแล้ว คุณสามารถเลือกแท็บ "ออเดอร์ทั้งหมด" เพื่อตรวจสอบประวัติได้`}
+            </Typography>
+            <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
+              <Button
+                variant="contained"
+                color="secondary"
+                size="small"
+                startIcon={<i className="tabler-list-details" />}
+                onClick={() => setStatusFilter("all")}
+              >
+                {lang === "la"
+                  ? `ເບິ່ງອໍເດີທັງໝົດ (${rawOrders.length})`
+                  : `ดูออเดอร์ทั้งหมด (${rawOrders.length})`}
+              </Button>
+              <Button
+                variant="tonal"
+                color="warning"
+                size="small"
+                startIcon={<i className="tabler-eye" />}
+                onClick={() => setShowDemo(true)}
+              >
+                {lang === "la" ? "ເປີດອໍເດີຕົວຢ່າງ (Demo)" : "เปิดออเดอร์ตัวอย่าง (Demo)"}
+              </Button>
+              <Link href={`/${lang}/pos`} passHref>
+                <Button
+                  variant="tonal"
+                  color="primary"
+                  size="small"
+                  startIcon={<i className="tabler-cash-register" />}
+                >
+                  {lang === "la" ? "ສັ່ງອໍເດີໃໝ່ໃນ POS" : "สั่งออเดอร์ใหม่ใน POS"}
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    return (
+      <Card sx={{ borderRadius: 3 }}>
+        <CardContent className="flex flex-col items-center justify-center py-16 text-center gap-3">
+          <CustomAvatar skin="light" variant="rounded" color="success" size={72}>
+            <i className="tabler-soup text-[38px]" />
+          </CustomAvatar>
+          <Typography variant="h5" className="font-bold">
+            {lang === "la" ? "ຄິວອາຫານໃນຄົວວ່າງ!" : "คิวอาหารในครัวว่าง!"}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 460 }}>
+            {lang === "la"
+              ? "ຍັງບໍ່ມີອໍເດີທີ່ກຳລັງປຸງແຕ່ງ. ອໍເດີໃໝ່ຈາກໜ້າຮ້ານ POS ຈະສະແດງຢູ່ນີ້ອັດຕະໂນມັດ ພ້ອມສຽງແຈ້ງເຕືອນ ຫຼື ທ່ານສາມາດເປີດອໍເດີຕົວຢ່າງເພື່ອທົດລອງລະບົບໄດ້."
+              : "ยังไม่มีออเดอร์ที่กำลังปรุง ออเดอร์ใหม่จากหน้าร้าน POS จะปรากฏที่นี่อัตโนมัติพร้อมเสียงเตือน หรือคุณสามารถเปิดออเดอร์ตัวอย่างเพื่อทดลองระบบได้"}
+          </Typography>
+          <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
+            <Button
+              variant="contained"
+              color="warning"
+              size="small"
+              startIcon={<i className="tabler-eye" />}
+              onClick={() => setShowDemo(true)}
+            >
+              {lang === "la" ? "ເປີດອໍເດີຕົວຢ່າງ (Demo Tickets)" : "เปิดออเดอร์ตัวอย่าง (Demo Tickets)"}
+            </Button>
+            <Link href={`/${lang}/pos`} passHref>
+              <Button
+                variant="tonal"
+                color="primary"
+                size="small"
+                startIcon={<i className="tabler-cash-register" />}
+              >
+                {lang === "la" ? "ໄປໜ້າ POS ເພື່ອສັ່ງອາຫານ" : "ไปหน้า POS เพื่อสั่งอาหาร"}
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* 1. KDS Header & Controls Bar */}
@@ -257,21 +512,7 @@ export const KdsList: React.FC<{ props: KdsProps }> = ({ props }) => {
 
       {/* 2. Tickets Grid Display */}
       {filteredOrders.length === 0 ? (
-        <Card sx={{ borderRadius: 3 }}>
-          <CardContent className="flex flex-col items-center justify-center py-20 text-center gap-3">
-            <CustomAvatar skin="light" variant="rounded" color="success" size={72}>
-              <i className="tabler-soup text-[38px]" />
-            </CustomAvatar>
-            <Typography variant="h5" className="font-bold">
-              {lang === "la" ? "ຄິວອາຫານໃນຄົວວ່າງ!" : "คิวอาหารในครัวว่าง!"}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 420 }}>
-              {lang === "la"
-                ? "ທຸກລາຍການອາຫານຖືກປຸງແຕ່ງ ແລະ ເສີບຄົບຖ້ວນແລ້ວ. ອໍເດີໃໝ່ຈາກໜ້າຮ້ານ POS ຈະສະແດງຢູ່ນີ້ອັດຕະໂນມັດ ພ້ອມສຽງແຈ້ງເຕືອນ."
-                : "ทุกรายการอาหารถูกปรุงและเสิร์ฟครบถ้วนแล้ว ออเดอร์ใหม่จากหน้าร้าน POS จะปรากฏที่นี่อัตโนมัติพร้อมเสียงเตือน"}
-            </Typography>
-          </CardContent>
-        </Card>
+        renderEmptyState()
       ) : (
         <Grid container spacing={4}>
           {filteredOrders.map((order) => {

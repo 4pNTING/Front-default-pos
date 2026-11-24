@@ -127,7 +127,10 @@ export const KdsTicketCardComponent: React.FC<KdsTicketCardProps> = ({
     return "var(--mui-palette-info-main)";
   };
 
-  const getStatusChipColor = (): "info" | "warning" | "success" | "secondary" => {
+  const getStatusChipColor = (): "info" | "warning" | "success" | "secondary" | "error" => {
+    if (order.status === IPosOrderStatus.paid || order.status === IPosOrderStatus.completed) {
+      return "success";
+    }
     if (order.status === IPosOrderStatus.served) {
       return "success";
     }
@@ -137,10 +140,19 @@ export const KdsTicketCardComponent: React.FC<KdsTicketCardProps> = ({
     if (order.status === IPosOrderStatus.pending || order.status === IPosOrderStatus.confirmed) {
       return "info";
     }
+    if (order.status === IPosOrderStatus.cancelled) {
+      return "error";
+    }
     return "secondary";
   };
 
   const getStatusLabel = (): string => {
+    if (order.status === IPosOrderStatus.paid || order.status === IPosOrderStatus.completed) {
+      if (lang === "la") {
+        return "ຊຳລະເງິນແລ້ວ";
+      }
+      return "ชำระเงินแล้ว";
+    }
     if (order.status === IPosOrderStatus.served) {
       if (lang === "la") {
         return "ເສີບແລ້ວ";
@@ -158,6 +170,12 @@ export const KdsTicketCardComponent: React.FC<KdsTicketCardProps> = ({
         return "ອໍເດີໃໝ່";
       }
       return "ออเดอร์ใหม่";
+    }
+    if (order.status === IPosOrderStatus.cancelled) {
+      if (lang === "la") {
+        return "ຍົກເລີກ";
+      }
+      return "ยกเลิก";
     }
     return order.status;
   };
@@ -320,6 +338,32 @@ export const KdsTicketCardComponent: React.FC<KdsTicketCardProps> = ({
               variant="tonal"
               color={getStatusChipColor()}
               icon={<i className="tabler-check text-xs" />}
+              label={getStatusLabel()}
+            />
+          </div>
+        )}
+
+        {(order.status === IPosOrderStatus.paid || order.status === IPosOrderStatus.completed) && (
+          <div className="w-full flex justify-center py-1">
+            <CustomChip
+              round="true"
+              size="small"
+              variant="tonal"
+              color="success"
+              icon={<i className="tabler-circle-check text-xs" />}
+              label={getStatusLabel()}
+            />
+          </div>
+        )}
+
+        {order.status === IPosOrderStatus.cancelled && (
+          <div className="w-full flex justify-center py-1">
+            <CustomChip
+              round="true"
+              size="small"
+              variant="tonal"
+              color="error"
+              icon={<i className="tabler-x text-xs" />}
               label={getStatusLabel()}
             />
           </div>

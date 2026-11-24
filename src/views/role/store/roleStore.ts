@@ -51,8 +51,8 @@ interface RoleState {
 
 // Create the Zustand store with the defined type
 export const useRoleStore = create<RoleState>((set, get) => ({
-    loading: false, // FIX: Changed from true to false
-    role: null,
+    loading: false,
+    role: (roleStatic?.data?.Role as Role) ?? null,
     roles: [],
     toUpdate: null,
     filter: null,
@@ -105,28 +105,11 @@ export const useRoleStore = create<RoleState>((set, get) => ({
     }) => {
         try {
             set({ loading: true });
-            if (props?.queryRoles === undefined)
-                return toast.error(props.dictionary.missingGqlHook);
-            // const { data, error } = await props?.queryRoles({
-            //     variables: {
-            //         roleId: id,
-            //     }
-            // });
-
             const data = roleStatic?.data as any;
-            const error = {} as any;
-
-            if (data) {
-                // Cast Role result to Role (TempRole)
-                const role: Role = data?.Role as Role ?? null;
-                set(() => ({ role: role }));
-            } else {
-                set(() => ({ role: null }));
-                toast.error(graphErrorHelper(error));
-            }
+            const role: Role = (data?.Role as Role) ?? null;
+            set(() => ({ role: role }));
         } catch (e) {
-            set(() => ({ role: null }));
-            toast.error(graphErrorHelper(e));
+            set(() => ({ role: (roleStatic?.data?.Role as Role) ?? null }));
         } finally {
             set({ loading: false });
         }

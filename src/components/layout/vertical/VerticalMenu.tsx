@@ -35,7 +35,7 @@ import StyledVerticalNavExpandIcon from "@menu/styles/vertical/StyledVerticalNav
 import menuItemStyles from "@core/styles/vertical/menuItemStyles";
 import menuSectionStyles from "@core/styles/vertical/menuSectionStyles";
 import { useRoleStore } from "@/views/role/store/roleStore";
-import { roleStatic, kdsMenuItem } from "@/views/role/store/roleStaticStore";
+import { roleStatic } from "@/views/role/store/roleStaticStore";
 
 // React/NextAuth
 import React, { useEffect, useMemo } from "react";
@@ -144,26 +144,11 @@ const VerticalMenu = ({ dictionary, scrollMenu, lang }: Props) => {
     updateSettings({ mode: checked ? "dark" : "light" });
   };
 
+  const activeRole = role || (roleStatic?.data?.Role as any);
+
   const filteredMenus = React.useMemo(() => {
-    let menus = role?.menus;
-    if (!menus || menus.length === 0) {
-      menus = roleStatic?.data?.Role?.menus || [];
-    }
-
-    // Ensure /kds is accessible to EVERY role without exception
-    const hasKds = menus.some((item: any) => item?.href === "/kds");
-    if (!hasKds) {
-      const posIndex = menus.findIndex((item: any) => item?.href === "/pos");
-      if (posIndex !== -1) {
-        const nextMenus = [...menus];
-        nextMenus.splice(posIndex + 1, 0, kdsMenuItem);
-        return nextMenus;
-      }
-      return [kdsMenuItem, ...menus];
-    }
-
-    return menus;
-  }, [role?.menus]);
+    return activeRole?.menus || [];
+  }, [activeRole?.menus]);
 
   const handleUserLogout = async () => {
     try {
@@ -502,7 +487,7 @@ const VerticalMenu = ({ dictionary, scrollMenu, lang }: Props) => {
           onScrollY: (container) => scrollMenu(container, true),
         })}
     >
-      {role != null ? (
+      {activeRole != null ? (
         <>
           {!isCollapsed || isHovered ? (
             <div className="px-4 py-3">
@@ -531,7 +516,7 @@ const VerticalMenu = ({ dictionary, scrollMenu, lang }: Props) => {
                     className="font-bold uppercase text-[10px] leading-tight"
                     color="primary"
                   >
-                    {(lang.startsWith("la") ? role?.laName : role?.enName) || session?.data?.user?.level || "Admin"}
+                    {(lang.startsWith("la") ? activeRole?.laName : activeRole?.enName) || session?.data?.user?.level || "ຜູ້ຈັດການ (Manager)"}
                   </Typography>
                 </div>
               </div>

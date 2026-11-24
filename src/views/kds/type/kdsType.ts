@@ -6,7 +6,7 @@ export interface KdsProps {
   lang: string;
 }
 
-export type KdsStatusFilter = "all_active" | "confirmed" | "preparing" | "served";
+export type KdsStatusFilter = "all" | "all_active" | "confirmed" | "preparing" | "served";
 
 export interface KdsElapsedInfo {
   text: string;
@@ -25,12 +25,14 @@ export interface KdsStoreState {
   checkedItems: Record<string, boolean>;
   audioEnabled: boolean;
   isFullscreen: boolean;
+  showDemo: boolean;
   lastUpdated: Date;
 
   setStatusFilter: (filter: KdsStatusFilter) => void;
   setStationFilter: (station: string) => void;
   setAudioEnabled: (enabled: boolean) => void;
   setIsFullscreen: (fullscreen: boolean) => void;
+  setShowDemo: (showDemo: boolean) => void;
   toggleItemCheck: (orderId: string, itemId: string) => void;
   setOrders: (orders: OrderType[]) => void;
   setTables: (tables: POSTableType[]) => void;

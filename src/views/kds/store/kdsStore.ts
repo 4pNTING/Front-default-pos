@@ -16,6 +16,7 @@ export const useKdsStore = create<KdsStoreState>((set) => ({
   checkedItems: {},
   audioEnabled: true,
   isFullscreen: false,
+  showDemo: false,
   lastUpdated: new Date(),
 
   setStatusFilter: (statusFilter: KdsStatusFilter) => set({ statusFilter }),
@@ -25,6 +26,8 @@ export const useKdsStore = create<KdsStoreState>((set) => ({
   setAudioEnabled: (audioEnabled: boolean) => set({ audioEnabled }),
 
   setIsFullscreen: (isFullscreen: boolean) => set({ isFullscreen }),
+
+  setShowDemo: (showDemo: boolean) => set({ showDemo }),
 
   toggleItemCheck: (orderId: string, itemId: string) => {
     set((state) => {

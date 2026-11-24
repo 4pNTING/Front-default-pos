@@ -41,6 +41,8 @@ export const KdsHeaderComponent: React.FC<KdsHeaderProps> = ({
     setAudioEnabled,
     isFullscreen,
     setIsFullscreen,
+    showDemo,
+    setShowDemo,
     isRefetching,
     lastUpdated,
   } = useKdsStore();
@@ -152,6 +154,26 @@ export const KdsHeaderComponent: React.FC<KdsHeaderProps> = ({
     return "tonal";
   };
 
+  const getDemoButtonText = (): string => {
+    if (showDemo) {
+      if (lang === "la") {
+        return "ປິດອໍເດີຕົວຢ່າງ";
+      }
+      return "ปิดออเดอร์ตัวอย่าง";
+    }
+    if (lang === "la") {
+      return "ອໍເດີຕົວຢ່າງ";
+    }
+    return "ออเดอร์ตัวอย่าง";
+  };
+
+  const getDemoButtonIcon = (): string => {
+    if (showDemo) {
+      return "tabler-eye-check";
+    }
+    return "tabler-eye";
+  };
+
   return (
     <Card>
       <CardContent className="flex flex-col gap-4 p-5">
@@ -255,6 +277,16 @@ export const KdsHeaderComponent: React.FC<KdsHeaderProps> = ({
               </IconButton>
             </Tooltip>
 
+            {/* Demo Orders Button */}
+            <Button
+              variant={showDemo ? "contained" : "tonal"}
+              color="warning"
+              onClick={() => setShowDemo(!showDemo)}
+              startIcon={<i className={getDemoButtonIcon()} />}
+            >
+              {getDemoButtonText()}
+            </Button>
+
             {/* Back to POS Button */}
             <Link href={`/${lang}/pos`} passHref>
               <Button
@@ -308,6 +340,16 @@ export const KdsHeaderComponent: React.FC<KdsHeaderProps> = ({
             startIcon={<i className="tabler-check" />}
           >
             {lang === "la" ? "ເສີບແລ້ວ (Served)" : "เสิร์ฟแล้ว (Served)"}
+          </Button>
+
+          <Button
+            size="small"
+            variant={getFilterButtonVariant("all")}
+            color="secondary"
+            onClick={() => setStatusFilter("all")}
+            startIcon={<i className="tabler-list-details" />}
+          >
+            {lang === "la" ? "ອໍເດີທັງໝົດ (All)" : "ออเดอร์ทั้งหมด (All)"}
           </Button>
         </div>
       </CardContent>
