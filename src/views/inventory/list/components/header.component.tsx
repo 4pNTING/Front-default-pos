@@ -53,18 +53,8 @@ export const HeaderComponent: React.FC<{ props: InventoryListProps; onRefresh: (
           </div>
         </div>
 
-        {/* Actions: Refresh & Add New Button */}
+        {/* Actions: Add New Button */}
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onRefresh}
-            disabled={loading}
-            className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl border border-gray-200 dark:border-gray-700 transition-all shadow-xs disabled:opacity-50"
-            title="Refresh"
-          >
-            <i className={`tabler-refresh text-base ${loading ? "animate-spin" : ""}`} />
-          </button>
-
           <button
             type="button"
             onClick={() => setCreateModalOpen(true)}

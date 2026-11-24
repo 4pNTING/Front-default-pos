@@ -254,18 +254,6 @@ export const KdsHeaderComponent: React.FC<KdsHeaderProps> = ({
               </IconButton>
             </Tooltip>
 
-            {/* Refresh Button */}
-            <Tooltip title={lang === "la" ? "ຣີເຟຣຊ" : "รีเฟรช"}>
-              <IconButton
-                onClick={onRefresh}
-                disabled={isRefetching}
-                color="secondary"
-                sx={{ border: "1px solid", borderColor: "divider" }}
-              >
-                <i className={getRefreshIconClass()} />
-              </IconButton>
-            </Tooltip>
-
             {/* Fullscreen Button */}
             <Tooltip title={getFullscreenTooltip()}>
               <IconButton

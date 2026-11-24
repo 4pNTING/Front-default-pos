@@ -175,36 +175,6 @@ const HeaderComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
             }`}
           />
         </button>
-
-        {/* Auto Refresh Live Status / Toggle */}
-        <button
-          onClick={() => {
-            const next = !autoRefreshEnabled;
-            setAutoRefreshEnabled(next);
-            if (next && silentRefresh) {
-              silentRefresh();
-            }
-          }}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
-            autoRefreshEnabled
-              ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60"
-              : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400 hover:text-gray-600"
-          }`}
-          title={
-            autoRefreshEnabled
-              ? "Auto-refresh active (every 15s) - Click to pause"
-              : "Auto-refresh paused - Click to resume & sync"
-          }
-        >
-          <span
-            className={`w-2 h-2 rounded-full ${
-              autoRefreshEnabled ? "bg-emerald-500 animate-pulse" : "bg-gray-400"
-            }`}
-          />
-          <span className="hidden sm:inline">
-            {autoRefreshEnabled ? "Live (15s)" : "Paused"}
-          </span>
-        </button>
       </div>
     </div>
   );

@@ -73,18 +73,8 @@ export const ReportHeaderComponent: React.FC<ReportHeaderProps> = ({
           </div>
         </div>
 
-        {/* Action Buttons: Refresh + Export CSV */}
+        {/* Action Buttons: Export CSV */}
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <button
-            onClick={onRefresh}
-            disabled={loading}
-            className="px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-750 text-gray-700 dark:text-gray-200 text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs disabled:opacity-50"
-            title={isLao ? "ໂຫຼດຂໍ້ມູນໃໝ່" : "Refresh data"}
-          >
-            <i className={`tabler-refresh text-base ${loading ? "animate-spin" : ""}`} />
-            <span className="hidden sm:inline">{isLao ? "ໂຫຼດຂໍ້ມູນໃໝ່" : "Refresh"}</span>
-          </button>
-
           <button
             onClick={onExportCsv}
             className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"

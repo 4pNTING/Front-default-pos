@@ -10,17 +10,17 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
     href: '/dashboard'
   },
   {
-    label: dictionary.posPage?.title ,
+    label: dictionary.posPage?.title,
     icon: 'tabler-cash-register',
     href: '/pos'
   },
   {
-    label: (dictionary as any).kds?.title ?? "Kitchen Display (KDS)",
+    label: (dictionary as any).kds?.title,
     icon: 'tabler-tools-kitchen-2',
     href: '/kds'
   },
   {
-    label: (dictionary as any).report?.title ?? "Sales Reports",
+    label: (dictionary as any).report?.title,
     icon: 'tabler-chart-histogram',
     href: '/report'
   },

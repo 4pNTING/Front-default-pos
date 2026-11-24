@@ -347,9 +347,9 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
 
   const getPosButtonLabel = (): string => {
     if (lang === "la") {
-      return "ເປີດລະບົບຂາຍ (POS)";
+      return "ເປີດລະບົບຂາຍ ";
     }
-    return "เปิดระบบขาย (POS)";
+    return "เปิดระบบขาย ";
   };
 
   const getRevenueTitle = (): string => {
@@ -975,18 +975,6 @@ export const PosDashboardView: React.FC<PosDashboardViewProps> = ({ dictionary: 
             </div>
 
             <div className="flex items-center gap-3 flex-wrap">
-              <Tooltip title={getRefreshTooltip()}>
-                <Button
-                  variant="tonal"
-                  color="secondary"
-                  onClick={handleRefreshAll}
-                  disabled={isRefetching}
-                  startIcon={<i className={getRefreshIconClass()} />}
-                >
-                  {getRefreshButtonLabel()}
-                </Button>
-              </Tooltip>
-
               <Link href={`/${lang}/pos`} passHref>
                 <Button
                   variant="contained"
