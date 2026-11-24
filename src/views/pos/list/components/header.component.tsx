@@ -103,7 +103,7 @@ const HeaderComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
             }`}
           >
             <i className="tabler-tools-kitchen-2 text-base" />
-            <span>{lang === "la" ? "ຈໍສະແດງຜົນໃນຄົວ" : "Kitchen (KDS)"}</span>
+            <span>{lang === "la" ? "ລະບົບຈໍສະແດງຜົນໃນຄົວ (Kitchen Display System)" : "Kitchen Display System (KDS)"}</span>
             {activeOrders.length > 0 && (
               <span className="ml-1 bg-amber-500 text-white text-[11px] font-bold px-1.5 py-0.2 rounded-full">
                 {activeOrders.length}

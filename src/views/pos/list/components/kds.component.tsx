@@ -210,7 +210,7 @@ export const KdsComponent: React.FC<{ props: POSListProps }> = ({ props }) => {
             </div>
             <div>
               <h2 className="font-extrabold text-sm md:text-base text-white tracking-wide">
-                {lang === "la" ? "ໜ້າຈໍສະແດງຜົນໃນຄົວ (KDS)" : "Kitchen Display System"}
+                {lang === "la" ? "ລະບົບຈໍສະແດງຜົນໃນຄົວ (Kitchen Display System)" : "Kitchen Display System (KDS)"}
               </h2>
               <span className="text-[11px] text-slate-400 block">
                 {lang === "la" ? "ອັບເດດສະຖານະການປຸງແຕ່ງແບບ Real-time" : "Real-time kitchen order dispatch"}

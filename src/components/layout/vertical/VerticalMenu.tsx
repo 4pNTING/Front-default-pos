@@ -152,7 +152,7 @@ const VerticalMenu = ({ dictionary, scrollMenu, lang }: Props) => {
       menus = roleStatic?.data?.Role?.menus || allRoleMenus;
     }
 
-    // Ensure /kds is ALWAYS present in the menu for Admin, Manager and all roles
+    // Ensure /kds (Kitchen Display System) is ALWAYS present in the menu for Admin, Manager and all roles
     const hasKds = menus.some((item: any) => item?.href === "/kds");
     if (!hasKds) {
       const posIndex = menus.findIndex((item: any) => item?.href === "/pos");
