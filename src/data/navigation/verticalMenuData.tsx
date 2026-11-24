@@ -15,7 +15,7 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
     href: '/pos'
   },
   {
-    label: (dictionary as any).kds?.title ?? "Kitchen Display System (KDS)",
+    label: (dictionary as any).kds?.title ?? "Kitchen Display (KDS)",
     icon: 'tabler-tools-kitchen-2',
     href: '/kds'
   },

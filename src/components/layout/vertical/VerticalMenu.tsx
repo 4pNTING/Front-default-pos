@@ -35,7 +35,7 @@ import StyledVerticalNavExpandIcon from "@menu/styles/vertical/StyledVerticalNav
 import menuItemStyles from "@core/styles/vertical/menuItemStyles";
 import menuSectionStyles from "@core/styles/vertical/menuSectionStyles";
 import { useRoleStore } from "@/views/role/store/roleStore";
-import { roleStatic, kdsMenuItem, allRoleMenus } from "@/views/role/store/roleStaticStore";
+import { roleStatic } from "@/views/role/store/roleStaticStore";
 
 // React/NextAuth
 import React, { useEffect, useMemo } from "react";
@@ -147,56 +147,8 @@ const VerticalMenu = ({ dictionary, scrollMenu, lang }: Props) => {
   const activeRole = role || (roleStatic?.data?.Role as any);
 
   const filteredMenus = React.useMemo(() => {
-    let menus = activeRole?.menus;
-    if (!menus || menus.length === 0) {
-      menus = roleStatic?.data?.Role?.menus || allRoleMenus;
-    }
-
-    // Ensure /kds (Kitchen Display System) is ALWAYS present in the menu for Admin, Manager and all roles
-    const hasKds = menus.some((item: any) => item?.href === "/kds");
-    if (!hasKds) {
-      const posIndex = menus.findIndex((item: any) => item?.href === "/pos");
-      if (posIndex !== -1) {
-        const nextMenus = [...menus];
-        nextMenus.splice(posIndex + 1, 0, kdsMenuItem);
-        return nextMenus;
-      }
-      return [kdsMenuItem, ...menus];
-    }
-
-    return menus;
-  }, [activeRole]);
-
-  const getRoleDisplayName = (): string => {
-    const user = session?.data?.user;
-    const userLevel = (user?.level || user?.username || "").toLowerCase();
-
-    if (userLevel.includes("admin") || userLevel.includes("supper") || userLevel === "superadmin") {
-      if (lang.startsWith("la")) {
-        return "ຜູ້ດູແລລະບົບ (Admin)";
-      }
-      return "Admin";
-    }
-
-    if (userLevel.includes("manage") || user?.level?.includes("ຜູ້ຈັດການ")) {
-      if (lang.startsWith("la")) {
-        return "ຜູ້ຈັດການ (Manager)";
-      }
-      return "Manager";
-    }
-
-    if (activeRole) {
-      if (lang.startsWith("la")) {
-        return activeRole.laName || "ຜູ້ດູແລລະບົບ (Admin)";
-      }
-      return activeRole.enName || "Admin";
-    }
-
-    if (lang.startsWith("la")) {
-      return "ຜູ້ດູແລລະບົບ (Admin)";
-    }
-    return "Admin";
-  };
+    return activeRole?.menus || [];
+  }, [activeRole?.menus]);
 
   const handleUserLogout = async () => {
     try {
@@ -564,7 +516,7 @@ const VerticalMenu = ({ dictionary, scrollMenu, lang }: Props) => {
                     className="font-bold uppercase text-[10px] leading-tight"
                     color="primary"
                   >
-                    {getRoleDisplayName()}
+                    {(lang.startsWith("la") ? activeRole?.laName : activeRole?.enName) || session?.data?.user?.level || "ຜູ້ຈັດການ (Manager)"}
                   </Typography>
                 </div>
               </div>

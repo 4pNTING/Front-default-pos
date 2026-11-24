@@ -1348,7 +1348,7 @@
   "zoneCreatedSuccessfully": "Zone created successfully",
   "zoneName": "Zone Name",
   "kds": {
-    "title": "Kitchen Display System (KDS)",
+    "title": "Kitchen Display (KDS)",
     "subtitle": "Real-time kitchen order dispatch and status tracking"
   }
 }

@@ -73,17 +73,17 @@ export const KdsHeaderComponent: React.FC<KdsHeaderProps> = ({
 
   const getKdsTitle = (): string => {
     if (lang === "la") {
-      return "ລະບົບຈໍສະແດງຜົນໃນຄົວ (Kitchen Display System)";
+      return "ລະບົບຈໍສະແດງຜົນໃນຄົວ (KDS)";
     }
-    return "ระบบจอแสดงผลในครัว (Kitchen Display System)";
+    return "ระบบจอแสดงผลในครัว (KDS)";
   };
 
   const getKdsSubtitle = (): string => {
     const timeStr = lastUpdated.toLocaleTimeString();
     if (lang === "la") {
-      return `ອັບເດດອໍເດີຄົວອັດຕະໂນມັດ • Kitchen Display System • ລ່າສຸດ: ${timeStr}`;
+      return `ອັບເດດອໍເດີຄົວອັດຕະໂນມັດ • ລ່າສຸດ: ${timeStr}`;
     }
-    return `อัปเดตออเดอร์ครัวอัตโนมัติ • Kitchen Display System • ล่าสุด: ${timeStr}`;
+    return `อัปเดตออเดอร์ครัวอัตโนมัติ • ล่าสุด: ${timeStr}`;
   };
 
   const getTicketCountLabel = (): string => {

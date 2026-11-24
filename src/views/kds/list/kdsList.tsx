@@ -399,9 +399,7 @@ export const KdsList: React.FC<{ props: KdsProps }> = ({ props }) => {
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
         <CircularProgress size={44} color="warning" />
         <Typography variant="body1" color="text.secondary">
-          {lang === "la"
-            ? "ກຳລັງໂຫຼດລະບົບຈໍສະແດງຜົນໃນຄົວ (Kitchen Display System)..."
-            : "กำลังโหลดระบบจอแสดงผลในครัว (Kitchen Display System)..."}
+          {lang === "la" ? "ກຳລັງໂຫຼດຂໍ້ມູນຄົວ (KDS)..." : "กำลังโหลดข้อมูลครัว (KDS)..."}
         </Typography>
       </div>
     );

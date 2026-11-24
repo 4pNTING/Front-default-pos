@@ -106,29 +106,8 @@ export const useRoleStore = create<RoleState>((set, get) => ({
         try {
             set({ loading: true });
             const data = roleStatic?.data as any;
-            const baseRole: Role = (data?.Role as Role) ?? null;
-            if (baseRole) {
-                const lowerId = (id || "").toLowerCase();
-                let laName = "ຜູ້ດູແລລະບົບ (Admin)";
-                let enName = "Admin";
-                let systemCode = "Admin";
-
-                if (lowerId.includes("manage") || id.includes("ຜູ້ຈັດການ")) {
-                    laName = "ຜູ້ຈັດການ (Manager)";
-                    enName = "Manager";
-                    systemCode = "Manager";
-                }
-
-                const resolvedRole: Role = {
-                    ...baseRole,
-                    laName,
-                    enName,
-                    systemCode,
-                };
-                set(() => ({ role: resolvedRole }));
-            } else {
-                set(() => ({ role: null }));
-            }
+            const role: Role = (data?.Role as Role) ?? null;
+            set(() => ({ role: role }));
         } catch (e) {
             set(() => ({ role: (roleStatic?.data?.Role as Role) ?? null }));
         } finally {

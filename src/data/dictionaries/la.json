@@ -1348,7 +1348,7 @@
   "zoneCreatedSuccessfully": "ສ້າງ Zone ສຳເລັດແລ້ວ",
   "zoneName": "ຊື່ Zone",
   "kds": {
-    "title": "ລະບົບຈໍສະແດງຜົນໃນຄົວ (Kitchen Display System)",
+    "title": "ຈໍສະແດງຜົນໃນຄົວ (KDS)",
     "subtitle": "ລະບົບສະແດງຜົນ ແລະ ຈັດການອໍເດີໃນຄົວແບບ Real-time"
   }
 }
