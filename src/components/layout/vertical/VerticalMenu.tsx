@@ -35,7 +35,7 @@ import StyledVerticalNavExpandIcon from "@menu/styles/vertical/StyledVerticalNav
 import menuItemStyles from "@core/styles/vertical/menuItemStyles";
 import menuSectionStyles from "@core/styles/vertical/menuSectionStyles";
 import { useRoleStore } from "@/views/role/store/roleStore";
-import { roleStatic } from "@/views/role/store/roleStaticStore";
+import { roleStatic, kdsMenuItem, reportMenuItem, allRoleMenus } from "@/views/role/store/roleStaticStore";
 
 // React/NextAuth
 import React, { useEffect, useMemo } from "react";
@@ -147,8 +147,37 @@ const VerticalMenu = ({ dictionary, scrollMenu, lang }: Props) => {
   const activeRole = role || (roleStatic?.data?.Role as any);
 
   const filteredMenus = React.useMemo(() => {
-    return activeRole?.menus || [];
-  }, [activeRole?.menus]);
+    let menus = activeRole?.menus;
+    if (!menus || menus.length === 0) {
+      menus = roleStatic?.data?.Role?.menus || allRoleMenus;
+    }
+
+    const nextMenus = [...menus];
+
+    // Ensure /kds (Kitchen Display System) is present
+    const hasKds = nextMenus.some((item: any) => item?.href === "/kds");
+    if (!hasKds) {
+      const posIndex = nextMenus.findIndex((item: any) => item?.href === "/pos");
+      if (posIndex !== -1) {
+        nextMenus.splice(posIndex + 1, 0, kdsMenuItem);
+      } else {
+        nextMenus.push(kdsMenuItem);
+      }
+    }
+
+    // Ensure /report (Sales & Order Reports) is present
+    const hasReport = nextMenus.some((item: any) => item?.href === "/report");
+    if (!hasReport) {
+      const kdsIndex = nextMenus.findIndex((item: any) => item?.href === "/kds");
+      if (kdsIndex !== -1) {
+        nextMenus.splice(kdsIndex + 1, 0, reportMenuItem);
+      } else {
+        nextMenus.push(reportMenuItem);
+      }
+    }
+
+    return nextMenus;
+  }, [activeRole]);
 
   const handleUserLogout = async () => {
     try {

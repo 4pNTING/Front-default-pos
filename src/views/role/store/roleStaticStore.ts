@@ -1,3 +1,29 @@
+export const kdsMenuItem = {
+  href: "/kds",
+  icon: "tabler-tools-kitchen-2",
+  exactMatch: false,
+  laMenu: "ຈໍສະແດງຜົນໃນຄົວ (KDS)",
+  enMenu: "Kitchen Display (KDS)",
+  laSection: "ລະບົບຫຼັກ",
+  enSection: "Main System",
+  permission: ["c", "r", "u", "d"],
+  feature: "kds",
+  __typename: "RoleMenu",
+};
+
+export const reportMenuItem = {
+  href: "/report",
+  icon: "tabler-chart-histogram",
+  exactMatch: false,
+  laMenu: "ລາຍງານຍອດຂາຍ (Reports)",
+  enMenu: "Sales Reports",
+  laSection: "ລະບົບຫຼັກ",
+  enSection: "Main System",
+  permission: ["c", "r", "u", "d"],
+  feature: "report",
+  __typename: "RoleMenu",
+};
+
 const overview_section = [
   {
     href: "/dashboard",
@@ -23,18 +49,8 @@ const overview_section = [
     feature: "pos",
     __typename: "RoleMenu",
   },
-  {
-    href: "/kds",
-    icon: "tabler-tools-kitchen-2",
-    exactMatch: false,
-    laMenu: "ຈໍສະແດງຜົນໃນຄົວ (KDS)",
-    enMenu: "Kitchen Display (KDS)",
-    laSection: "ລະບົບຫຼັກ",
-    enSection: "Main System",
-    permission: ["c", "r", "u", "d"],
-    feature: "kds",
-    __typename: "RoleMenu",
-  },
+  kdsMenuItem,
+  reportMenuItem,
 ];
 
 const restaurant_section = [
@@ -143,16 +159,18 @@ const settings_section = [
   },
 ];
 
+export const allRoleMenus = [...overview_section, ...restaurant_section, ...settings_section];
+
 export const roleStatic = {
   data: {
     Role: {
       _id: "67643abba78e121bcea07a53",
       createdAt: "Thu Dec 19 2024 15:24:43 GMT+0000 (Coordinated Universal Time)",
       updatedAt: "Thu Dec 19 2024 15:24:43 GMT+0000 (Coordinated Universal Time)",
-      laName: "ຜູ້ຈັດການ (Manager)",
-      enName: "Manager",
-      systemCode: "Manager",
-      menus: [...overview_section, ...restaurant_section, ...settings_section],
+      laName: "ຜູ້ດູແລລະບົບ (Admin)",
+      enName: "Admin",
+      systemCode: "Admin",
+      menus: allRoleMenus,
       __typename: "Role",
     },
   },

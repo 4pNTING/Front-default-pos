@@ -1350,5 +1350,9 @@
   "kds": {
     "title": "Kitchen Display (KDS)",
     "subtitle": "Real-time kitchen order dispatch and status tracking"
+  },
+  "report": {
+    "title": "Sales & Order Reports",
+    "subtitle": "Comprehensive sales analytics, revenue metrics and order history"
   }
 }
